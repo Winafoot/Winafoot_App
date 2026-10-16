@@ -1,0 +1,14 @@
+# Modèle de android/key.properties (ce fichier-ci peut être commité, pas key.properties).
+# Copier en android/key.properties, renseigner les valeurs et ne jamais commiter key.properties
+# ni le keystore (.gitignore les ignore). Procédure complète : README, section Publication Android.
+#
+# La clé décrite ici est la clé d'UPLOAD : avec Play App Signing, Google signe ensuite les APK
+# distribués avec une autre clé qu'il conserve.
+# Valeurs sans guillemets. Avec un keystore PKCS12 (défaut de keytool sous JDK 9+ sans -storetype JKS),
+# keyPassword doit être IDENTIQUE à storePassword : keytool n'accepte qu'un seul mot de passe.
+storePassword=<mot de passe du keystore>
+keyPassword=<mot de passe de la clé>
+keyAlias=upload
+# Chemin ABSOLU du keystore (Gradle n'interprète pas « ~ » ; un chemin relatif part de android/app).
+# Pas d'espace en fin de ligne. Garder le fichier hors du dépôt.
+storeFile=/chemin/absolu/vers/wina-upload-keystore.jks

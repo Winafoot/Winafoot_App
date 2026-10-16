@@ -1,0 +1,121 @@
+name: wina
+description: Wina mobile application
+
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.7.2 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+  # Firebase
+  firebase_core: ^4.7.0
+  firebase_auth: ^6.4.0
+  cloud_firestore: ^6.3.0
+  cloud_functions: ^6.2.0
+  firebase_messaging: ^16.2.0
+  firebase_app_check: ^0.4.3
+
+  # Utilitaires
+  http: ^1.6.0
+  iconsax_flutter: ^1.0.1
+  cached_network_image: ^3.4.1
+  hooks_riverpod: ^2.6.1
+  fluttertoast: ^8.2.12
+  flutter_svg: ^2.3.0
+  url_launcher: ^6.3.2
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  easy_localization: ^3.0.8
+  auto_route: ^5.0.4
+  share_plus: ^12.0.2
+  package_info_plus: ^9.0.1
+  pdf: 3.11.3
+  printing: 5.14.3
+  shimmer: ^3.0.0
+  flutter_local_notifications: ^18.0.1
+
+  # Paquets Kosmos intégrés au dépôt : rôle, provenance et correctifs locaux
+  # dans packages/README.md.
+  core_kosmos:
+    path: packages/core_kosmos
+  kosmos_auth:
+    path: packages/kosmos_auth
+  permissionrequest:
+    path: packages/permissionrequest
+  settings_kosmos:
+    path: packages/settings_kosmos
+  skeleton:
+    path: packages/skeleton
+  ui_kosmos_v4:
+    path: packages/ui_kosmos_v4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  json_serializable: ^6.8.0
+  freezed: ^2.5.2
+  build_runner: ^2.4.13
+  auto_route_generator: ^5.0.3
+  flutter_screenutil: ^5.9.3
+  shared_preferences: ^2.5.5
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
+
+
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+
+  assets:
+    - assets/svg/
+    - assets/images/
+    - assets/translations/
+
+flutter_native_splash:
+  # Fond clair aligné sur AppColor.background (lib/config/theme.dart), et non
+  # plus une image plein écran sombre, pour que le démarrage soit de la même
+  # teinte que scaffoldBackgroundColor.
+  color: "#EFF4EF"
+  image: "tool/branding/splash_icon_android12.png"
+  # Sans ce paramètre, l'outil supprime android:screenOrientation du manifest
+  # et casse le verrouillage paysage
+  android_screen_orientation: sensorLandscape
+
+  # Android 12+ : le système ignore l'image plein écran et n'affiche qu'une
+  # icône centrée (rognée en cercle) sur un fond uni. Doit donc être configuré
+  # séparément, sinon le démarrage est incorrect sur Android 12 à 15.
+  android_12:
+    color: "#EFF4EF"
+    color_dark: "#EFF4EF"
+    # 1152x1152, marque inscrite dans le cercle de 768 px imposé par l'API
+    image: "tool/branding/splash_icon_android12.png"
+    image_dark: "tool/branding/splash_icon_android12.png"
+
+flutter_launcher_icons:
+  # Source hors assets/ : sert uniquement à générer les icônes, ne doit pas être embarquée dans le bundle
+  image_path: "tool/branding/logo_wina_v2.png"
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true

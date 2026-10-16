@@ -1,0 +1,84 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/theme.dart';
+import 'package:wina/routes/app_router.gr.dart';
+import 'package:wina/view/page/check_profil_step1_screen.dart';
+import 'package:flutter/widgets.dart';
+
+import 'package:skeleton/controller/user_controller.dart';
+import 'package:skeleton/skeleton.dart';
+
+/// Région où les Cloud Functions du projet sont déployées.
+/// `FirebaseFunctions.instance` viserait `us-central1`, où rien ne tourne.
+const String kCloudRegion = 'europe-west9';
+
+SkeletonAppConfig initSkeletonAppConfig() {
+  return SkeletonAppConfig(
+    cloudRegion: kCloudRegion,
+    logoPath: "assets/images/app_logo.png",
+    logoFormat: LogoFormat.png,
+    mainRouteInfo: const LoggedUserAppCoreRoute(),
+    authentificationConfig: SkeletonAuthentificationConfig(
+      userType: "client",
+      // Connexion biométrique désactivée : l'app ne propose pas de l'activer, la connexion
+      // se fait par e-mail et mot de passe.
+      enableLocalAuth: false,
+      registerFirst: false,
+      canCreateAccount: false,
+      showBackButton: false,
+      // Tant que `profilCompleted` est faux, la passerelle skeleton appelle ce
+      // callback : on ouvre l'écran « Finalisez votre profil » (étape 1). Le
+      // retour non-null court-circuite la redirection par défaut.
+      showCompleteProfil: (context, user) {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const CheckProfilStep1Screen(),
+          ),
+        );
+        return 'check-profil';
+      },
+      // Wordmark au-dessus de la carte. C'est le seul point d'insertion vivant
+      // sur le chemin tablette (`LoginPage._buildWeb`) : `showLogoOnPage` et
+      // `logoPath` ne sont lus que par la branche téléphone d'`AuthParent`.
+      webLoginPageTitleBuilder:
+          (BuildContext context, WidgetRef ref) => Padding(
+            padding: EdgeInsets.only(bottom: formatHeight(28)),
+            child: SvgPicture.asset(
+              "assets/svg/logo_inline.svg",
+              width: sp(88),
+            ),
+          ),
+      // Contenu du CTA « Connexion » : le `Button` Kosmos n'a pas d'emplacement
+      // d'icône, seul ce crochet permet d'y poser la pastille fléchée de la
+      // maquette. Le bouton garde sa pilule verte, son loader et son mutex.
+      loginButtonBuilder:
+          (BuildContext context, WidgetRef ref) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                "utils.connexion".tr(),
+                style: AppThemeStyle.semiBStyle(16, AppColor.textLight),
+              ),
+              sw(7),
+              SizedBox(
+                width: sp(22),
+                height: sp(22),
+                child: Icon(
+                  Iconsax.arrow_circle_right,
+                  size: sp(13),
+                  color: AppColor.textLight,
+                ),
+              ),
+            ],
+          ),
+      showLogoOnPage: false,
+      emailMustBeVerified: false,
+      sendEmailVerificationIfNotVerified: false,
+      canLoginWithPhone: false,
+      logoutCallback: (BuildContext context, WidgetRef ref) async {
+        await UserController.logoutUser(context, ref);
+      },
+    ),
+  );
+}

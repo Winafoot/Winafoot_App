@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1074102338688",
+    "firebase_url": "https://wina-c4c4a-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "wina-c4c4a",
+    "storage_bucket": "wina-c4c4a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074102338688:android:0827145a5f257951c25265",
+        "android_client_info": {
+          "package_name": "fr.winafoot.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAB9iSZ-4kIsBwpdpcFVkqFJ9sDaAafTbA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,1347 @@
+@startuml
+set namespaceSeparator ::
+
+class "wina::config::maintenance_gate.dart::MaintenanceGate" {
+  {static} +bool blocksNavigation
+  {static} +GateState resolve()
+  {static} +Future<void> start()
+}
+
+abstract class "wina::config::app_update.dart::AppUpdate" {
+  {static} +String minBuildField
+  {static} +String storeUrlField
+  {static} +String? platformKey()
+  {static} +int? minBuildFor()
+  {static} +String? storeUrlFor()
+  {static} +bool isUpdateRequired()
+  {static} +Future<int?> currentBuildNumber()
+}
+
+class "wina::config::permission_config.dart::PermissionSeenGuard" {
+  +void onNavigation()
+}
+
+"auto_route::src::router::controller::routing_controller.dart::AutoRouteGuard" <|-- "wina::config::permission_config.dart::PermissionSeenGuard"
+
+abstract class "wina::config::theme.dart::AppColor" {
+  {static} +Color primaryColor
+  {static} +Color pitchGreen
+  {static} +Color jerseyStarter
+  {static} +Color jerseySub
+  {static} +Color captainLine
+  {static} +Color jerseyRed
+  {static} +Color jerseyBlue
+  {static} +Color jerseyLightBlue
+  {static} +Color jerseyGreen
+  {static} +Color jerseyLightGreen
+  {static} +Color jerseyYellow
+  {static} +Color jerseyOrange
+  {static} +Color jerseyPink
+  {static} +Color jerseyGrey
+  {static} +Color jerseyBlack
+  {static} +Color jerseyWhite
+  {static} +Color primaryLabels
+  {static} +Color secondaryLabels
+  {static} +Color inkNavy
+  {static} +Color grey5A6574
+  {static} +Color background
+  {static} +Color surface
+  {static} +Color rosterRowSurface
+  {static} +Color rosterRowHighlight
+  {static} +Color rosterRowHovered
+  {static} +Color rosterName
+  {static} +Color cellsBackground
+  {static} +Color fieldsBackground
+  {static} +Color decorationColor
+  {static} +Color chipBackground
+  {static} +Color chipGradientTop
+  {static} +Color chipGradientBottom
+  {static} +Color buttonGradientTop
+  {static} +Color buttonGradientBottom
+  {static} +Color navBar
+  {static} +Color textLight
+  {static} +Color divider
+  {static} +Color disabled
+  {static} +Color cellBorder
+  {static} +Color chevron
+  {static} +Color headerRule
+  {static} +Color destructive
+  {static} +Color scrim
+}
+
+"wina::config::theme.dart::AppColor" o-- "dart::ui::Color"
+
+abstract class "wina::config::theme.dart::AppThemeStyle" {
+  {static} +String poppinsFont
+  {static} +TextStyle defaultText()
+  {static} +TextStyle lightStyle()
+  {static} +TextStyle regularStyle()
+  {static} +TextStyle mediumStyle()
+  {static} +TextStyle semiBStyle()
+  {static} +TextStyle boldStyle()
+}
+
+class "wina::providers::live_match_providers.dart::LiveMatchNotifier" {
+  +void start()
+  +void tick()
+  +void selectPlayer()
+  +void substitute()
+  +void bump()
+  +void removeEvent()
+  +void togglePause()
+  +void beginHalfTime()
+  +void startSecondHalf()
+  +void finish()
+  +void setEnabledStats()
+  +void applyComposition()
+  +void clear()
+}
+
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "wina::providers::live_match_providers.dart::LiveMatchNotifier"
+
+class "wina::providers::match_providers.dart::MatchDraftNotifier" {
+  +void reset()
+  +void setId()
+  +void setOpponentName()
+  +void setOpponentCategory()
+  +void setOpponentDivision()
+  +void setOwnJersey()
+  +void setOpponentJerseyColor()
+  +void setComposition()
+  +void setEnabledStats()
+}
+
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "wina::providers::match_providers.dart::MatchDraftNotifier"
+
+class "wina::providers::composition_providers.dart::CompositionDraft" {
+  +int? playerCount
+  +Formation? formation
+  +String? formationName
+  +Map<int, String> assignments
+  +Map<String, int> numbers
+  +String? captainId
+  +Set<String> substituteIds
+  +Set<int> subNumbers
+  +bool hasCount
+  +bool hasFormation
+  +int slotCount
+  +int placedCount
+  +bool allPlaced
+  +CompositionDraft copyWith()
+}
+
+"wina::providers::composition_providers.dart::CompositionDraft" o-- "wina::models::formation.dart::Formation"
+
+class "wina::providers::composition_providers.dart::CompositionDraftNotifier" {
+  +void reset()
+  +void setCount()
+  +void setSubNumbers()
+  +void setFormation()
+  +void setNumber()
+  +void clearNumber()
+  +void toggleCaptain()
+  +void assign()
+  +void unassign()
+  +void loadFromComposition()
+}
+
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "wina::providers::composition_providers.dart::CompositionDraftNotifier"
+
+class "wina::models::match_period.dart::PeriodStats" {
+  +PeriodStatus status
+  +Map<String, Map<String, int>> playerStats
+  +List<String> statKeys
+  +bool isAvailable
+}
+
+"wina::models::match_period.dart::PeriodStats" o-- "wina::models::match_period.dart::PeriodStatus"
+
+class "wina::models::stat_catalog.dart::StatDef" {
+  +String key
+  +String label
+  +bool defaultOn
+  +bool bilanOnly
+  +StatCategory category
+  +List<String> parts
+  +bool isCalculated
+  +bool isTotal
+}
+
+"wina::models::stat_catalog.dart::StatDef" o-- "wina::models::stat_catalog.dart::StatCategory"
+
+class "wina::models::formation.dart::FormationSlot" {
+  +PlayerPosition role
+  +double x
+  +double y
+  +int hashCode
+  +bool ==()
+}
+
+"wina::models::formation.dart::FormationSlot" o-- "wina::models::player.dart::PlayerPosition"
+
+class "wina::models::formation.dart::Formation" {
+  +String label
+  +int playerCount
+  +List<FormationSlot> slots
+  +int hashCode
+  +bool ==()
+}
+
+class "wina::models::game_match.dart::MatchOpponent" {
+  +String name
+  +TeamCategory? category
+  +TeamDivision? division
+  +JerseyColorOption? jerseyColor
+  +MatchOpponent copyWith()
+  +Map<String, dynamic> toJson()
+}
+
+"wina::models::game_match.dart::MatchOpponent" o-- "wina::models::coach_profile.dart::TeamCategory"
+"wina::models::game_match.dart::MatchOpponent" o-- "wina::models::coach_profile.dart::TeamDivision"
+"wina::models::game_match.dart::MatchOpponent" o-- "wina::models::coach_profile.dart::JerseyColorOption"
+
+class "wina::models::game_match.dart::GameMatch" {
+  +String? id
+  +MatchOpponent opponent
+  +Jersey? ownJersey
+  +MatchComposition? composition
+  +List<MatchComposition> compositions
+  +List<MatchComposition> compositionsUsed
+  +bool hasMultipleCompositions
+  +List<String> enabledStatKeys
+  +MatchStatus status
+  +DateTime? createdAt
+  +int scoreUs
+  +int scoreThem
+  +int elapsedSeconds
+  +Map<String, Map<String, int>> playerStats
+  +DateTime? finishedAt
+  +int half
+  +Map<String, Map<String, int>>? firstHalfStats
+  +List<String> firstHalfStatKeys
+  +String? resultLabel
+  +String durationLabel
+  +bool isOpponentValid
+  +bool isJerseyValid
+  +bool isCompositionReady
+  +bool isStatsReady
+  +bool isReadyToStart
+  +PeriodStats statsFor()
+  +GameMatch copyWith()
+  +Map<String, dynamic> toJson()
+}
+
+"wina::models::game_match.dart::GameMatch" o-- "wina::models::game_match.dart::MatchOpponent"
+"wina::models::game_match.dart::GameMatch" o-- "wina::models::coach_profile.dart::Jersey"
+"wina::models::game_match.dart::GameMatch" o-- "wina::models::match_composition.dart::MatchComposition"
+"wina::models::game_match.dart::GameMatch" o-- "wina::models::game_match.dart::MatchStatus"
+
+class "wina::models::custom_composition.dart::CustomComposition" {
+  +String? id
+  +String name
+  +int playerCount
+  +String formationLabel
+  +List<FormationSlot> slots
+  +bool isFavorite
+  +DateTime? createdAt
+  +DateTime? lastUsedAt
+  +CustomComposition copyWith()
+  +Formation toFormation()
+  +Map<String, dynamic> toJson()
+}
+
+class "wina::models::player.dart::Player" {
+  +String? id
+  +String firstName
+  +String lastName
+  +StrongFoot strongFoot
+  +PlayerPosition position
+  +String fullName
+  +Player copyWith()
+  +Map<String, dynamic> toJson()
+}
+
+"wina::models::player.dart::Player" o-- "wina::models::player.dart::StrongFoot"
+"wina::models::player.dart::Player" o-- "wina::models::player.dart::PlayerPosition"
+
+class "wina::models::player.dart::SquadFullException" {
+}
+
+"dart::core::Exception" <|-- "wina::models::player.dart::SquadFullException"
+
+class "wina::models::coach_profile.dart::Jersey" {
+  +String name
+  +JerseyColorOption color
+  +Map<String, dynamic> toJson()
+}
+
+"wina::models::coach_profile.dart::Jersey" o-- "wina::models::coach_profile.dart::JerseyColorOption"
+
+class "wina::models::coach_profile.dart::CoachProfile" {
+  +String? coachName
+  +String? teamName
+  +TeamCategory? category
+  +TeamDivision? division
+  +PlayerCount? teamFormat
+  +String? coachFirstName
+}
+
+"wina::models::coach_profile.dart::CoachProfile" o-- "wina::models::coach_profile.dart::TeamCategory"
+"wina::models::coach_profile.dart::CoachProfile" o-- "wina::models::coach_profile.dart::TeamDivision"
+"wina::models::coach_profile.dart::CoachProfile" o-- "wina::models::formation.dart::PlayerCount"
+
+class "wina::models::player_stats.dart::StatDef" {
+  +String label
+  +bool hasSpace
+}
+
+class "wina::models::live_match.dart::MatchEvent" {
+  +int atSeconds
+  +String playerId
+  +String playerName
+  +String statKey
+  +String statLabel
+  +int delta
+  +int half
+}
+
+class "wina::models::live_match.dart::LiveMatch" {
+  +String formationLabel
+  +List<FormationSlot> slots
+  +List<String?> assignments
+  +List<String> enabledStatKeys
+  +Map<String, int> numbers
+  +List<String> substituteIds
+  +Map<String, Map<String, int>> playerStats
+  +int scoreUs
+  +int scoreThem
+  +int elapsedSeconds
+  +int half
+  +MatchStatus status
+  +List<MatchEvent> events
+  +String? selectedPlayerId
+  +List<String>? halfTimeStatKeys
+  +bool isLive
+  +bool isPaused
+  +String clock
+  +Map<String, Map<String, int>> firstHalfStats
+  +List<String> firstHalfStatKeys
+  +int statValue()
+  +List<({int? number, Player player})> startersAt()
+  +List<({int? number, Player player})> substitutes()
+  +LiveMatch copyWith()
+}
+
+"wina::models::live_match.dart::LiveMatch" o-- "wina::models::game_match.dart::MatchStatus"
+
+class "wina::models::app_notification.dart::AppNotification" {
+  +String id
+  +String title
+  +bool isRead
+  +String? body
+  +DateTime? sentAt
+  +String? type
+  +Map<String, dynamic>? metadata
+  +String? ctaLabel
+  +String? matchId
+  +String relativeTime
+}
+
+class "wina::models::match_composition.dart::MatchComposition" {
+  +String formationLabel
+  +int playerCount
+  +String? name
+  +List<FormationSlot> slots
+  +List<String?> assignments
+  +Map<String, int> numbers
+  +String? captainId
+  +List<String> substituteIds
+  +int placedCount
+  +bool isComplete
+  +Map<String, dynamic> toJson()
+}
+
+class "wina::models::userAppData::user_app_data.dart::UserAppData" {
+}
+
+abstract class "wina::models::userAppData::user_app_data.dart::$UserAppDataCopyWith" {
+  +$Res call()
+}
+
+class "wina::view::page::settings::reset_password_card.dart::ChangePasswordForm" {
+  +GlobalKey<FormState>? formKey
+  +TextEditingController? currentPasswordController
+  +TextEditingController? newPasswordController
+  +TextEditingController? confirmPasswordController
+  +void Function()? onSuccess
+  +void Function(Object)? onError
+  +State<ChangePasswordForm> createState()
+}
+
+"wina::view::page::settings::reset_password_card.dart::ChangePasswordForm" o-- "flutter::src::widgets::framework.dart::GlobalKey<FormState>"
+"wina::view::page::settings::reset_password_card.dart::ChangePasswordForm" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"wina::view::page::settings::reset_password_card.dart::ChangePasswordForm" o-- "dart::ui::void Function()"
+"wina::view::page::settings::reset_password_card.dart::ChangePasswordForm" o-- "null::void Function(Object)"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "wina::view::page::settings::reset_password_card.dart::ChangePasswordForm"
+
+class "wina::view::page::settings::settings_page.dart::SettingsWebPage" {
+  +Widget build()
+  +Widget userHeader()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::settings::settings_page.dart::SettingsWebPage"
+
+class "wina::view::page::settings::settings_node.dart::SettingsNode" {
+  +Widget? icon
+  +Widget Function(bool)? leadingBuilder
+  +Widget Function(bool)? trailingBuilder
+  +String title
+  +String? subtitle
+  +void Function()? onTap
+  +List<SettingsNode> children
+  +Widget Function(BuildContext)? contentBuilder
+  +String? paneTitle
+  +bool hasChildren
+  +bool hasCustomContent
+}
+
+"wina::view::page::settings::settings_node.dart::SettingsNode" o-- "flutter::src::widgets::framework.dart::Widget"
+"wina::view::page::settings::settings_node.dart::SettingsNode" o-- "null::Widget Function(bool)"
+"wina::view::page::settings::settings_node.dart::SettingsNode" o-- "null::void Function()"
+"wina::view::page::settings::settings_node.dart::SettingsNode" o-- "flutter::src::widgets::framework.dart::Widget Function(BuildContext)"
+
+class "wina::view::page::settings::settings_node.dart::SettingsItem" {
+  +String title
+  +List<SettingsNode> children
+}
+
+class "wina::view::page::settings::settings_node.dart::SettingsView" {
+  +List<SettingsItem> items
+  +Widget Function(BuildContext)? leftHeaderBuilder
+  +State<SettingsView> createState()
+}
+
+"wina::view::page::settings::settings_node.dart::SettingsView" o-- "flutter::src::widgets::framework.dart::Widget Function(BuildContext)"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "wina::view::page::settings::settings_node.dart::SettingsView"
+
+class "wina::view::page::gerer_maillots_screen.dart::GererMaillotsScreen" {
+  +ConsumerState<GererMaillotsScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::gerer_maillots_screen.dart::GererMaillotsScreen"
+
+class "wina::view::page::creer_joueur_screen.dart::CreerJoueurScreen" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::creer_joueur_screen.dart::CreerJoueurScreen"
+
+class "wina::view::page::gerer_equipe_placement_screen.dart::GererEquipePlacementScreen" {
+  +Set<String>? allowedPlayerIds
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::gerer_equipe_placement_screen.dart::GererEquipePlacementScreen"
+
+class "wina::view::page::creer_composition_screen.dart::CreerCompositionScreen" {
+  +CustomComposition? existing
+  +int? playerCount
+  +ConsumerState<CreerCompositionScreen> createState()
+}
+
+"wina::view::page::creer_composition_screen.dart::CreerCompositionScreen" o-- "wina::models::custom_composition.dart::CustomComposition"
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::creer_composition_screen.dart::CreerCompositionScreen"
+
+class "wina::view::page::modifier_joueur_screen.dart::ModifierJoueurScreen" {
+  +Player player
+  +Widget build()
+}
+
+"wina::view::page::modifier_joueur_screen.dart::ModifierJoueurScreen" o-- "wina::models::player.dart::Player"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::modifier_joueur_screen.dart::ModifierJoueurScreen"
+
+class "wina::view::page::coup_denvoi_step2_screen.dart::CoupDEnvoiStep2Screen" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::coup_denvoi_step2_screen.dart::CoupDEnvoiStep2Screen"
+
+class "wina::view::page::coup_denvoi_step1_screen.dart::CoupDEnvoiStep1Screen" {
+  +ConsumerState<CoupDEnvoiStep1Screen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::coup_denvoi_step1_screen.dart::CoupDEnvoiStep1Screen"
+
+class "wina::view::page::gerer_equipe_composition_screen.dart::GererEquipeCompositionScreen" {
+  +Set<String>? allowedPlayerIds
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::gerer_equipe_composition_screen.dart::GererEquipeCompositionScreen"
+
+class "wina::view::page::gerer_equipe_composition_screen.dart::FormationSearchFormatter" {
+  +TextEditingValue formatEditUpdate()
+}
+
+"flutter::src::services::text_formatter.dart::TextInputFormatter" <|-- "wina::view::page::gerer_equipe_composition_screen.dart::FormationSearchFormatter"
+
+class "wina::view::page::notifications_screen.dart::NotificationsScreen" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::notifications_screen.dart::NotificationsScreen"
+
+class "wina::view::page::gerer_equipe_numbers_screen.dart::GererEquipeNumbersScreen" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::gerer_equipe_numbers_screen.dart::GererEquipeNumbersScreen"
+
+class "wina::view::page::update_required_page.dart::UpdateRequiredPage" {
+  +String? storeUrl
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::update_required_page.dart::UpdateRequiredPage"
+
+class "wina::view::page::match_live_screen.dart::MatchLiveScreen" {
+  +ConsumerState<MatchLiveScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::match_live_screen.dart::MatchLiveScreen"
+
+class "wina::view::page::detail_joueur_screen.dart::DetailJoueurScreen" {
+  +Player player
+  +Widget build()
+}
+
+"wina::view::page::detail_joueur_screen.dart::DetailJoueurScreen" o-- "wina::models::player.dart::Player"
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::detail_joueur_screen.dart::DetailJoueurScreen"
+
+class "wina::view::page::statistiques_matchs_screen.dart::StatistiquesMatchsScreen" {
+  +ConsumerState<StatistiquesMatchsScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::statistiques_matchs_screen.dart::StatistiquesMatchsScreen"
+
+class "wina::view::page::statistiques_matchs_screen.dart::BilanCard" {
+  +String title
+  +String? helper
+  +Color helperColor
+  +Widget? trailing
+  +bool halvesAvailable
+  +void Function(MatchPeriod) onPeriod
+  +Widget build()
+}
+
+"wina::view::page::statistiques_matchs_screen.dart::BilanCard" o-- "dart::ui::Color"
+"wina::view::page::statistiques_matchs_screen.dart::BilanCard" o-- "flutter::src::widgets::framework.dart::Widget"
+"wina::view::page::statistiques_matchs_screen.dart::BilanCard" o-- "flutter::src::foundation::basic_types.dart::void Function(MatchPeriod)"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::statistiques_matchs_screen.dart::BilanCard"
+
+class "wina::view::page::statistiques_matchs_screen.dart::Roster" {
+  +MatchComposition composition
+  +Map<String, Player> byId
+  +String jerseyAsset
+  +String? selectedPlayerId
+  +Widget build()
+}
+
+"wina::view::page::statistiques_matchs_screen.dart::Roster" o-- "wina::models::match_composition.dart::MatchComposition"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::statistiques_matchs_screen.dart::Roster"
+
+class "wina::view::page::statistiques_matchs_screen.dart::PlayerMarker" {
+  +double size
+  +bool selected
+  +String jerseyAsset
+  +int number
+  +String name
+  +bool isCaptain
+  +void Function() onTap
+  +Widget build()
+}
+
+"wina::view::page::statistiques_matchs_screen.dart::PlayerMarker" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::statistiques_matchs_screen.dart::PlayerMarker"
+
+class "wina::view::page::gerer_equipe_count_screen.dart::GererEquipeCountScreen" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::gerer_equipe_count_screen.dart::GererEquipeCountScreen"
+
+class "wina::view::page::check_profil_step1_screen.dart::CheckProfilStep1Screen" {
+  +bool editMode
+  +State<CheckProfilStep1Screen> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "wina::view::page::check_profil_step1_screen.dart::CheckProfilStep1Screen"
+
+class "wina::view::page::coup_denvoi_step3_screen.dart::CoupDEnvoiStep3Screen" {
+  +ConsumerState<CoupDEnvoiStep3Screen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::coup_denvoi_step3_screen.dart::CoupDEnvoiStep3Screen"
+
+class "wina::view::page::parametrer_stats_screen.dart::ParametrerStatsScreen" {
+  +ConsumerState<ParametrerStatsScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::parametrer_stats_screen.dart::ParametrerStatsScreen"
+
+class "wina::view::page::mon_equipe_screen.dart::MonEquipeScreen" {
+  +ConsumerState<MonEquipeScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::mon_equipe_screen.dart::MonEquipeScreen"
+
+class "wina::view::page::match_break_screen.dart::MatchBreakScreen" {
+  +bool isHalfTime
+  +ConsumerState<MatchBreakScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::match_break_screen.dart::MatchBreakScreen"
+
+class "wina::view::page::home_page.dart::HomePage" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::home_page.dart::HomePage"
+
+class "wina::view::page::match_finished_screen.dart::MatchFinishedScreen" {
+  +ConsumerState<MatchFinishedScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::match_finished_screen.dart::MatchFinishedScreen"
+
+class "wina::view::page::maintenance_page.dart::MaintenancePage" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::maintenance_page.dart::MaintenancePage"
+
+class "wina::view::page::test_equipe_screen.dart::TestEquipeScreen" {
+  +ConsumerState<TestEquipeScreen> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::test_equipe_screen.dart::TestEquipeScreen"
+
+class "wina::view::page::bilan_individuel_screen.dart::BilanIndividuelScreen" {
+  +GameMatch match
+  +MatchPeriod period
+  +String? playerId
+  +ConsumerState<BilanIndividuelScreen> createState()
+}
+
+"wina::view::page::bilan_individuel_screen.dart::BilanIndividuelScreen" o-- "wina::models::game_match.dart::GameMatch"
+"wina::view::page::bilan_individuel_screen.dart::BilanIndividuelScreen" o-- "wina::models::match_period.dart::MatchPeriod"
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::bilan_individuel_screen.dart::BilanIndividuelScreen"
+
+class "wina::view::page::tester_equipe_screen.dart::TesterEquipeScreen" {
+  +CustomComposition composition
+  +ConsumerState<TesterEquipeScreen> createState()
+}
+
+"wina::view::page::tester_equipe_screen.dart::TesterEquipeScreen" o-- "wina::models::custom_composition.dart::CustomComposition"
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "wina::view::page::tester_equipe_screen.dart::TesterEquipeScreen"
+
+class "wina::view::page::ia_screen.dart::IaScreen" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::ia_screen.dart::IaScreen"
+
+class "wina::view::page::ia_screen.dart::ComingSoonBadge" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::ia_screen.dart::ComingSoonBadge"
+
+class "wina::view::page::ia_screen.dart::ComingSoonTab" {
+  +String title
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::page::ia_screen.dart::ComingSoonTab"
+
+class "wina::view::page::bilan_collectif_screen.dart::BilanCollectifScreen" {
+  +GameMatch match
+  +MatchPeriod period
+  +Widget build()
+}
+
+"wina::view::page::bilan_collectif_screen.dart::BilanCollectifScreen" o-- "wina::models::game_match.dart::GameMatch"
+"wina::view::page::bilan_collectif_screen.dart::BilanCollectifScreen" o-- "wina::models::match_period.dart::MatchPeriod"
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::page::bilan_collectif_screen.dart::BilanCollectifScreen"
+
+class "wina::view::page::check_profil_step2_screen.dart::CheckProfilStep2Screen" {
+  +State<CheckProfilStep2Screen> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "wina::view::page::check_profil_step2_screen.dart::CheckProfilStep2Screen"
+
+class "wina::view::widget::whistle_icon.dart::WhistleIcon" {
+  +double size
+  +Color color
+  +Widget build()
+}
+
+"wina::view::widget::whistle_icon.dart::WhistleIcon" o-- "dart::ui::Color"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::whistle_icon.dart::WhistleIcon"
+
+class "wina::view::widget::empty_state_placeholder.dart::EmptyStatePlaceholder" {
+  +IconData? icon
+  +double iconSize
+  +String title
+  +String? subtitle
+  +double titleSize
+  +EdgeInsetsGeometry? padding
+  +Widget build()
+}
+
+"wina::view::widget::empty_state_placeholder.dart::EmptyStatePlaceholder" o-- "flutter::src::widgets::icon_data.dart::IconData"
+"wina::view::widget::empty_state_placeholder.dart::EmptyStatePlaceholder" o-- "flutter::src::painting::edge_insets.dart::EdgeInsetsGeometry"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::empty_state_placeholder.dart::EmptyStatePlaceholder"
+
+class "wina::view::widget::match_header.dart::MatchHeader" {
+  +String title
+  +String clock
+  +int scoreUs
+  +int scoreThem
+  +void Function()? onBack
+  +double clockFontSize
+  +List<Widget> controls
+  +Widget build()
+}
+
+"wina::view::widget::match_header.dart::MatchHeader" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_header.dart::MatchHeader"
+
+class "wina::view::widget::stats_pager_arrows.dart::StatsPagerArrows" {
+  +ScrollController controller
+  +Widget build()
+}
+
+"wina::view::widget::stats_pager_arrows.dart::StatsPagerArrows" o-- "flutter::src::widgets::scroll_controller.dart::ScrollController"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::stats_pager_arrows.dart::StatsPagerArrows"
+
+class "wina::view::widget::search_field.dart::SearchField" {
+  +TextEditingController controller
+  +String hintText
+  +void Function(String) onChanged
+  +void Function() onClear
+  +Widget build()
+}
+
+"wina::view::widget::search_field.dart::SearchField" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"wina::view::widget::search_field.dart::SearchField" o-- "flutter::src::foundation::basic_types.dart::void Function(String)"
+"wina::view::widget::search_field.dart::SearchField" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::search_field.dart::SearchField"
+
+class "wina::view::widget::label_pill.dart::LabelPill" {
+  +String label
+  +Color? color
+  +double fontSize
+  +double horizontalPadding
+  +double verticalPadding
+  +Widget build()
+}
+
+"wina::view::widget::label_pill.dart::LabelPill" o-- "dart::ui::Color"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::label_pill.dart::LabelPill"
+
+class "wina::view::widget::match_wizard.dart::MatchWizardScaffold" {
+  +String title
+  +Widget child
+  +void Function()? onBack
+  +Widget? bottomCta
+  +Widget build()
+}
+
+"wina::view::widget::match_wizard.dart::MatchWizardScaffold" o-- "flutter::src::widgets::framework.dart::Widget"
+"wina::view::widget::match_wizard.dart::MatchWizardScaffold" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_wizard.dart::MatchWizardScaffold"
+
+class "wina::view::widget::match_wizard.dart::TeamLabelBadge" {
+  +String label
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_wizard.dart::TeamLabelBadge"
+
+class "wina::view::widget::match_wizard.dart::InfoChip" {
+  +String label
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_wizard.dart::InfoChip"
+
+class "wina::view::widget::match_wizard.dart::VsBadge" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_wizard.dart::VsBadge"
+
+class "wina::view::widget::match_wizard.dart::LabeledPillDropdown" {
+  +String label
+  +T? value
+  +List<T> values
+  +String Function(T) labelOf
+  +void Function(T) onChanged
+  +Widget Function(T)? leadingOf
+  +Widget build()
+}
+
+"wina::view::widget::match_wizard.dart::LabeledPillDropdown" o-- "null::String Function(T)"
+"wina::view::widget::match_wizard.dart::LabeledPillDropdown" o-- "flutter::src::foundation::basic_types.dart::void Function(T)"
+"wina::view::widget::match_wizard.dart::LabeledPillDropdown" o-- "null::Widget Function(T)"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_wizard.dart::LabeledPillDropdown"
+
+class "wina::view::widget::match_wizard.dart::WizardCtaButton" {
+  +String label
+  +void Function() onTap
+  +bool enabled
+  +Widget build()
+}
+
+"wina::view::widget::match_wizard.dart::WizardCtaButton" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_wizard.dart::WizardCtaButton"
+
+class "wina::view::widget::confirm_dialog.dart::AppConfirmDialog" {
+  +String title
+  +String message
+  +String primaryLabel
+  +void Function() onPrimary
+  +String secondaryLabel
+  +void Function() onSecondary
+  +Color? primaryAccent
+  +Color? secondaryAccent
+  +Widget build()
+}
+
+"wina::view::widget::confirm_dialog.dart::AppConfirmDialog" o-- "dart::ui::void Function()"
+"wina::view::widget::confirm_dialog.dart::AppConfirmDialog" o-- "dart::ui::Color"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::confirm_dialog.dart::AppConfirmDialog"
+
+class "wina::view::widget::player_form.dart::PlayerFormHeader" {
+  +String title
+  +void Function() onBack
+  +Widget build()
+}
+
+"wina::view::widget::player_form.dart::PlayerFormHeader" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::player_form.dart::PlayerFormHeader"
+
+class "wina::view::widget::player_form.dart::PlayerFormScaffold" {
+  +String title
+  +Widget form
+  +Widget build()
+}
+
+"wina::view::widget::player_form.dart::PlayerFormScaffold" o-- "flutter::src::widgets::framework.dart::Widget"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::player_form.dart::PlayerFormScaffold"
+
+class "wina::view::widget::player_form.dart::PlayerForm" {
+  +String? initialFirstName
+  +String? initialLastName
+  +StrongFoot? initialFoot
+  +PlayerPosition? initialPosition
+  +String submitLabel
+  +Future<void> Function(String, String, StrongFoot, PlayerPosition) onSubmit
+  +State<PlayerForm> createState()
+}
+
+"wina::view::widget::player_form.dart::PlayerForm" o-- "wina::models::player.dart::StrongFoot"
+"wina::view::widget::player_form.dart::PlayerForm" o-- "wina::models::player.dart::PlayerPosition"
+"wina::view::widget::player_form.dart::PlayerForm" o-- "null::Future<void> Function(String, String, StrongFoot, PlayerPosition)"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "wina::view::widget::player_form.dart::PlayerForm"
+
+class "wina::view::widget::custom_back_button.dart::CustomBackButton" {
+  +void Function() onTap
+  +Widget build()
+}
+
+"wina::view::widget::custom_back_button.dart::CustomBackButton" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::custom_back_button.dart::CustomBackButton"
+
+class "wina::view::widget::page_header.dart::PageHeader" {
+  +IconData icon
+  +String title
+  +double iconSize
+  +void Function()? onBack
+  +bool backDivider
+  +List<Widget> actions
+  +Widget build()
+}
+
+"wina::view::widget::page_header.dart::PageHeader" o-- "flutter::src::widgets::icon_data.dart::IconData"
+"wina::view::widget::page_header.dart::PageHeader" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::page_header.dart::PageHeader"
+
+class "wina::view::widget::formation_pitch.dart::FormationPitch" {
+  +Formation? formation
+  +double markerFraction
+  +double borderRadius
+  +Widget build()
+}
+
+"wina::view::widget::formation_pitch.dart::FormationPitch" o-- "wina::models::formation.dart::Formation"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::formation_pitch.dart::FormationPitch"
+
+class "wina::view::widget::match_stats_board.dart::MatchStatsBoard" {
+  +LiveMatch live
+  +Map<String, Player> byId
+  +bool noValue
+  +String? highlightPlayerId
+  +ScrollController? controller
+  +String? jerseyAsset
+  +Widget build()
+}
+
+"wina::view::widget::match_stats_board.dart::MatchStatsBoard" o-- "wina::models::live_match.dart::LiveMatch"
+"wina::view::widget::match_stats_board.dart::MatchStatsBoard" o-- "flutter::src::widgets::scroll_controller.dart::ScrollController"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::match_stats_board.dart::MatchStatsBoard"
+
+class "wina::view::widget::notification_bell.dart::NotificationBell" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::widget::notification_bell.dart::NotificationBell"
+
+class "wina::view::widget::check_profil_form.dart::WinaWordmark" {
+  +double size
+  +bool tappable
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "wina::view::widget::check_profil_form.dart::WinaWordmark"
+
+class "wina::view::widget::check_profil_form.dart::CheckProfilScaffold" {
+  +String title
+  +List<Widget> children
+  +void Function()? onBack
+  +Widget build()
+}
+
+"wina::view::widget::check_profil_form.dart::CheckProfilScaffold" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::check_profil_form.dart::CheckProfilScaffold"
+
+class "wina::view::widget::check_profil_form.dart::CpLabel" {
+  +String text
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::check_profil_form.dart::CpLabel"
+
+class "wina::view::widget::check_profil_form.dart::CpBox" {
+  +Widget child
+  +bool error
+  +Widget build()
+}
+
+"wina::view::widget::check_profil_form.dart::CpBox" o-- "flutter::src::widgets::framework.dart::Widget"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::check_profil_form.dart::CpBox"
+
+class "wina::view::widget::check_profil_form.dart::CpTextField" {
+  +TextEditingController controller
+  +String hint
+  +void Function(String)? onChanged
+  +bool error
+  +Widget build()
+}
+
+"wina::view::widget::check_profil_form.dart::CpTextField" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"wina::view::widget::check_profil_form.dart::CpTextField" o-- "flutter::src::foundation::basic_types.dart::void Function(String)"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::check_profil_form.dart::CpTextField"
+
+class "wina::view::widget::check_profil_form.dart::CpDropdown" {
+  +T? value
+  +List<T> values
+  +String Function(T) labelOf
+  +void Function(T) onChanged
+  +Widget Function(T)? leadingOf
+  +bool error
+  +Widget build()
+}
+
+"wina::view::widget::check_profil_form.dart::CpDropdown" o-- "null::String Function(T)"
+"wina::view::widget::check_profil_form.dart::CpDropdown" o-- "flutter::src::foundation::basic_types.dart::void Function(T)"
+"wina::view::widget::check_profil_form.dart::CpDropdown" o-- "null::Widget Function(T)"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::check_profil_form.dart::CpDropdown"
+
+class "wina::view::widget::check_profil_form.dart::CpRequiredNote" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::check_profil_form.dart::CpRequiredNote"
+
+class "wina::view::widget::check_profil_form.dart::CpButton" {
+  +String label
+  +void Function() onTap
+  +bool soft
+  +double radius
+  +Widget build()
+}
+
+"wina::view::widget::check_profil_form.dart::CpButton" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::check_profil_form.dart::CpButton"
+
+class "wina::view::widget::gerer_equipe_scaffold.dart::GererEquipeScaffold" {
+  +String title
+  +Widget child
+  +void Function()? onBack
+  +Widget? action
+  +Widget? leading
+  +Widget? headerTrailing
+  +Widget build()
+}
+
+"wina::view::widget::gerer_equipe_scaffold.dart::GererEquipeScaffold" o-- "flutter::src::widgets::framework.dart::Widget"
+"wina::view::widget::gerer_equipe_scaffold.dart::GererEquipeScaffold" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::gerer_equipe_scaffold.dart::GererEquipeScaffold"
+
+class "wina::view::widget::header_divider.dart::HeaderDivider" {
+  +double height
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::header_divider.dart::HeaderDivider"
+
+class "wina::view::widget::bilan_scaffold.dart::BilanScaffold" {
+  +String title
+  +Widget child
+  +Widget build()
+}
+
+"wina::view::widget::bilan_scaffold.dart::BilanScaffold" o-- "flutter::src::widgets::framework.dart::Widget"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::bilan_scaffold.dart::BilanScaffold"
+
+class "wina::view::widget::bilan_scaffold.dart::BilanExportButton" {
+  +void Function() onTap
+  +Widget build()
+}
+
+"wina::view::widget::bilan_scaffold.dart::BilanExportButton" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::bilan_scaffold.dart::BilanExportButton"
+
+class "wina::view::widget::app_loader.dart::AppLoader" {
+  +EdgeInsetsGeometry? padding
+  +Color? color
+  +Widget build()
+}
+
+"wina::view::widget::app_loader.dart::AppLoader" o-- "flutter::src::painting::edge_insets.dart::EdgeInsetsGeometry"
+"wina::view::widget::app_loader.dart::AppLoader" o-- "dart::ui::Color"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::app_loader.dart::AppLoader"
+
+class "wina::view::widget::app_loader.dart::AppSkeleton" {
+  +Widget child
+  +Widget build()
+}
+
+"wina::view::widget::app_loader.dart::AppSkeleton" o-- "flutter::src::widgets::framework.dart::Widget"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::app_loader.dart::AppSkeleton"
+
+class "wina::view::widget::app_loader.dart::SkeletonBox" {
+  +double? height
+  +double? width
+  +double radius
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::app_loader.dart::SkeletonBox"
+
+class "wina::view::widget::player_pick_tile.dart::PlayerPickTile" {
+  +Player player
+  +bool selected
+  +String jerseyAsset
+  +void Function() onTap
+  +Widget build()
+}
+
+"wina::view::widget::player_pick_tile.dart::PlayerPickTile" o-- "wina::models::player.dart::Player"
+"wina::view::widget::player_pick_tile.dart::PlayerPickTile" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::player_pick_tile.dart::PlayerPickTile"
+
+class "wina::view::widget::team_crest.dart::TeamCrest" {
+  +Color? color
+  +double size
+  +Widget build()
+}
+
+"wina::view::widget::team_crest.dart::TeamCrest" o-- "dart::ui::Color"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::team_crest.dart::TeamCrest"
+
+class "wina::view::widget::jersey_form.dart::JerseyFormController" {
+  +List<Jersey> collect()
+}
+
+class "wina::view::widget::jersey_form.dart::JerseyForm" {
+  +JerseyFormController controller
+  +List<Jersey> initialJerseys
+  +State<JerseyForm> createState()
+}
+
+"wina::view::widget::jersey_form.dart::JerseyForm" o-- "wina::view::widget::jersey_form.dart::JerseyFormController"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "wina::view::widget::jersey_form.dart::JerseyForm"
+
+class "wina::view::widget::jersey_form.dart::ShirtIcon" {
+  +String asset
+  +double size
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::jersey_form.dart::ShirtIcon"
+
+class "wina::view::widget::app_background.dart::AppBackground" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::app_background.dart::AppBackground"
+
+class "wina::view::widget::settings_button.dart::SettingsButton" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "wina::view::widget::settings_button.dart::SettingsButton"
+
+abstract class "wina::data::notification_repository.dart::NotificationRepository" {
+  {static} +Stream<List<AppNotification>> watchNotifications()
+  {static} +Future<void> markAsRead()
+  {static} +Future<void> deleteNotification()
+  {static} +Future<void> deleteAll()
+  {static} +Future<void> markAllAsRead()
+}
+
+abstract class "wina::data::coach_profile_repository.dart::CoachProfileRepository" {
+  {static} +Future<void> saveTeamInfo()
+  {static} +Future<String?> loadInitialCoachName()
+  {static} +Stream<CoachProfile> watchCoachProfile()
+  {static} +Stream<List<Jersey>> watchJerseys()
+  {static} +Future<void> addJerseys()
+  {static} +Future<void> updateJersey()
+  {static} +Future<void> deleteJersey()
+  {static} +Future<List<Jersey>> getJerseys()
+  {static} +Future<void> markProfilCompleted()
+}
+
+class "wina::data::search::search_service.dart::SearchService" {
+  +void setUid()
+  +Future<Set<String>?> searchCompositions()
+  +Future<Set<String>?> searchMatches()
+}
+
+class "wina::data::search::union_search.dart::UnionSearch" {
+  +Future<Set<String>?> Function(String) search
+  +void Function(String, Set<String>) onChange
+  +void Function(bool)? onPending
+  +Duration debounce
+  +void input()
+  +void clear()
+  +void dispose()
+}
+
+"wina::data::search::union_search.dart::UnionSearch" o-- "null::Future<Set<String>> Function(String)"
+"wina::data::search::union_search.dart::UnionSearch" o-- "null::void Function(String, Set<String>)"
+"wina::data::search::union_search.dart::UnionSearch" o-- "null::void Function(bool)"
+
+class "wina::data::search::search_key.dart::SearchKey" {
+  +String appId
+  +String apiKey
+  +int ttlSeconds
+  +String compositionsIndex
+  +String matchesIndex
+}
+
+class "wina::data::search::algolia_client.dart::AlgoliaReply" {
+  +Set<String>? ids
+  +bool authRejected
+}
+
+class "wina::data::search::algolia_client.dart::AlgoliaClient" {
+  +Duration timeout
+  +Future<AlgoliaReply> search()
+}
+
+abstract class "wina::data::player_repository.dart::PlayerRepository" {
+  {static} +Stream<List<Player>> watchPlayers()
+  {static} +Future<void> addPlayer()
+  {static} +Future<int> maxSquadSize()
+  {static} +Future<int> configMaxSquadSize()
+  {static} +Future<void> updatePlayer()
+  {static} +Future<void> deletePlayer()
+}
+
+abstract class "wina::data::composition_repository.dart::CompositionRepository" {
+  {static} +Stream<List<CustomComposition>> watchCustomCompositions()
+  {static} +Future<void> addComposition()
+  {static} +Future<void> updateComposition()
+  {static} +Future<void> deleteComposition()
+  {static} +Future<void> setFavorite()
+}
+
+abstract class "wina::data::match_repository.dart::MatchRepository" {
+  {static} +Future<String> saveDraft()
+  {static} +Stream<List<GameMatch>> watchFinishedMatches()
+  {static} +Future<void> finishMatch()
+  {static} +Map<String, dynamic> finishedPayload()
+  {static} +Future<GameMatch?> getMatch()
+  {static} +Map<String, dynamic> matchFinishedPayload()
+  {static} +Future<void> abandonMatch()
+  {static} +Future<void> deleteMatch()
+}
+
+class "wina::routes::app_router.gr.dart::AppRouter" {
+  +IsConnectedGuard isConnectedGuard
+  +PermissionSeenGuard permissionSeenGuard
+  +IsNotConnectedGuard isNotConnectedGuard
+  +Map<String, Page<dynamic> Function(RouteData)> pagesMap
+  +List<RouteConfig> routes
+}
+
+"wina::routes::app_router.gr.dart::AppRouter" o-- "skeleton::guard::is_connected.dart::IsConnectedGuard"
+"wina::routes::app_router.gr.dart::AppRouter" o-- "wina::config::permission_config.dart::PermissionSeenGuard"
+"wina::routes::app_router.gr.dart::AppRouter" o-- "skeleton::guard::is_not_connected.dart::IsNotConnectedGuard"
+"auto_route::src::router::controller::routing_controller.dart::RootStackRouter" <|-- "wina::routes::app_router.gr.dart::AppRouter"
+
+class "wina::routes::app_router.gr.dart::LoggedUserAppCoreRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::LoggedUserAppCoreRoute"
+
+class "wina::routes::app_router.gr.dart::AuthParentRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::AuthParentRoute"
+
+class "wina::routes::app_router.gr.dart::LegalInformationRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::LegalInformationRoute"
+
+class "wina::routes::app_router.gr.dart::LegalInformationRouteArgs" {
+  +Key? key
+  +String info
+  +String toString()
+}
+
+"wina::routes::app_router.gr.dart::LegalInformationRouteArgs" o-- "flutter::src::foundation::key.dart::Key"
+
+class "wina::routes::app_router.gr.dart::MaintenanceRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::MaintenanceRoute"
+
+class "wina::routes::app_router.gr.dart::UpdateRequiredRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::UpdateRequiredRoute"
+
+class "wina::routes::app_router.gr.dart::UpdateRequiredRouteArgs" {
+  +Key? key
+  +String? storeUrl
+  +String toString()
+}
+
+"wina::routes::app_router.gr.dart::UpdateRequiredRouteArgs" o-- "flutter::src::foundation::key.dart::Key"
+
+class "wina::routes::app_router.gr.dart::PermissionRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::PermissionRoute"
+
+class "wina::routes::app_router.gr.dart::PermissionRouteArgs" {
+  +Key? key
+  +List<PermissionDataModel>? permissions
+  +String toString()
+}
+
+"wina::routes::app_router.gr.dart::PermissionRouteArgs" o-- "flutter::src::foundation::key.dart::Key"
+
+class "wina::routes::app_router.gr.dart::HomeRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::HomeRoute"
+
+class "wina::routes::app_router.gr.dart::ProfileParentRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::ProfileParentRoute"
+
+class "wina::routes::app_router.gr.dart::SettingsWebRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::SettingsWebRoute"
+
+class "wina::routes::app_router.gr.dart::SubNodeRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::SubNodeRoute"
+
+class "wina::routes::app_router.gr.dart::SubNodeRouteArgs" {
+  +Key? key
+  +String parentCelluleTag
+  +KosmosSettingsConfig? settingsConfig
+  +String? themeName
+  +KosmosSettingsThemeData? theme
+  +String toString()
+}
+
+"wina::routes::app_router.gr.dart::SubNodeRouteArgs" o-- "flutter::src::foundation::key.dart::Key"
+"wina::routes::app_router.gr.dart::SubNodeRouteArgs" o-- "settings_kosmos::model::settings_config.dart::KosmosSettingsConfig"
+"wina::routes::app_router.gr.dart::SubNodeRouteArgs" o-- "settings_kosmos::theme::settings_theme_data.dart::KosmosSettingsThemeData"
+
+class "wina::routes::app_router.gr.dart::ChangePasswordRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::ChangePasswordRoute"
+
+class "wina::routes::app_router.gr.dart::ChangePhoneRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::ChangePhoneRoute"
+
+class "wina::routes::app_router.gr.dart::LoginRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::LoginRoute"
+
+class "wina::routes::app_router.gr.dart::LoginRouteArgs" {
+  +Key? key
+  +void Function(BuildContext)? onLoginSuccess
+  +String toString()
+}
+
+"wina::routes::app_router.gr.dart::LoginRouteArgs" o-- "flutter::src::foundation::key.dart::Key"
+"wina::routes::app_router.gr.dart::LoginRouteArgs" o-- "null::void Function(BuildContext)"
+
+class "wina::routes::app_router.gr.dart::PhoneLoginRoute" {
+  {static} +String name
+}
+
+"auto_route::src::route::page_route_info.dart::PageRouteInfo" <|-- "wina::routes::app_router.gr.dart::PhoneLoginRoute"
+
+class "wina::routes::app_router.dart::$AppRouter" {
+}
+
+abstract class "wina::services::email_sync.dart::EmailSync" {
+  {static} +String? emailToWrite()
+  {static} +void start()
+  {static} +Future<void> sync()
+}
+
+
+@enduml

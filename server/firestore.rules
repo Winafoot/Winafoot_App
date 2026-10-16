@@ -1,0 +1,473 @@
+rules_version = '2';
+
+// Règles Firestore — Wina (wina-c4c4a)
+//
+// Modèle de données : tout le contenu utilisateur est imbriqué sous
+// users/{uid}/… — le contrôle d'accès est donc strictement "owner-scoped".
+// Les collections racines tenues par les Cloud Functions (Admin SDK, qui
+// contourne ces règles) restent fermées au client par le catch-all.
+//
+// Principe : deny-by-default. Toute collection non listée est refusée par le
+// catch-all en fin de fichier.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------- helpers
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Back-office Wina : custom claim `admin` (vue « Administrateurs », scripts/set-admin.ts)
+    // ET adresse e-mail vérifiée, comme les callables d'administration (verifyAdmin).
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.admin == true
+        && request.auth.token.email_verified == true;
+    }
+
+    // ---------------------------------------- validation du contenu écrit par le client
+    // Sous-collections que le client écrit lui-même. Chaque liste de champs reprend le
+    // `toJson()` du modèle de l'app (app/lib/models) : si un modèle gagne un champ, la liste
+    // doit suivre, sinon l'écriture est refusée (tests/rules/content_validation.test.js).
+    //
+    // Les règles contrôlent la forme de chaque document et la taille des listes et des cartes ;
+    // le contenu de leurs éléments (emplacements, statistiques par joueur) est borné par la
+    // taille maximale d'un document Firestore (1 Mio).
+
+    function isStr(v, max) {
+      return v is string && v.size() <= max;
+    }
+
+    function isStrOrNull(v, max) {
+      return v == null || isStr(v, max);
+    }
+
+    function isIntBetween(v, lo, hi) {
+      return v is int && v >= lo && v <= hi;
+    }
+
+    function isListMax(v, max) {
+      return v is list && v.size() <= max;
+    }
+
+    function isMapMax(v, max) {
+      return v is map && v.size() <= max;
+    }
+
+    // Les horodatages sont posés par le client avec serverTimestamp(), donc de type timestamp.
+    function validStamps(d) {
+      return d.get('createdAt', request.time) is timestamp
+        && d.get('updatedAt', request.time) is timestamp;
+    }
+
+    // Player.toJson : le client ne PEUT que modifier ces quatre champs (la création et la
+    // suppression passent par les callables createPlayer / deletePlayer).
+    function validPlayer(d) {
+      return isStr(d.get('firstName', ''), 60)
+        && isStr(d.get('lastName', ''), 60)
+        && isStr(d.get('strongFoot', ''), 30)
+        && isStr(d.get('position', ''), 30);
+    }
+
+    // MatchOpponent.toJson
+    function validOpponent(o) {
+      return o is map
+        && o.keys().hasOnly(['name', 'category', 'division', 'jerseyColor'])
+        && isStr(o.get('name', ''), 100)
+        && isStrOrNull(o.get('category', null), 30)
+        && isStrOrNull(o.get('division', null), 30)
+        && isStrOrNull(o.get('jerseyColor', null), 30);
+    }
+
+    // Jersey.toJson, tel qu'embarqué dans un match (`ownJersey`).
+    function validEmbeddedJersey(j) {
+      return j == null
+        || (j is map
+            && j.keys().hasOnly(['name', 'color'])
+            && isStr(j.get('name', ''), 60)
+            && isStr(j.get('color', ''), 30));
+    }
+
+    // MatchComposition.toJson
+    function validMatchComposition(c) {
+      return c == null
+        || (c is map
+            && c.keys().hasOnly([
+              'formationLabel', 'playerCount', 'slots', 'assignments',
+              'numbers', 'captainId', 'substituteIds', 'name'
+            ])
+            && isStr(c.get('formationLabel', ''), 30)
+            && isIntBetween(c.get('playerCount', 0), 0, 30)
+            && isListMax(c.get('slots', []), 30)
+            && isListMax(c.get('assignments', []), 30)
+            && isMapMax(c.get('numbers', {}), 40)
+            && isStrOrNull(c.get('captainId', null), 128)
+            && isListMax(c.get('substituteIds', []), 40)
+            && isStrOrNull(c.get('name', null), 100));
+    }
+
+    // GameMatch.toJson (saveDraft) + MatchRepository.finishedPayload (finishMatch).
+    // Le document est jugé tel qu'il sera APRÈS l'écriture : un set merge est donc validé en entier.
+    function validMatch(d) {
+      return d.keys().hasOnly([
+          'opponent', 'ownJersey', 'composition', 'compositions',
+          'enabledStatKeys', 'status', 'createdAt', 'updatedAt', 'finishedAt',
+          'scoreUs', 'scoreThem', 'elapsedSeconds', 'playerStats', 'half',
+          'firstHalfStats', 'firstHalfStatKeys'
+        ])
+        && validStamps(d)
+        && d.get('finishedAt', request.time) is timestamp
+        && validOpponent(d.get('opponent', {}))
+        && validEmbeddedJersey(d.get('ownJersey', null))
+        && validMatchComposition(d.get('composition', null))
+        && isListMax(d.get('compositions', []), 20)
+        && isListMax(d.get('enabledStatKeys', []), 60)
+        && isStr(d.get('status', ''), 30)
+        && isIntBetween(d.get('scoreUs', 0), 0, 999)
+        && isIntBetween(d.get('scoreThem', 0), 0, 999)
+        && isIntBetween(d.get('elapsedSeconds', 0), 0, 43200)
+        && isIntBetween(d.get('half', 1), 1, 2)
+        && isMapMax(d.get('playerStats', {}), 60)
+        && (d.get('firstHalfStats', null) == null
+            || isMapMax(d.get('firstHalfStats', {}), 60))
+        && isListMax(d.get('firstHalfStatKeys', []), 60);
+    }
+
+    // CustomComposition.toJson (composition personnalisée du coach).
+    function validCustomComposition(d) {
+      return d.keys().hasOnly([
+          'name', 'type', 'playerCount', 'formationLabel', 'isFavorite',
+          'slots', 'createdAt', 'updatedAt', 'lastUsedAt'
+        ])
+        && validStamps(d)
+        && d.get('lastUsedAt', request.time) is timestamp
+        && isStr(d.get('name', ''), 100)
+        && isStr(d.get('type', 'custom'), 20)
+        && isIntBetween(d.get('playerCount', 11), 1, 30)
+        && isStr(d.get('formationLabel', ''), 30)
+        && d.get('isFavorite', false) is bool
+        && isListMax(d.get('slots', []), 30);
+    }
+
+    // Jersey.toJson + `order` et `createdAt` posés par addJerseys.
+    function validJersey(d) {
+      return d.keys().hasOnly(['name', 'color', 'order', 'createdAt'])
+        && d.get('createdAt', request.time) is timestamp
+        && isStr(d.get('name', ''), 60)
+        && isStr(d.get('color', ''), 30)
+        && isIntBetween(d.get('order', 0), 0, 9999);
+    }
+
+    // Empêche le client de modifier des champs qu'il ne doit pas toucher.
+    function onlyChanges(allowedFields) {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(allowedFields);
+    }
+
+    // Clés ajoutées, modifiées ou retirées par une mise à jour.
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // Contrôles de type et de taille d'un champ d'une liste blanche : seul un champ que
+    // l'écriture touche est contrôlé (`changed`), la valeur déjà enregistrée n'est pas rejugée.
+    // Un champ retiré prend la valeur par défaut, valide.
+    function strIfChanged(d, changed, field, max) {
+      return !changed.hasAny([field]) || isStr(d.get(field, ''), max);
+    }
+
+    function strOrNullIfChanged(d, changed, field, max) {
+      return !changed.hasAny([field]) || isStrOrNull(d.get(field, null), max);
+    }
+
+    function boolIfChanged(d, changed, field) {
+      return !changed.hasAny([field]) || d.get(field, false) is bool;
+    }
+
+    function stampIfChanged(d, changed, field) {
+      return !changed.hasAny([field]) || d.get(field, request.time) is timestamp;
+    }
+
+    function stampOrNullIfChanged(d, changed, field) {
+      return !changed.hasAny([field])
+        || d.get(field, null) == null
+        || d.get(field, null) is timestamp;
+    }
+
+    // ------------------------------------------------- configuration publique
+    // Lue au démarrage (app_config_repository côté serveur, app_config côté app).
+    // Écriture réservée aux Cloud Functions.
+
+    match /app_config/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ----------------------------------------------------- données utilisateur
+
+    match /users/{uid} {
+      // Le back-office lit la fiche coach (liste + détail). Les écritures
+      // restent réservées au propriétaire : les mutations administrateur
+      // passent par les callables Admin SDK.
+      allow read: if isOwner(uid) || isAdmin();
+      // Champs que le CLIENT écrit sur sa fiche (inventaire des écritures de
+      // l'app et des paquets du socle, app/packages). Tout le reste est posé
+      // par createCoach (Admin SDK) ou par un trigger, et le serveur ou le
+      // back-office s'y fie : userType, disabled, invitedByAdmin, createdByAdmin,
+      // lastInviteSentAt, profilCompleted (recopié depuis metadata/security),
+      // firstname, id, createdAt, teamFormat...
+      //   coachName, teamName, category, division : « Finalisez votre profil »
+      //     (CoachProfileRepository.saveTeamInfo, set merge) ;
+      //   email : recopié depuis Firebase Auth après vérification de la nouvelle adresse (EmailSync) ;
+      //   cguAccepted, cguAcceptedDate : UserController.acceptCgu (horodatage client) ;
+      //   online, lastOnline : setOnline (core_kosmos), à chaque changement de cycle
+      //     de vie — son échec est avalé en silence, ne pas l'oublier ;
+      //   phone, phoneNumber : liaison d'un téléphone (flux du socle, écrans non
+      //     routés aujourd'hui car canLoginWithPhone = false).
+      function clientOwnedUserFields() {
+        return [
+          'coachName', 'teamName', 'category', 'division',
+          'email', 'cguAccepted', 'cguAcceptedDate',
+          'online', 'lastOnline', 'phone', 'phoneNumber'
+        ];
+      }
+
+      // Types et tailles des champs de clientOwnedUserFields, d'après ce que l'app écrit :
+      // textes du profil (nom du coach et de l'équipe saisis librement, catégorie et division =
+      // noms d'énumérations), adresse e-mail, horodatage client des CGU, présence (lastOnline
+      // vaut null quand l'utilisateur est en ligne), téléphone au format E.164 et sa carte
+      // { phoneNumber, isoCode, dialCode }.
+      function validPhoneNumber(p) {
+        return p == null
+          || (p is map
+              && p.keys().hasOnly(['phoneNumber', 'isoCode', 'dialCode'])
+              && isStrOrNull(p.get('phoneNumber', null), 32)
+              && isStrOrNull(p.get('isoCode', null), 8)
+              && isStrOrNull(p.get('dialCode', null), 8));
+      }
+
+      function validUserFields(d, changed) {
+        return strIfChanged(d, changed, 'coachName', 100)
+          && strIfChanged(d, changed, 'teamName', 100)
+          && strIfChanged(d, changed, 'category', 30)
+          && strIfChanged(d, changed, 'division', 30)
+          && strIfChanged(d, changed, 'email', 254)
+          && boolIfChanged(d, changed, 'cguAccepted')
+          && stampIfChanged(d, changed, 'cguAcceptedDate')
+          && boolIfChanged(d, changed, 'online')
+          && stampOrNullIfChanged(d, changed, 'lastOnline')
+          && strOrNullIfChanged(d, changed, 'phone', 32)
+          && (!changed.hasAny(['phoneNumber']) || validPhoneNumber(d.get('phoneNumber', null)));
+      }
+
+      // Création par le client : jamais. La fiche est créée côté serveur : createCoach
+      // (Admin SDK) pour un compte provisionné, createPlayer pour le premier joueur d'un compte
+      // qui n'en aurait pas.
+      allow create: if false;
+      // Liste blanche de champs (clientOwnedUserFields), donc `teamFormat` et `playerCount`
+      // restent immuables pour le client : ni ajout, ni modification, ni retrait. Le compteur
+      // d'effectif est tenu par les callables createPlayer / deletePlayer, et par eux seuls.
+      // Un set() sans merge qui
+      // réécrit la fiche sans les champs serveur est refusé aussi (ils apparaissent comme
+      // retirés dans le diff) — l'app ne doit écrire users/{uid} que par update() ou
+      // set(merge: true).
+      allow update: if isOwner(uid)
+        && onlyChanges(clientOwnedUserFields())
+        && validUserFields(request.resource.data, changedKeys());
+      // Suppression de compte : passe par une Cloud Function (nettoyage des
+      // sous-collections + Auth). Jamais directement depuis le client.
+      allow delete: if false;
+
+      // users/{uid}/metadata/security : mis à jour par le CLIENT, créé par le
+      // serveur (createCoach, Admin SDK) et jamais supprimé par le client.
+      // - CoachProfileRepository.markProfilCompleted() y pose profilCompleted, et
+      //   sans cette autorisation l'utilisateur boucle indéfiniment sur
+      //   « Finalisez votre profil » (l'échec est avalé par un catch vide côté app) ;
+      // - UserController.acceptCgu() y pose cguAccepted et cguAcceptedDate.
+      // `lastVerifEmailAt` (anti-rejeu de sendEmailVerification) reste écrit par
+      // le serveur : le client ne doit pas pouvoir le réinitialiser.
+      // Volontairement NON autorisés, car écrits seulement par des écrans du socle
+      // que Wina ne branche pas : lastPasswordUpdate et lastEmailVerification
+      // (kosmos_auth), enableBiometricLogin (core_kosmos), et sur la fiche
+      // socialAccount, userProfileImage, profilImage. Le jour où l'un de ces
+      // écrans est branché, son écriture échouera sans bruit : ouvrir le champ ici,
+      // avec un test.
+      function clientOwnedSecurityFields() {
+        return ['profilCompleted', 'cguAccepted', 'cguAcceptedDate'];
+      }
+
+      function validSecurityFields(d, changed) {
+        return boolIfChanged(d, changed, 'profilCompleted')
+          && boolIfChanged(d, changed, 'cguAccepted')
+          && stampIfChanged(d, changed, 'cguAcceptedDate');
+      }
+
+      match /metadata/security {
+        allow read: if isOwner(uid);
+        allow update: if isOwner(uid)
+          && onlyChanges(clientOwnedSecurityFields())
+          && validSecurityFields(request.resource.data, changedKeys());
+      }
+
+      // users/{uid}/metadata/metadata : écrit par le CLIENT, uniquement depuis les
+      // paquets du socle de l'app (app/packages), jamais depuis app/lib :
+      //   - login (skeleton login_page.dart) et logout (user_controller.dart)
+      //     remettent fcmToken à null ;
+      //   - les deux interrupteurs de notification des réglages
+      //     (core_kosmos notif_controller.dart) ;
+      //   - le rafraîchissement du jeton FCM au démarrage (core_kosmos user_provider.dart) ;
+      //   - l'acceptation des CGU (skeleton user_controller.dart) ;
+      //   - la fin de l'onboarding permissions (permissionrequest
+      //     permission_controller.dart).
+      // Aucun de ces appels n'est protégé par un try/catch : un refus remonterait une
+      // exception non gérée qui interromprait la connexion.
+      //
+      // La liste blanche ci-dessous est volontairement exhaustive plutôt que
+      // large : un champ non listé est refusé, y compris mélangé à des champs
+      // légitimes. Toute donnée de facturation reste hors de ce document.
+      // Les champs authorized_push_notif_N sont des drapeaux de diagnostic écrits par
+      // core_kosmos (notif_controller.dart, N de 1 à 9).
+      function clientOwnedMetadataFields() {
+        return [
+          'fcmToken',
+          'enablePushNotification',
+          'enableEmailNotification',
+          'permissionLaunched',
+          'cguAccepted',
+          'cguAcceptedDate',
+          'createdAt',
+          'authorized_push_notif_1', 'authorized_push_notif_2',
+          'authorized_push_notif_3', 'authorized_push_notif_4',
+          'authorized_push_notif_5', 'authorized_push_notif_6',
+          'authorized_push_notif_7', 'authorized_push_notif_8',
+          'authorized_push_notif_9'
+        ];
+      }
+
+      // Types et tailles : jeton FCM (texte ou null, sans longueur maximale documentée : borne
+      // large), interrupteurs et drapeaux booléens, horodatages client.
+      function validMetadataFields(d, changed) {
+        return strOrNullIfChanged(d, changed, 'fcmToken', 4096)
+          && boolIfChanged(d, changed, 'enablePushNotification')
+          && boolIfChanged(d, changed, 'enableEmailNotification')
+          && boolIfChanged(d, changed, 'permissionLaunched')
+          && boolIfChanged(d, changed, 'cguAccepted')
+          && stampIfChanged(d, changed, 'cguAcceptedDate')
+          && stampIfChanged(d, changed, 'createdAt')
+          && boolIfChanged(d, changed, 'authorized_push_notif_1')
+          && boolIfChanged(d, changed, 'authorized_push_notif_2')
+          && boolIfChanged(d, changed, 'authorized_push_notif_3')
+          && boolIfChanged(d, changed, 'authorized_push_notif_4')
+          && boolIfChanged(d, changed, 'authorized_push_notif_5')
+          && boolIfChanged(d, changed, 'authorized_push_notif_6')
+          && boolIfChanged(d, changed, 'authorized_push_notif_7')
+          && boolIfChanged(d, changed, 'authorized_push_notif_8')
+          && boolIfChanged(d, changed, 'authorized_push_notif_9');
+      }
+
+      match /metadata/metadata {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(clientOwnedMetadataFields())
+          && validMetadataFields(request.resource.data, request.resource.data.keys());
+        allow update: if isOwner(uid)
+          && onlyChanges(clientOwnedMetadataFields())
+          && validMetadataFields(request.resource.data, changedKeys());
+        // Le document n'est jamais supprimé par le client : la suppression de
+        // compte passe par une Cloud Function.
+        allow delete: if false;
+      }
+
+      // Métadonnées serveur (users/{uid}/metadata/*) : écrites par les Cloud
+      // Functions uniquement. Le client peut lire son propre état, jamais
+      // l'écrire.
+      // NB : les règles Firestore sont une UNION permissive — le bloc
+      // /metadata/security ci-dessus autorise donc bien l'écriture sur ce seul
+      // document, malgré ce deny plus large.
+      match /metadata/{document=**} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
+      // Notifications : créées par le serveur. Le client peut les marquer comme
+      // lues (NotificationRepository.markAsRead / markAllAsRead) et supprimer
+      // les siennes — la recette exige que tout contenu affiché à l'utilisateur
+      // puisse être supprimé par lui.
+      //
+      // La suppression ne porte que sur la COPIE PERSONNELLE. La trace d'envoi
+      // vit dans la collection racine `notifications` (champ sendingStatus,
+      // écrit par le trigger onCreateNotification), qui reste fermée au client.
+      // Aucun code serveur ne lit cette sous-collection pour une logique métier :
+      // add_notification.ts y écrit, on_delete_user.ts la purge à la suppression
+      // de compte. Une suppression par l'utilisateur ne casse donc aucun
+      // traitement.
+      //
+      // `create` reste refusé (seul le serveur crée une notification) et
+      // `update` garde sa liste blanche : titre, corps et expéditeur restent
+      // inaltérables.
+      match /notifications/{notificationId} {
+        allow read: if isOwner(uid);
+        allow create: if false;
+        allow update: if isOwner(uid) && onlyChanges(['isRead', 'readAt']);
+        allow delete: if isOwner(uid);
+      }
+
+      // Contenu créé et géré par le coach lui-même.
+      // ATTENTION : les règles Firestore ne cascadent PAS du document parent
+      // vers ses sous-collections — chaque sous-collection écrite par l'app doit
+      // être listée explicitement ici, sinon le catch-all final la refuse.
+      // Source de vérité : app/lib/data/*_repository.dart.
+
+      // players — PlayerRepository (_playersSubcollection = 'players').
+      // C'est l'effectif : fonctionnalité centrale de l'app.
+      //
+      // Le plafond est appliqué par les callables createPlayer et deletePlayer (Admin SDK,
+      // transaction, nombre RÉEL de joueurs), pas ici : les règles ne savent pas compter les
+      // documents d'une collection. Le client ne peut donc que lire et modifier ses joueurs.
+      match /players/{playerId} {
+        allow read: if isOwner(uid);
+        allow create, delete: if false;
+        allow update: if isOwner(uid)
+          && onlyChanges(['firstName', 'lastName', 'strongFoot', 'position'])
+          && validPlayer(request.resource.data);
+      }
+
+      match /matches/{matchId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validMatch(request.resource.data);
+      }
+
+      match /compositions/{compositionId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && validCustomComposition(request.resource.data);
+      }
+
+      match /jerseys/{jerseyId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validJersey(request.resource.data);
+      }
+    }
+
+    // ------------------------------------------------------- piste d'audit
+    // Écrite uniquement par l'Admin SDK (callables admin), lue par le back-office.
+
+    match /admin_audit/{entryId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ------------------------------------------------------------- catch-all
+    // Toute collection non explicitement autorisée ci-dessus est refusée.
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

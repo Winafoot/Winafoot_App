@@ -1,0 +1,61 @@
+dartdoc:
+  categories:
+    "Config":
+      markdown: doc/md/config.md
+      name: Config
+    "Controller":
+      markdown: doc/md/controller.md
+      name: Controller
+    "Core":
+      markdown: doc/md/core.md
+      name: Core
+    "Extension":
+      markdown: doc/md/extension.md
+      name: Extension
+    "Model":
+      markdown: doc/md/model.md
+      name: Model
+    "PackagesConfig":
+      markdown: doc/md/packages_config.md
+      name: PackagesConfig
+    "Provider":
+      markdown: doc/md/provider.md
+      name: Provider
+    "Utils":
+      markdown: doc/md/utils.md
+      name: Utilitaires
+    "Theme":
+      markdown: doc/md/theme.md
+      name: Thème
+    "Widget":
+      markdown: doc/md/widget.md
+      name: Widget
+    "User":
+      markdown: doc/md/user.md
+      name: User
+  categoryOrder:
+    [
+      "User",
+      "PackagesConfig",
+      "Config",
+      "Controller",
+      "Core",
+      "Extension",
+      "Model",
+      "Provider",
+      "Utils",
+      "Theme",
+      "Widget",
+    ]
+  examplePathPrefix: "doc/examples"
+  includeExternal: []
+  nodoc: []
+  linkTo:
+    # url: "https://my.dartdocumentationsite.org/dev/%v%"
+  showUndocumentedCategories: true
+  ignore:
+    - ambiguous-doc-reference
+    - unresolved-doc-reference
+  warnings:
+    - tool-error
+  favicon: "doc/images/kosmos-logo.png"

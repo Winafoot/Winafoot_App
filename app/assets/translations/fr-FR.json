@@ -1,0 +1,863 @@
+{
+  "package": {
+    "commentary": {
+      "sure-delete-commentary": {
+        "title": "Supprimer le commentaire",
+        "subtitle": "Êtes-vous sûr de vouloir supprimer ce commentaire ?"
+      }
+    },
+    "validator": {
+      "must-have-value": "Ce champ est obligatoire",
+      "email-invalid": "Veuillez entrer un e-mail valide",
+      "password-invalid-length": "6 caractères minimum",
+      "password-invalid-maj": "1 majuscule minimum",
+      "password-invalid-min": "1 minuscule minimum",
+      "password-invalid-number": "1 chiffre minimum",
+      "password-invalid-special-char": "1 caractère spécial minimum (&?!@#)",
+      "password-not-match": "Les mots de passe sont différents",
+      "number-invalid": "Veuillez entrer un nombre valide",
+      "number-out-of-range": "Veuillez entrer un nombre entre {min} et {max}",
+      "number-out-of-min": "Veuillez entrer un nombre supérieur à {min}",
+      "number-out-of-max": "Veuillez entrer un nombre inférieur à {max}",
+      "date-invalid": "Veuillez entrer une date valide",
+      "date-out-of-range": "Veuillez entrer une date entre {min} et {max}",
+      "date-out-of-min": "Veuillez entrer une date supérieure à {min}",
+      "date-out-of-max": "Veuillez entrer une date inférieure à {max}",
+      "alpha-invalid": "Veuillez entrer une valeur valide",
+      "code-invalid": "Veuillez entrer un code valide"
+    },
+    "core": {
+      "popup": {
+        "select-picture-from": "Sélectionner une photo"
+      }
+    },
+    "picker": {
+      "number-picture": {
+        "zero": "Aucune photo",
+        "one": "1 photo",
+        "other": "{} photos"
+      },
+      "write-message": "Écrivez un message..",
+      "camera": {
+        "shootingTips": "Prendre une photo",
+        "confirm": "Valider",
+        "saving": "Enregistrement...",
+        "shootingWithRecordingTips": "Restez appuyé pour filmer."
+      }
+    },
+    "ui-kosmos_v4": {
+      "field": {
+        "phone_number_field": {
+          "search-label": "Rechercher un pays",
+          "error_message": "Veuillez entrer un numéro de téléphone valide"
+        },
+        "input": {
+          "choose-media": "Appuyez pour choisir une photo",
+          "choose-file": "Appuyez pour choisir un fichier",
+          "press-to-modify": "Appuyez pour modifier le fichier"
+        }
+      }
+    },
+    "signalement": {
+      "filePicker": {
+        "title": "Ajouter des fichiers"
+      },
+      "description": {
+        "title": "Dites-nous en plus"
+      }
+    },
+    "field": {
+      "auth": {
+        "email-or-id": {
+          "title": "Adresse email",
+          "hint": "john.doe@gmail.com"
+        },
+        "email": {
+          "title": "Adresse email",
+          "hint": "john.doe@gmail.com"
+        },
+        "password": {
+          "title": "Mot de passe",
+          "hint": "Mot de passe",
+          "security-action": "Que faire ?"
+        },
+        "actual-password": {
+          "title": "Mot de passe actuel",
+          "hint": "Mot de passe actuel"
+        },
+        "new-password": {
+          "title": "Nouveau mot de passe",
+          "hint": "Nouveau mot de passe"
+        },
+        "repeat-password": {
+          "title": "Confirmation mot de passe",
+          "hint": "Confirmation mot de passe"
+        },
+        "new-repeat-password": {
+          "title": "Confirmez nouveau mot de passe",
+          "hint": "Confirmez nouveau mot de passe"
+        },
+        "phone": {
+          "title": "Numéro de téléphone",
+          "hint": "06 00 00 00 00"
+        },
+        "code": {
+          "title": "Code reçu par SMS",
+          "hint": ""
+        }
+      },
+      "textarea": {
+        "title": "TextArea",
+        "hint": "Écrivez ici.."
+      }
+    },
+    "kosmos-auth": {
+      "phone-added-success": "Votre numéro de téléphone a été ajouté avec succès.",
+      "invalid-email": "Aucun utilisateur n’a été trouvé avec les informations renseignées.",
+      "user-not-found": "Aucun utilisateur n’a été trouvé avec les informations renseignées.",
+      "user-disabled": "Votre compte a été désactivé par l’administrateur.",
+      "wrong-password": "Le mot de passe est erroné.",
+      "email-already-in-use": "Cette adresse email est déjà utilisée.",
+      "phone-already-in-use": "Ce numéro de téléphone est déjà utilisé.",
+      "weak-password": "Le mot de passe saisi est trop faible",
+      "account-exists-with-different-credential": "Un compte existe déjà avec cette adresse email.",
+      "invalid-credential": "Aucun utilisateur n’a été trouvé avec les informations renseignées.",
+      "invalid-verification-code": "Le code de vérification saisi n’est pas valide.",
+      "invalid-verification-id": "Le code de vérification saisi n’est pas valide.",
+      "requires-recent-login": "Vous devez vous reconnecter pour effectuer cette action.",
+      "invalid-phone-number": "Le numéro de téléphone saisi n’est pas valide.",
+      "error-phone-not-exist": "Ce numéro de téléphone n’existe pas.",
+      "code-invalid": "Veuillez entrer un code valide",
+      "code-is-required": "Veuillez entrer le code reçu par SMS",
+      "email-must-be-verified": "Vous devez vérifier votre adresse email pour continuer.",
+      "tiers-auth-valid-email": "Votre compte tiers doit avoir un email valide pour continuer.",
+      "send-reset-password-email": "Un email de réinitialisation de mot de passe a été envoyé à l’adresse email renseignée.",
+      "error-internet": "Un problème de connexion est survenu. Vérifiez votre connexion Internet.",
+      "error-default": "Une erreur est survenue, veuillez recommencer.",
+      "must-accept-cgu": "Vous devez accepter les conditions générales d’utilisation pour continuer.",
+      "password-security": "Format mot de passe",
+      "password-security-length": "6 caractères minimum",
+      "password-security-maj": "Contient au moins 1 majuscule",
+      "password-security-min": "Contient au moins 1 minuscule",
+      "password-security-number": "Contient au moins 1 chiffre",
+      "password-security-special": "Contient au moins 1 caractère spécial (&?!@#)",
+      "success-change-password": "Votre mot de passe a été modifié avec succès.",
+      "success-change-email": "Un email de confirmation vous a été envoyé à votre nouvelle adresse.",
+      "phone-update-success": "Votre numéro de téléphone a été changé !",
+      "cant-be-same-password": "Le nouveau mot de passe doit être différent de l'ancien.",
+      "cant-be-same-email": "Le nouvel email doit être différent de l'ancien.",
+      "cant-be-same-phone": "Le nouveau numéro doit être différent de l'ancien.",
+      "code-is-expired": "Le code de vérification a expiré.",
+      "code-sent": "Un code de vérification vous a été envoyé par SMS.",
+      "too-many-requests": "Trop de tentatives de connexion. Veuillez réessayer plus tard."
+    },
+    "skeleton": {
+      "auth": {
+        "signin": "Connexion",
+        "already-have-account": "Vous avez déjà un compte ?",
+        "login-title": "Connectez-vous",
+        "login-phone-title": "Connectez-vous",
+        "verify-phone-title": "Entrez le code reçu par SMS pour vous connecter",
+        "verify-phone-code-title": "Validez votre numéro de téléphone",
+        "code-expire-in": "Le code expire dans {time} minutes",
+        "no-code": "Pas reçu ?",
+        "resend-code": "Renvoyer",
+        "forgot-password": "Mot de passe oublié ?",
+        "reset-password": "Réinitialiser",
+        "no-account": "Pas de compte ?",
+        "create-account": "Créer maintenant",
+        "login-with-phone": "Se connecter par téléphone",
+        "login-with-email": "Se connecter par email",
+        "or-connect-with": "ou connectez-vous avec",
+        "or-signup-with": "ou inscrivez-vous avec",
+        "verify-email": "Vérifiez votre boîte mail",
+        "verify-email-subtitle": "Vous avez reçu un email afin de réinitialiser votre mot de passe.",
+        "create-account-verify-email": "Vérifiez votre boîte mail",
+        "create-account-title": "Créez un compte",
+        "create-account-verify-email-subtitle": "Un email de vérification vous a été envoyé à l'adresse {}",
+        "reset-password-modal": {
+          "title": "Réinitialiser mot de passe",
+          "subtitle": "Entrez l’adresse email associée à votre compte. Nous vous enverrons un email de réinitialisation sur celle-ci."
+        },
+        "tiers-signin": {
+          "get-password-title": "Entrez votre mot de passe",
+          "get-password-subtitle": "Nous avons trouvé un compte avec cette adresse email, veuillez entrer votre mot de passe pour vous connecter."
+        }
+      },
+      "profile": {
+        "delete-success": "Votre compte a été supprimé avec succès.\nÀ très vite",
+        "logout": "Se déconnecter",
+        "delete-account": "Supprimer mon profil",
+        "delete-my-account": "Supprimer mon compte",
+        "delete-my-account-subtitle": "Souhaitez-vous vraiment supprimer votre compte ?",
+        "logout-success": "Vous avez été déconnecté avec succès.\nÀ très vite"
+      },
+      "new-cgu-must-be-accepted": "Vous devez accepter les nouvelles conditions générales d’utilisation pour continuer."
+    },
+    "onboarding": {
+      "button_next": "Suivant",
+      "button_start": "Terminer",
+      "skip": "Passer"
+    },
+    "permission": {
+      "notification": {
+        "title": "Notifications Push",
+        "redirect-to-settings": "Souhaitez-vous activer notre service de notifications Push ? Il vous aidera à exploiter tout le potentiel de notre application.",
+        "button": "Activer les notifications"
+      },
+      "camera": {
+        "title": "Caméra",
+        "redirect-to-settings": "Pour bénéficier de cette fonctionnalité, vous devez accepter la permission de caméra.",
+        "button": "Activer la caméra"
+      },
+      "microphone": {
+        "title": "Microphone",
+        "redirect-to-settings": "Pour bénéficier de cette fonctionnalité, vous devez accepter la permission de microphone.",
+        "button": "Activer le micro"
+      },
+      "accessMediaLocation": {
+        "title": "Accès emplacement média",
+        "redirect-to-settings": "Pour bénéficier de cette fonctionnalité, vous devez accepter la permission d'accès à l'emplacement média.",
+        "button": "Activer l'accès"
+      },
+      "mediaLibrary": {
+        "title": "Bibliothèque média",
+        "redirect-to-settings": "Pour bénéficier de cette fonctionnalité, vous devez accepter la permission d'accès à la bibliothèque média.",
+        "button": "Activer l'accès"
+      },
+      "photos": {
+        "title": "Photos",
+        "redirect-to-settings": "Pour bénéficier de cette fonctionnalité, vous devez accepter la permission d'accès à vos photos.",
+        "button": "Activer l'accès"
+      },
+      "storage": {
+        "title": "Stockage",
+        "redirect-to-settings": "Pour bénéficier de cette fonctionnalité, vous devez accepter la permission d'accès au stockage.",
+        "button": "Activer l'accès"
+      },
+      "mic": {
+        "redirect-to-settings": "Veuillez autoriser le microphone dans les paramètres de votre téléphone.",
+        "title": "Microphone",
+        "button": "Ouvrir les paramètres"
+      },
+      "notif-push": {
+        "title": "Notifications Push",
+        "desc": "Souhaitez-vous activer notre service de notifications Push ? Il vous aidera à exploiter tout le potentiel de notre application.",
+        "button": "Activer les notifications"
+      },
+      "location": {
+        "title": "Géolocalisation",
+        "desc": "Pour utiliser pleinement notre application mobile, vous devez accepter la géolocalisation.",
+        "button": "Activer la géolocalisation",
+        "redirect-to-settings": "Veuillez autoriser la géolocalisation dans les paramètres de votre téléphone."
+      },
+      "background-location": {
+        "title": "Géolocalisation en arrière-plan",
+        "desc": "Souhaitez-vous activer notre service de géolocalisation en arrière-plan ? Il sera essentiel au fonctionnement de l’application.",
+        "button": "Activer la géolocalisation en arrière-plan"
+      },
+      "skip": "Passer"
+    },
+    "image": {
+      "from-gallery": "Galerie",
+      "from-camera": "Appareil photo"
+    },
+    "duration": {
+      "now": "À l'instant",
+      "days-ago": "{} j",
+      "x-days": "{} j",
+      "hours-ago": "{} h",
+      "minutes-ago": "{} min",
+      "seconds-ago": "{} sec",
+      "months-ago": "{} mois",
+      "years-ago": "{} ans",
+      "moment-ago": "Il y a un moment"
+    },
+    "settings": {
+      "edited-by": "Édité par ",
+      "kosmos-digital": "kosmos-digital.com",
+      "section-title": {
+        "modify": "Modifier",
+        "personnal-data": "Mon compte",
+        "settings": "Paramètres",
+        "other": "Autres",
+        "link": "Liens",
+        "social": "Réseaux sociaux",
+        "security": "Sécurité"
+      },
+      "node": {
+        "blocked-users": {
+          "unblock": "Débloquer l'utilisateur",
+          "block": "Bloquer l'utilisateur",
+          "unblock-success": "Utilisateur débloqué avec succès",
+          "title": "Utilisateurs bloqués",
+          "subtitle": "Liste des utilisateurs bloqués"
+        },
+        "change-personnal-content": {
+          "title": "Informations personnelles",
+          "subtitle": "Nom, prénom..."
+        },
+        "security": {
+          "title": "Sécurité",
+          "subtitle": "Mot de passe, tél, e-mail..."
+        },
+        "payment": {
+          "title": "Moyens de paiement",
+          "subtitle": "Carte bancaire / Apple Pay / RIB"
+        },
+        "phone-number": {
+          "title": "Numéro de téléphone"
+        },
+        "change-email": {
+          "title": "Adresse email"
+        },
+        "change-password": {
+          "title": "Mot de passe",
+          "subtitle": "Dernière modification : {timeAgo}"
+        },
+        "push-notif": {
+          "title": "Notifications push"
+        },
+        "email-notif": {
+          "title": "Notifications email"
+        },
+        "help": {
+          "title": "Aide",
+          "subtitle": "Contactez-nous par email"
+        },
+        "share": {
+          "title": "Partager l'app",
+          "subtitle": "Soutenez-nous en partageant l'app"
+        },
+        "link": {
+          "privacy-policy": "Politique de confidentialité",
+          "legal-mention": "Mentions légales",
+          "legal-notice": "Mentions légales",
+          "cgvu": "Conditions générales de ventes et d'utilisation",
+          "about": "À propos"
+        },
+        "social": {
+          "facebook": "Notre page Facebook",
+          "instagram": "Notre Instagram",
+          "twitter": "Twitter",
+          "linkedin": "Linkedin",
+          "snapchat": "Snapchat"
+        }
+      }
+    },
+    "network-error": {
+      "title": "Erreur réseau 😕",
+      "subtitle": "Aucune connexion Internet n’est détectée. Veuillez vérifier votre connexion au réseau.",
+      "button": "Actualiser"
+    }
+  },
+  "date": {
+    "day": {
+      "mo": "Lu",
+      "tu": "Ma",
+      "we": "Me",
+      "th": "Je",
+      "fr": "Ve",
+      "sa": "Sa",
+      "su": "Di"
+    },
+    "month": {
+      "january": "Janvier",
+      "february": "Février",
+      "march": "Mars",
+      "april": "Avril",
+      "may": "Mai",
+      "june": "Juin",
+      "july": "Juillet",
+      "august": "Août",
+      "september": "Septembre",
+      "october": "Octobre",
+      "november": "Novembre",
+      "december": "Décembre"
+    },
+    "event": {
+      "cancel": "Annuler",
+      "validate": "Valider"
+    },
+    "range": {
+      "no_date": "Aucune date"
+    }
+  },
+  "utils": {
+    "number_x": "n°{}",
+    "mandatory-fields": "* Les champs marqués sont obligatoires",
+    "submit": "Envoyer",
+    "choose": "Choisir",
+    "validate-and-modify": "Valider et modifier",
+    "modify": "Modifier",
+    "by-default": "Par défaut",
+    "deactivate": "Désactivées",
+    "activate": "Activées",
+    "loading": "Chargement..",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "continue": "Continuer",
+    "connexion": "Connexion",
+    "validate": "Valider",
+    "success": "Succès",
+    "yes": "Oui",
+    "no": "Non",
+    "error": "Erreur",
+    "reinit": "Réinitialiser",
+    "cgvu": "CGVU",
+    "validate-and-continue": "Valider et continuer",
+    "confidentiality-policy": "Politique de confidentialité",
+    "cgvu-and-confidentiality": "CGVU et politique de confidentialité",
+    "accept-cgvu-and-confidentiality": "J’accepte la politique de confidentialité et les conditions générales de ventes et d'utilisation.",
+    "what-do-you-want-to-do": "Que souhaitez-vous faire ?",
+    "error-default": "Une erreur est survenue, veuillez recommencer.",
+    "form-invalid": "Veuillez corriger les champs en erreur.",
+    "save": "Enregistrer"
+  },
+  "app": {
+    "recherche": {
+      "compositions-hint": "Rechercher un schéma, ex. 4-3-3",
+      "test-equipe-hint": "Rechercher un nom ou un schéma",
+      "joueurs-hint": "Rechercher un joueur"
+    },
+    "auth": {
+      "create-account": {
+        "title-1": "Créez",
+        "title-2": " un compte"
+      },
+      "login": {
+        "title-1": "Connectez-",
+        "title-2": "vous"
+      }
+    },
+    "mon-equipe": {
+      "nom-equipe-defaut": "Mon équipe",
+      "erreur-chargement": "Impossible de charger l’effectif.",
+      "effectif-vide-titre": "Aucun joueur dans l’effectif",
+      "effectif-vide-sous-titre": "Créez votre premier joueur pour composer votre équipe.",
+      "puce-coach": "Coach {prenom}",
+      "detail-joueurs": "Détail des joueurs",
+      "compteur-joueurs": "{count} sur {max} joueurs",
+      "creer-joueur": "Créer un joueur",
+      "aucun-resultat-titre": "Aucun joueur trouvé",
+      "aucun-resultat-sous-titre": "Aucun joueur ne correspond à votre recherche.",
+      "pied-fort": "Pied fort",
+      "coup-denvoi": "Coup d’envoi",
+      "nav-mon-equipe": "Mon équipe",
+      "nav-ia": "IA bientôt disponible",
+      "nav-statistiques": "Statistiques matchs",
+      "nav-test-equipe": "Test équipe"
+    },
+    "detail-joueur": {
+      "titre-statistiques": "Statistiques du joueur",
+      "action-modifier": "Modifier le joueur",
+      "action-supprimer": "Supprimer le joueur",
+      "suppression-titre": "Supprimer ce joueur",
+      "suppression-message": "Souhaitez-vous vraiment supprimer ce joueur ? Cette action est irréversible.",
+      "suppression-conserver": "Conserver ce joueur",
+      "suppression-confirmer": "Supprimer définitivement",
+      "suppression-erreur": "Le joueur n’a pas pu être supprimé.",
+      "suppression-succes-titre": "Joueur supprimé !",
+      "suppression-succes-message": "Le joueur a bien été supprimé."
+    },
+    "creer-joueur": {
+      "titre": "Créer un joueur",
+      "valider": "Créer le joueur",
+      "erreur-message": "Le joueur n’a pas pu être créé.",
+      "effectif-plein": "Votre effectif est complet ({max} joueurs). Supprimez un joueur avant d’en créer un nouveau.",
+      "succes-titre": "Joueur créé !",
+      "succes-message": "Le joueur a bien été créé."
+    },
+    "modifier-joueur": {
+      "titre": "Modifier un joueur",
+      "valider": "Enregistrer les modifications",
+      "erreur-message": "La modification n’a pas pu être enregistrée.",
+      "succes-titre": "Joueur modifié !",
+      "succes-message": "Le joueur a bien été modifié."
+    },
+    "gerer-equipe-count": {
+      "titre": "Choisissez le nombre de joueurs",
+      "matchs-a": "Matchs à ",
+      "joueurs": "{} joueurs",
+      "choisir": "Choisir"
+    },
+    "gerer-equipe-numbers": {
+      "titre": "Attribuez les numéros",
+      "suivant": "Suivant",
+      "detail-joueurs": "Détail des joueurs",
+      "effectif": "{} sur {} joueurs",
+      "creer-joueur": "Créer un joueur",
+      "remplacants": "Remplaçants",
+      "aucun-joueur-poste": "Aucun joueur à ce poste.",
+      "aucun-remplacant": "Aucun remplaçant pour l’instant.",
+      "pied-fort": "Pied fort",
+      "numero": "Numéro",
+      "attribuer-numeros": "Attribuer les numéros",
+      "numeros-remplacants": "Numéros des remplaçants",
+      "brassard-capitaine": "Brassard de capitaine",
+      "attribuer-numero": "Attribuer un numéro",
+      "attribuer": "Attribuer",
+      "retirer-numero": "Retirer le numéro",
+      "selectionner-numeros-remplacants": "Sélectionnez les numéros des remplaçants",
+      "valider": "Valider"
+    },
+    "gerer-equipe-composition": {
+      "titre": "Choisissez la composition",
+      "suivant": "Suivant",
+      "composition-choisie": "Composition choisie",
+      "aide-choix": "Choisissez une composition à droite.",
+      "resultats-recherche": "Résultats de votre recherche",
+      "aucun-resultat": "Aucun résultat",
+      "aucun-resultat-sous-titre": "Essayez une autre orthographe ou une autre composition.",
+      "mes-compositions": "Mes compositions personnalisées",
+      "aucune-composition-personnalisee": "Aucune composition personnalisée pour le moment.",
+      "compositions-standards": "Compositions standards",
+      "creer-composition": "Créer une composition"
+    },
+    "gerer-equipe-placement": {
+      "titre": "Placez vos joueurs",
+      "modifier-numeros": "Modifier\nnuméros",
+      "modifier-composition": "Modifier\ncomposition",
+      "joueurs-a-placer": "Joueurs à placer",
+      "consigne": "Pour placer un joueur, glissez le numéro de ce dernier sur le terrain à l’emplacement que vous souhaitez.",
+      "mon-equipe": "Mon équipe",
+      "gardiens": "Gardiens",
+      "defenseurs": "Défenseurs",
+      "milieux": "Milieux",
+      "attaquants": "Attaquants",
+      "remplacants": "Remplaçants",
+      "pied-fort": "Pied fort",
+      "numero": "Numéro",
+      "capitaine-abrege": "Cap.",
+      "composition-choisie": "Composition choisie",
+      "choisir-joueur": "Choisissez un joueur à placer",
+      "aucun-joueur-disponible": "Aucun joueur disponible.",
+      "placer": "Placer"
+    },
+    "gerer-maillots": {
+      "titre": "Modifier les maillots",
+      "echec": "Échec",
+      "erreur-chargement": "Impossible de charger les maillots.",
+      "section-enregistres": "Maillots enregistrés",
+      "aucun-maillot-titre": "Aucun maillot à ajouter",
+      "aucun-maillot-message": "Renseignez le nom et la couleur du maillot.",
+      "enregistres-titre": "Maillots enregistrés !",
+      "enregistres-message": "Vos maillots ont bien été ajoutés.",
+      "modifie-titre": "Maillot modifié !",
+      "supprimer-titre": "Supprimer ce maillot",
+      "supprimer-message": "Souhaitez-vous vraiment supprimer le maillot « {} » ? Cette action est irréversible.",
+      "conserver": "Conserver ce maillot",
+      "supprimer-definitivement": "Supprimer définitivement",
+      "supprime-titre": "Maillot supprimé !",
+      "supprime-message": "Le maillot a bien été supprimé.",
+      "incomplet-titre": "Maillot incomplet",
+      "incomplet-message": "Renseignez le nom du maillot.",
+      "modifier-titre": "Modifier le maillot",
+      "champ-nom": "Nom du maillot*",
+      "champ-nom-hint": "Ex. Extérieur",
+      "champ-couleur": "Couleur du maillot*"
+    },
+    "creer-composition": {
+      "titre-creer": "Créer une composition",
+      "titre-modifier": "Modifier une composition",
+      "cta-creer": "Créer la composition personnalisée",
+      "cta-modifier": "Enregistrer les modifications",
+      "dialogue-titre-modifier": "Modifier la composition",
+      "aucun-nom": "Aucun nom",
+      "personnalise": "Personnalisé",
+      "consigne": "Glissez les maillots pour composer votre schéma.",
+      "actions": "Actions",
+      "champ-nom": "Nom de la composition*",
+      "champ-nom-hint": "Ex. Ma super compo",
+      "champ-formation": "Nom de la formation*",
+      "champ-formation-hint": "Ex. 4-4-2",
+      "champs-obligatoires": "*Champs obligatoires",
+      "echec-titre": "Échec de l’enregistrement",
+      "echec-message": "La composition n’a pas pu être enregistrée. Réessayez."
+    },
+    "match-live": {
+      "titre": "Match en cours",
+      "titre-fin-match": "Mettre fin au match ?",
+      "message-fin-match": "Souhaitez-vous vraiment mettre fin au match ? Le résultat sera enregistré et les statistiques ne pourront plus être modifiées.",
+      "reprendre-match": "Reprendre le match",
+      "fin-match": "Mettre fin au match",
+      "titre-enregistrement-impossible": "Enregistrement impossible",
+      "message-enregistrement-impossible": "Le résultat du match n’a pas pu être enregistré. Vérifiez votre connexion : le match reste en cours et rien n’est perdu tant que vous restez sur cet écran.",
+      "rester-sur-match": "Rester sur le match",
+      "reessayer": "Réessayer",
+      "titre-quitter": "Quitter le match ?",
+      "message-quitter": "Souhaitez-vous vraiment quitter le match ? Si vous quittez maintenant, le match ne sera pas enregistré.",
+      "quitter-quand-meme": "Quitter quand même",
+      "reprendre": "Reprendre",
+      "pause": "Pause",
+      "mi-temps": "Mi-temps",
+      "fin-du-match": "Fin du match",
+      "modifier-composition": "Modifier composition",
+      "statistiques-joueur": "Statistiques du joueur",
+      "selectionnez-joueur": "Sélectionnez un joueur sur le terrain.",
+      "remplacer": "Remplacer",
+      "remplacer-joueur": "Remplacer un joueur",
+      "aucun-remplacant": "Aucun remplaçant disponible sur le banc.",
+      "historique": "Historique",
+      "aucune-action": "Aucune action pour le moment.",
+      "a-l-instant": "À l’instant",
+      "il-y-a-min": "Il y a {minutes} min"
+    },
+    "match-break": {
+      "titre-mi-temps": "Mi-temps",
+      "titre-pause": "Pause",
+      "demarrer-2e-mi-temps": "Démarrer 2e mi-temps",
+      "reprendre-match": "Reprendre le match",
+      "titre-fin-match": "Mettre fin au match ?",
+      "message-fin-match": "Souhaitez-vous vraiment mettre fin au match ? Le résultat sera enregistré et les statistiques ne pourront plus être modifiées.",
+      "fin-match": "Mettre fin au match",
+      "titre-enregistrement-impossible": "Enregistrement impossible",
+      "message-enregistrement-impossible": "Le résultat du match n’a pas pu être enregistré. Vérifiez votre connexion : le match n’est pas terminé et rien n’est perdu tant que vous restez sur cet écran.",
+      "rester-sur-ecran": "Rester sur cet écran",
+      "reessayer": "Réessayer",
+      "joueurs": "Joueurs",
+      "statistiques": "Statistiques",
+      "actions-match": "Actions sur le match",
+      "modifier-statistiques": "Modifier statistiques",
+      "modifier-composition": "Modifier composition"
+    },
+    "match-finished": {
+      "titre": "Match terminé",
+      "actions-match": "Actions sur le match",
+      "accueil": "Accueil",
+      "voir-statistiques": "Voir les statistiques"
+    },
+    "coup-denvoi-step1": {
+      "titre": "Choix de l’adversaire",
+      "suivant": "Suivant",
+      "mon-equipe": "Mon équipe",
+      "coach": "Coach {prenom}",
+      "equipe-adverse": "Équipe adverse",
+      "hint-nom-equipe": "Nom de l’équipe…",
+      "categorie": "Catégorie",
+      "division": "Division"
+    },
+    "coup-denvoi-step2": {
+      "titre": "Choix des maillots",
+      "suivant": "Suivant",
+      "mon-equipe": "Mon équipe",
+      "equipe-adverse": "Équipe adverse",
+      "aucun-maillot": "Aucun maillot configuré.\nAjoutez-en depuis « Gérer les maillots ».",
+      "maillot-adverse": "Maillot adverse",
+      "choisir-couleur": "Choisissez la couleur du maillot de l’équipe adverse.",
+      "couleur-maillot": "Couleur du maillot",
+      "maillot-porte": "Maillot porté"
+    },
+    "coup-denvoi-step3": {
+      "titre": "Gérez le match avant de démarrer",
+      "composition-copiee": "Composition copiée",
+      "repris-match-precedent": "Repris du match précédent.",
+      "repris-match-contre": "Repris du match contre {adversaire}.",
+      "gerer-equipe": "Gérer mon équipe",
+      "parametrer-statistiques": "Paramétrer les statistiques",
+      "copier-match-precedent": "Copier depuis un match précédent",
+      "mon-equipe": "Mon équipe",
+      "equipe-adverse": "Équipe adverse",
+      "coach": "Coach {prenom}",
+      "nb-joueurs": "{n} joueurs",
+      "nb-statistiques": "{n} statistiques",
+      "demarrer-match": "Démarrer le match",
+      "pret": "Le match est prêt à être démarré.",
+      "non-pret": "Avant de démarrer le match, vous devez gérer votre équipe et paramétrer les statistiques."
+    },
+    "bilan-collectif": {
+      "titre": "Bilan collectif",
+      "titre-periode": "Bilan collectif {periode}",
+      "export-impossible": "Export impossible",
+      "export-erreur": "Le partage du PDF n’a pas pu être lancé.",
+      "mon-equipe": "Mon équipe",
+      "equipe-adverse": "Équipe adverse",
+      "periode-mi-temps-1": "1ère mi-temps",
+      "periode-mi-temps-2": "2ème mi-temps",
+      "periode-total": "Total match",
+      "mi-temps-indisponible": "Détail par mi-temps indisponible pour ce match.",
+      "aucune-statistique": "Aucune statistique enregistrée pour ce match."
+    },
+    "bilan-individuel": {
+      "titre": "Bilan individuel",
+      "titre-periode": "Bilan individuel {periode}",
+      "export-impossible": "Export impossible",
+      "export-erreur": "Le partage du PDF n’a pas pu être lancé.",
+      "joueurs": "Joueurs",
+      "statistiques": "Statistiques"
+    },
+    "statistiques-matchs": {
+      "titre": "Statistiques matchs",
+      "titre-supprimer": "Supprimer ce match",
+      "message-supprimer": "Souhaitez-vous vraiment supprimer ce match et ses statistiques ? Cette action est irréversible.",
+      "conserver-match": "Conserver ce match",
+      "supprimer-definitivement": "Supprimer définitivement",
+      "match-supprime": "Match supprimé !",
+      "match-supprime-detail": "Le match a bien été retiré de votre historique.",
+      "echec-suppression": "Échec de la suppression",
+      "mon-equipe": "Mon équipe",
+      "equipe-adverse": "Équipe adverse",
+      "aucun-match": "Aucun match joué pour le moment.",
+      "aucun-match-detail": "Vos matchs terminés apparaîtront ici.",
+      "erreur-chargement": "Impossible de charger les matchs.",
+      "tous-les-matchs": "Tous les matchs joués",
+      "rechercher": "Rechercher…",
+      "aucun-resultat": "Aucun résultat",
+      "aucun-resultat-detail": "Aucun match ne correspond à votre recherche.",
+      "statistiques-globales": "Statistiques globales",
+      "bilan-collectif": "Bilan collectif",
+      "bilan-individuel": "Bilan individuel",
+      "selectionner-joueur": "Pour le bilan individuel, sélectionnez un joueur sur le terrain.",
+      "joueur-selectionne": "Joueur sélectionné",
+      "joueurs": "Joueurs",
+      "score-final": "Score final",
+      "temps-total": "Temps total",
+      "mi-temps-1": "Mi-temps 1",
+      "mi-temps-2": "Mi-temps 2",
+      "final": "Final",
+      "pied-fort": "Pied fort",
+      "numero": "Numéro",
+      "capitaine-abrege": "Cap.",
+      "consulter-bilan-titre": "Consulter un bilan individuel",
+      "champ-joueur": "Joueur*",
+      "champs-obligatoires": "*Champs obligatoires",
+      "consulter": "Consulter"
+    },
+    "bilan-scaffold": {
+      "exporter-pdf": "Exporter en PDF"
+    },
+    "check-profil-form": {
+      "champs-obligatoires": "*Champs obligatoires"
+    },
+    "check-profil-data": {
+      "enregistrement-impossible": "Enregistrement impossible"
+    },
+    "gerer-equipe-scaffold": {
+      "titre": "Gérer mon équipe"
+    },
+    "jersey-form": {
+      "maillot-incomplet-titre": "Maillot incomplet",
+      "maillot-incomplet-message": "Renseignez le nom et la couleur du maillot.",
+      "maillot-ajoute-titre": "Maillot ajouté !",
+      "nom-label": "Nom du maillot*",
+      "nom-hint": "Ex. Extérieur",
+      "couleur-label": "Couleur du maillot*",
+      "ajouter": "Ajouter le maillot"
+    },
+    "match-stats-board": {
+      "remplacants": "Remplaçants",
+      "pied-fort": "Pied fort",
+      "numero": "Numéro"
+    },
+    "match-wizard": {
+      "coup-denvoi": "Coup d’envoi",
+      "vs": "VS"
+    },
+    "past-match-picker-sheet": {
+      "titre": "Copier depuis un match précédent",
+      "aucun-match": "Aucun match terminé pour le moment.",
+      "erreur-chargement": "Impossible de charger les matchs précédents.",
+      "equipe-adverse": "Équipe adverse",
+      "vs-adversaire": "vs {}",
+      "n-joueurs": "{} joueurs",
+      "n-statistiques": "{} statistiques"
+    },
+    "player-form": {
+      "champs-obligatoires-titre": "Champs obligatoires",
+      "champs-obligatoires-message": "Renseignez le nom, le prénom, le pied fort et le poste.",
+      "nom-label": "Nom du joueur*",
+      "nom-hint": "Ex. Doe",
+      "prenom-label": "Prénom du joueur*",
+      "prenom-hint": "Ex. John",
+      "pied-fort-label": "Pied fort*",
+      "poste-label": "Catégorie de poste*"
+    },
+    "notifications": {
+      "titre": "Notifications",
+      "vide-titre": "Aucune notification",
+      "vide-sous-titre": "Vous serez notifié ici.",
+      "erreur-chargement": "Impossible de charger les notifications.",
+      "suppression-titre": "Supprimer cette notification ?",
+      "suppression-message": "Elle sera définitivement retirée de votre liste. Cette action est irréversible.",
+      "suppression-conserver": "Conserver",
+      "suppression-confirmer": "Supprimer définitivement",
+      "suppression-succes-titre": "Notification supprimée",
+      "suppression-succes-message": "Elle n’apparaît plus dans votre liste.",
+      "match-termine-titre": "Match terminé !",
+      "match-termine-message": "Vous venez de mettre fin à un match. Consultez les statistiques dès maintenant.",
+      "match-termine-cta": "Voir le match",
+      "match-indisponible": "Impossible d’ouvrir ce match."
+    },
+    "ia": {
+      "entete": "IA Wina",
+      "titre": "Parlez avec l’IA Wina",
+      "description": "Une nouvelle version de Wina se prépare. Un coach en plus, directement dans votre poche… l’IA bientôt disponible.",
+      "bientot-disponible": "Bientôt disponible",
+      "section-bientot-disponible": "Cette section sera bientôt disponible."
+    },
+    "check-profil-step2": {
+      "titre": "Finalisez votre profil Coach",
+      "terminer": "Terminer",
+      "profil-complete-titre": "Profil complété !",
+      "profil-complete-message": "Bienvenue, votre équipe est prête."
+    },
+    "parametrer-stats": {
+      "titre": "Paramétrez les statistiques",
+      "selection": "{} / {} sélectionnées"
+    },
+    "maintenance-page": {
+      "titre": "Application en maintenance",
+      "message": "Merci de réessayer plus tard."
+    },
+    "update-required-page": {
+      "titre": "Mise à jour nécessaire",
+      "message": "Une nouvelle version de Wina est disponible. Mettez l'application à jour pour continuer.",
+      "bouton": "Mettre à jour"
+    },
+    "test-equipe": {
+      "entete": "Test Équipe",
+      "titre": "Testez et créez des compositions",
+      "section-personnalisees": "Mes compositions personnalisées",
+      "section-standards": "Compositions standards",
+      "type-equipe": "Type d’équipe",
+      "compo-a": "Compo à {}",
+      "creer-composition": "Créer une composition",
+      "aucun-resultat-titre": "Aucun résultat",
+      "aucun-resultat-sous-titre": "Essayez une autre orthographe ou un autre nom de composition.",
+      "aucun-resultat-recherche": "Aucun résultat pour votre recherche.",
+      "aucune-composition": "Aucune composition personnalisée pour le moment.",
+      "action-tester": "Tester mon équipe",
+      "action-dupliquer": "Dupliquer",
+      "action-supprimer": "Supprimer",
+      "action-creer-depuis-modele": "Créer depuis ce modèle",
+      "nom-copie": "{} (copie)",
+      "erreur-titre": "Une erreur est survenue",
+      "erreur-duplication": "La composition n’a pas pu être dupliquée.",
+      "erreur-creation": "La composition n’a pas pu être créée.",
+      "erreur-suppression": "La composition n’a pas pu être supprimée.",
+      "erreur-action": "Action impossible. Réessayez.",
+      "supprimer-titre": "Supprimer cette composition",
+      "supprimer-message": "Souhaitez-vous vraiment supprimer cette composition ? Cette action est irréversible.",
+      "supprimer-conserver": "Conserver la composition",
+      "supprimer-confirmer": "Supprimer définitivement"
+    },
+    "tester-equipe": {
+      "entete": "Tester mon équipe",
+      "joueurs": "Joueurs",
+      "tous-places": "Tous les joueurs sont placés.",
+      "pied-fort": "Pied fort",
+      "numero": "Numéro",
+      "stats-titre": "Statistiques joueur",
+      "aucun-joueur-selectionne": "Aucun joueur n’a été sélectionné.",
+      "aucune-stat": "Aucune statistique de match enregistrée pour ce joueur.",
+      "retirer": "Retirer du terrain",
+      "choisir-joueur": "Choisir un joueur",
+      "aucun-joueur-disponible": "Aucun joueur disponible."
+    }
+  },
+  "bar": {
+    "settings": {
+      "no-content": "Aucun contenu disponible."
+    }
+  }
+}

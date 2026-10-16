@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the finishedPayload method from the MatchRepository class, for the Dart programming language.">
+  <title>finishedPayload method - MatchRepository class - match_repository library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">wina</a></li>
+    <li><a href="../../data_match_repository/">data&#47;match_repository.dart</a></li>
+    <li><a href="../../data_match_repository/MatchRepository-class.html">MatchRepository</a></li>
+    <li class="self-crumb">finishedPayload static method</li>
+  </ol>
+  <div class="self-name">finishedPayload</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="data_match_repository&#47;MatchRepository-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">finishedPayload</span> static method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+  <div>
+    <ol class="annotation-list">
+        <li>@<a href="https://pub.dev/documentation/meta/1.17.0/meta/visibleForTesting-constant.html">visibleForTesting</a></li>
+    </ol>
+  </div>
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span></span>
+<span class="name ">finishedPayload</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="finishedPayload-param-live"><span class="type-annotation"><a href="../../models_live_match/LiveMatch-class.html">LiveMatch</a></span> <span class="parameter-name">live</span></span></li>
+</ol>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Champs du résultat d'un match terminé, hors <code>finishedAt</code> (horodaté par le
+serveur). Écrits par TOUS les chemins de fin de match (écran de direct en
+2e mi-temps, écran de coupure « Fin du match »).</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">@visibleForTesting
+static Map&lt;String, dynamic&gt; finishedPayload(LiveMatch live) {
+  return &lt;String, dynamic&gt;{
+    &#39;status&#39;: &#39;finished&#39;,
+    &#39;scoreUs&#39;: live.scoreUs,
+    &#39;scoreThem&#39;: live.scoreThem,
+    &#39;elapsedSeconds&#39;: live.elapsedSeconds,
+    &#47;&#47; `playerStats` reste le TOTAL du match : cumul carrière et plafond de
+    &#47;&#47; cartons ne dépendent pas du découpage.
+    &#39;playerStats&#39;: live.playerStats,
+    &#47;&#47; Sélection en vigueur à la fin : celle du coup d&#39;envoi ignorait les
+    &#47;&#47; stats activées ou désactivées en pause ou à la mi-temps.
+    &#39;enabledStatKeys&#39;: live.enabledStatKeys,
+    &#47;&#47; Découpage par mi-temps : la 2e se déduit (total − 1re) à la lecture.
+    &#39;half&#39;: live.half,
+    &#39;firstHalfStats&#39;: live.firstHalfStats,
+    &#39;firstHalfStatKeys&#39;: live.firstHalfStatKeys,
+  };
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">wina</a></li>
+    <li><a href="../../data_match_repository/">match_repository</a></li>
+    <li><a href="../../data_match_repository/MatchRepository-class.html">MatchRepository</a></li>
+    <li class="self-crumb">finishedPayload static method</li>
+</ol>
+
+    <h5>MatchRepository class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    wina
+      1.0.0+1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

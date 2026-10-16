@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Storage n'est utilisé ni par l'app ni par le back-office : tout accès client est refusé.
+// Les Cloud Functions (Admin SDK) ne sont pas soumises à ces règles.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,46 @@
+dartdoc:
+  categories:
+    "Extension":
+      # markdown: doc/md/extension.md
+      name: Extension
+    "Config":
+      # markdown: doc/md/config.md
+      name: Configurations
+    "Utils":
+      # markdown: doc/md/utils.md
+      name: Utilitaires
+    "Theme":
+      markdown: doc/md/theme.md
+      name: Theme
+    "Widget":
+      markdown: doc/md/widget.md
+      name: Widget
+    "Button, CTA":
+      markdown: doc/md/button.md
+      name: Button, CTA
+    "Form, Input":
+      markdown: doc/md/form.md
+      name: Form, Input
+    "Date":
+      markdown: doc/md/date.md
+      name: Date
+    "PopUp":
+      markdown: doc/md/popup.md
+      name: PopUp
+  categoryOrder: ["Widget", "Button, CTA", "Form, Input", "PopUp", "Date", "Utils", "Config", "Extension", "Theme"]
+  examplePathPrefix: "doc/examples"
+  nodoc: [
+    "lib/_deprecated/*",
+    "lib/_deprecated/*/*.dart",
+    "lib/_deprecated/*/*/*.dart",
+    "lib/_deprecated/*/*/*/*.dart",
+  ]
+  linkTo:
+    # url: "https://my.dartdocumentationsite.org/dev/%v%"
+  showUndocumentedCategories: true
+  ignore:
+    - ambiguous-doc-reference
+    - unresolved-doc-reference
+  warnings:
+    - tool-error
+  favicon: "doc/images/kosmos-logo.png"

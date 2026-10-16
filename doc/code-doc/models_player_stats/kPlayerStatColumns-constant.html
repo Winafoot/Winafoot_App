@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the kPlayerStatColumns constant from the player_stats library, for the Dart programming language.">
+  <title>kPlayerStatColumns constant - player_stats library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">wina</a></li>
+    <li><a href="../models_player_stats/">models&#47;player_stats.dart</a></li>
+    <li class="self-crumb">kPlayerStatColumns constant</li>
+  </ol>
+  <div class="self-name">kPlayerStatColumns</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="models_player_stats&#47;models_player_stats-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-top-level-property">kPlayerStatColumns</span> top-level constant 
+ 
+</h1></div>
+
+        <section class="multi-line-signature">
+          
+          <a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../models_player_stats/StatDef-class.html">StatDef</a></span>&gt;</span></span>&gt;</span>
+          const <span class="name ">kPlayerStatColumns</span>
+          
+
+        </section>
+        
+<section class="desc markdown">
+  <p>Les 3 colonnes de statistiques de la page « Détail joueur », dans l'ordre
+EXACT du design Figma (14 / 14 / 13 lignes, 41 statistiques au total).</p>
+</section>
+
+        
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">const List&lt;List&lt;StatDef&gt;&gt; kPlayerStatColumns = &lt;List&lt;StatDef&gt;&gt;[
+  &#47;&#47; ── Colonne 1 ──────────────────────────────────────────────────────────────
+  &lt;StatDef&gt;[
+    StatDef(&#39;Interception de ballons&#39;),
+    StatDef(&#39;Récupération de ballons&#39;),
+    StatDef(&#39;Passes réussies&#39;),
+    StatDef(&#39;Passes manquées&#39;),
+    StatDef(&#39;Total passes&#39;),
+    StatDef(&#39;Pertes de ballons&#39;),
+    StatDef(&#39;Tirs cadrés&#39;, hasSpace: true),
+    StatDef(&#39;Tirs non cadrés&#39;),
+    StatDef(&#39;Tirs bloqués&#39;),
+    StatDef(&#39;Total tirs&#39;),
+    StatDef(&#39;Passes décisives&#39;, hasSpace: true),
+    StatDef(&#39;Buts marqués&#39;),
+    StatDef(&#39;Buts subis&#39;),
+    StatDef(&#39;Arrêts du gardien&#39;, hasSpace: true),
+  ],
+  &#47;&#47; ── Colonne 2 ──────────────────────────────────────────────────────────────
+  &lt;StatDef&gt;[
+    StatDef(&#39;Tirs subis hors surface&#39;),
+    StatDef(&#39;Tirs subis dans la surface&#39;),
+    StatDef(&#39;Total tirs subis&#39;),
+    StatDef(&#39;Contrôles de balle réussis&#39;, hasSpace: true),
+    StatDef(&#39;Contrôles de balle manqués&#39;),
+    StatDef(&#39;Hors-jeux&#39;),
+    StatDef(&#39;Duels aériens gagnés&#39;, hasSpace: true),
+    StatDef(&#39;Duels aériens perdus&#39;),
+    StatDef(&#39;Corners obtenus&#39;),
+    StatDef(&#39;Penaltys subis&#39;),
+    StatDef(&#39;Coups francs subis&#39;),
+    StatDef(&#39;Penaltys obtenus&#39;),
+    StatDef(&#39;Coups francs obtenus&#39;),
+    StatDef(&#39;Nombre de touches&#39;),
+  ],
+  &#47;&#47; ── Colonne 3 ──────────────────────────────────────────────────────────────
+  &lt;StatDef&gt;[
+    StatDef(&#39;Nombre de centres&#39;),
+    StatDef(&#39;Passes en profondeur&#39;),
+    StatDef(&#39;Duels défensifs gagnés&#39;),
+    StatDef(&#39;Duels défensifs perdus&#39;),
+    StatDef(&#39;Duels offensifs gagnés&#39;),
+    StatDef(&#39;Duels offensifs perdus&#39;),
+    StatDef(&#39;Dégagements&#39;),
+    StatDef(&#39;Centres réussis&#39;),
+    StatDef(&#39;Centres manqués&#39;),
+    StatDef(&#39;Fautes commises&#39;, hasSpace: true),
+    StatDef(&#39;Fautes subies&#39;),
+    StatDef(&#39;Cartons jaunes&#39;),
+    StatDef(&#39;Cartons rouges&#39;),
+  ],
+];</code></pre>
+</section>
+
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">wina</a></li>
+    <li><a href="../models_player_stats/">player_stats</a></li>
+    <li class="self-crumb">kPlayerStatColumns constant</li>
+</ol>
+
+    <h5>player_stats library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    wina
+      1.0.0+1
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

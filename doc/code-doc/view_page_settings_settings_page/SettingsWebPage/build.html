@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the build method from the SettingsWebPage class, for the Dart programming language.">
+  <title>build method - SettingsWebPage class - settings_page library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">wina</a></li>
+    <li><a href="../../view_page_settings_settings_page/">view&#47;page&#47;settings&#47;settings_page.dart</a></li>
+    <li><a href="../../view_page_settings_settings_page/SettingsWebPage-class.html">SettingsWebPage</a></li>
+    <li class="self-crumb">build method</li>
+  </ol>
+  <div class="self-name">build</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="view_page_settings_settings_page&#47;SettingsWebPage-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">build</span> method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+  <div>
+    <ol class="annotation-list">
+        <li>@<a href="https://api.flutter.dev/flutter/dart-core/override-constant.html">override</a></li>
+    </ol>
+  </div>
+<span class="returntype"><a href="https://api.flutter.dev/flutter/widgets/Widget-class.html">Widget</a></span>
+<span class="name ">build</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="build-param-context"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/widgets/BuildContext-class.html">BuildContext</a></span> <span class="parameter-name">context</span>, </span></li>
+<li><span class="parameter" id="build-param-ref"><span class="type-annotation"><a href="https://pub.dev/documentation/flutter_riverpod/2.6.1/flutter_riverpod/WidgetRef-class.html">WidgetRef</a></span> <span class="parameter-name">ref</span></span></li>
+</ol>)
+
+      <div class="features"><span class="feature">override</span></div>
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Describes the part of the user interface represented by this widget.</p>
+<p>The framework calls this method when this widget is inserted into the tree
+in a given <a href="https://api.flutter.dev/flutter/widgets/BuildContext-class.html">BuildContext</a> and when the dependencies of this widget change
+(e.g., an <a href="https://api.flutter.dev/flutter/widgets/InheritedWidget-class.html">InheritedWidget</a> referenced by this widget changes). This
+method can potentially be called in every frame and should not have any side
+effects beyond building a widget.</p>
+<p>The framework replaces the subtree below this widget with the widget
+returned by this method, either by updating the existing subtree or by
+removing the subtree and inflating a new subtree, depending on whether the
+widget returned by this method can update the root of the existing
+subtree, as determined by calling <a href="https://api.flutter.dev/flutter/widgets/Widget/canUpdate.html">Widget.canUpdate</a>.</p>
+<p>Typically implementations return a newly created constellation of widgets
+that are configured with information from this widget's constructor and
+from the given <a href="https://api.flutter.dev/flutter/widgets/BuildContext-class.html">BuildContext</a>.</p>
+<p>The given <a href="https://api.flutter.dev/flutter/widgets/BuildContext-class.html">BuildContext</a> contains information about the location in the
+tree at which this widget is being built. For example, the context
+provides the set of inherited widgets for this location in the tree. A
+given widget might be built with multiple different <a href="https://api.flutter.dev/flutter/widgets/BuildContext-class.html">BuildContext</a>
+arguments over time if the widget is moved around the tree or if the
+widget is inserted into the tree in multiple places at once.</p>
+<p>The implementation of this method must only depend on:</p>
+<ul>
+<li>the fields of the widget, which themselves must not change over time,
+and</li>
+<li>any ambient state obtained from the <code>context</code> using
+<a href="https://api.flutter.dev/flutter/widgets/BuildContext/dependOnInheritedWidgetOfExactType.html">BuildContext.dependOnInheritedWidgetOfExactType</a>.</li>
+</ul>
+<p>If a widget's <a href="../../view_page_settings_settings_page/SettingsWebPage/build.html">build</a> method is to depend on anything else, use a
+<a href="https://api.flutter.dev/flutter/widgets/StatefulWidget-class.html">StatefulWidget</a> instead.</p>
+<p>See also:</p>
+<ul>
+<li><a href="https://api.flutter.dev/flutter/widgets/StatelessWidget-class.html">StatelessWidget</a>, which contains the discussion on performance considerations.</li>
+</ul>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">@override
+Widget build(BuildContext context, WidgetRef ref) {
+  final config =
+      GetIt.I.isRegistered&lt;AppMetadataConfig&gt;()
+          ? GetIt.I&lt;AppMetadataConfig&gt;()
+          : null;
+
+  return Scaffold(
+    backgroundColor: AppColor.background,
+    body: SafeArea(
+      child: Stack(
+        children: [
+          const AppBackground(),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                sh(16),
+                const _SettingsHeader(),
+                sh(12),
+                Container(height: 1, color: AppColor.headerRule),
+                sh(16),
+                Expanded(
+                  child: SettingsView(
+                    leftHeaderBuilder: (context) {
+                      final user = ref.watch(userProvider).user;
+                      final imgUrl =
+                          user?.userProfileImage?.compressedUrl ??
+                          user?.userProfileImage?.url;
+                      return userHeader(context, imgUrl, user, ref);
+                    },
+                    items: [
+                      SettingsItem(
+                        title:
+                            &#39;package.settings.section-title.personnal-data&#39;
+                                .tr(),
+                        children: [
+                          &#47;&#47; Identité de l&#39;équipe : la cellule rouvre le
+                          &#47;&#47; formulaire de profil en mode édition pour
+                          &#47;&#47; corriger le nom de l&#39;équipe, d&#39;où le chevron
+                          &#47;&#47; des cellules navigables.
+                          SettingsNode(
+                            title:
+                                ref
+                                            .watch(coachProfileProvider)
+                                            .valueOrNull
+                                            ?.teamName
+                                            ?.trim()
+                                            .isNotEmpty ??
+                                        false
+                                    ? ref
+                                        .watch(coachProfileProvider)
+                                        .valueOrNull!
+                                        .teamName!
+                                        .trim()
+                                    : &#39;app.mon-equipe.nom-equipe-defaut&#39;.tr(),
+                            subtitle:
+                                ref.watch(userProvider).user?.email ?? &quot;&quot;,
+                            onTap:
+                                () =&gt; Navigator.of(context).push(
+                                  MaterialPageRoute&lt;void&gt;(
+                                    builder:
+                                        (_) =&gt; const CheckProfilStep1Screen(
+                                          editMode: true,
+                                        ),
+                                  ),
+                                ),
+                            children: [],
+                          ),
+                          SettingsNode(
+                            leadingBuilder:
+                                (_) =&gt; const _CircleGlyph(
+                                  asset: &#39;assets&#47;svg&#47;ic_security.svg&#39;,
+                                ),
+                            title:
+                                &#39;package.settings.node.security.title&#39;.tr(),
+                            paneTitle:
+                                &#39;package.settings.node.security.title&#39;.tr(),
+                            subtitle:
+                                &#39;package.settings.node.security.subtitle&#39;
+                                    .tr(),
+                            children: [
+                              SettingsNode(
+                                title:
+                                    &#39;package.settings.node.change-email.title&#39;
+                                        .tr(),
+                                paneTitle:
+                                    &#39;package.settings.node.change-email.title&#39;
+                                        .tr(),
+                                subtitle:
+                                    ref.watch(userProvider).user?.email ?? &quot;&quot;,
+                                contentBuilder: (context) {
+                                  return _EditEmailForm(
+                                    initialEmail:
+                                        ref
+                                            .watch(userProvider)
+                                            .user
+                                            ?.email ??
+                                        &#39;&#39;,
+                                  );
+                                },
+                              ),
+                              SettingsNode(
+                                title:
+                                    &#39;package.settings.node.change-password.title&#39;
+                                        .tr(),
+                                paneTitle:
+                                    &#39;package.settings.node.change-password.title&#39;
+                                        .tr(),
+                                subtitle:
+                                    ref
+                                                .watch(userProvider)
+                                                .securityMetadata
+                                                ?.lastPasswordUpdate !=
+                                            null
+                                        ? &#39;package.settings.node.change-password.subtitle&#39;.tr(
+                                          namedArgs: {
+                                            &quot;timeAgo&quot;:
+                                                DateTime.now()
+                                                    .difference(
+                                                      ref
+                                                          .watch(userProvider)
+                                                          .securityMetadata!
+                                                          .lastPasswordUpdate!,
+                                                    )
+                                                    .formatTimeAgo(),
+                                          },
+                                        )
+                                        : &quot;utils.by-default&quot;.tr(),
+                                contentBuilder: (context) {
+                                  return const ChangePasswordForm();
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      &#47;&#47; Paramètres
+                      SettingsItem(
+                        title: &#39;package.settings.section-title.settings&#39;.tr(),
+                        children: [
+                          SettingsNode(
+                            leadingBuilder:
+                                (_) =&gt; const _CircleGlyph(
+                                  asset: &#39;assets&#47;svg&#47;ic_notif.svg&#39;,
+                                ),
+                            title:
+                                &#39;package.settings.node.email-notif.title&#39;
+                                    .tr(),
+                            subtitle:
+                                (ref
+                                            .watch(userProvider)
+                                            .metadata
+                                            ?.enableEmailNotification ??
+                                        false)
+                                    ? &#39;utils.activate&#39;.tr()
+                                    : &#39;utils.deactivate&#39;.tr(),
+                            trailingBuilder: (isSelected) {
+                              final enabled =
+                                  ref
+                                      .watch(userProvider)
+                                      .metadata
+                                      ?.enableEmailNotification ??
+                                  false;
+                              return KosmosSwicth(
+                                isActive: enabled,
+                                onSwipe: (newVal) async {
+                                  await NotifPermissionController.setEmailNotificationPermission(
+                                    newVal,
+                                    FirebaseAuth.instance.currentUser!.uid,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+
+                      &#47;&#47; Autres
+                      SettingsItem(
+                        title: &#39;package.settings.section-title.other&#39;.tr(),
+                        children: [
+                          SettingsNode(
+                            leadingBuilder:
+                                (_) =&gt; _CircleGlyph(
+                                  asset: &#39;assets&#47;svg&#47;help.svg&#39;,
+                                ),
+                            title: &#39;package.settings.node.help.title&#39;.tr(),
+                            subtitle:
+                                &#39;package.settings.node.help.subtitle&#39;.tr(),
+                            onTap: () async {
+                              final String contactEmail =
+                                  GetIt.I.isRegistered&lt;AppMetadataConfig&gt;()
+                                      ? GetIt.I&lt;AppMetadataConfig&gt;()
+                                              .contactEmail ??
+                                          &quot;&quot;
+                                      : &quot;&quot;;
+                              if (contactEmail.isEmpty) return;
+                              await launchUrl(
+                                Uri.parse(
+                                  &quot;mailto:$contactEmail?subject=Aide&quot;,
+                                ),
+                              );
+                            },
+                          ),
+                          SettingsNode(
+                            leadingBuilder:
+                                (_) =&gt; _CircleGlyph(
+                                  asset: &#39;assets&#47;svg&#47;share.svg&#39;,
+                                ),
+                            title: &#39;package.settings.node.share.title&#39;.tr(),
+                            subtitle:
+                                &#39;package.settings.node.share.subtitle&#39;.tr(),
+                            onTap: () async {
+                              final String? message =
+                                  GetIt.I.isRegistered&lt;AppMetadataConfig&gt;()
+                                      ? GetIt.I&lt;AppMetadataConfig&gt;()
+                                          .shareMessage
+                                      : null;
+                              await SharePlus.instance.share(
+                                ShareParams(
+                                  text:
+                                      message ??
+                                      &#39;package.settings.node.share.subtitle&#39;
+                                          .tr(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+
+                      &#47;&#47; Liens
+                      SettingsItem(
+                        title: &#39;package.settings.section-title.link&#39;.tr(),
+                        children: [
+                          SettingsNode(
+                            title:
+                                &#39;package.settings.node.link.privacy-policy&#39;
+                                    .tr(),
+                            contentBuilder:
+                                (context) =&gt; legalPaneContent(
+                                  config?.confidentialityPolicy,
+                                ),
+                          ),
+                          SettingsNode(
+                            title: &#39;package.settings.node.link.cgvu&#39;.tr(),
+                            contentBuilder:
+                                (context) =&gt; legalPaneContent(config?.cgvu),
+                          ),
+                          SettingsNode(
+                            title:
+                                &#39;package.settings.node.link.legal-notice&#39;
+                                    .tr(),
+                            contentBuilder:
+                                (context) =&gt;
+                                    legalPaneContent(config?.legalNotice),
+                          ),
+                        ],
+                      ),
+
+                      &#47;&#47; Réseaux sociaux
+                      SettingsItem(
+                        title: &#39;package.settings.section-title.social&#39;.tr(),
+                        children: [
+                          SettingsNode(
+                            title:
+                                &#39;package.settings.node.social.facebook&#39;.tr(),
+                            icon: SvgPicture.asset(&#39;assets&#47;svg&#47;fb.svg&#39;),
+                            onTap: () async {
+                              final String? url =
+                                  GetIt.I.isRegistered&lt;AppMetadataConfig&gt;()
+                                      ? GetIt.I&lt;AppMetadataConfig&gt;()
+                                          .facebookUrl
+                                      : null;
+                              if (url != null) {
+                                await launchUrl(Uri.parse(url));
+                              }
+                            },
+                          ),
+                          SettingsNode(
+                            title:
+                                &#39;package.settings.node.social.instagram&#39;.tr(),
+                            icon: SvgPicture.asset(&#39;assets&#47;svg&#47;insta.svg&#39;),
+                            onTap: () async {
+                              final String? url =
+                                  GetIt.I.isRegistered&lt;AppMetadataConfig&gt;()
+                                      ? GetIt.I&lt;AppMetadataConfig&gt;()
+                                          .instagramUrl
+                                      : null;
+                              if (url != null) {
+                                await launchUrl(Uri.parse(url));
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">wina</a></li>
+    <li><a href="../../view_page_settings_settings_page/">settings_page</a></li>
+    <li><a href="../../view_page_settings_settings_page/SettingsWebPage-class.html">SettingsWebPage</a></li>
+    <li class="self-crumb">build method</li>
+</ol>
+
+    <h5>SettingsWebPage class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    wina
+      1.0.0+1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

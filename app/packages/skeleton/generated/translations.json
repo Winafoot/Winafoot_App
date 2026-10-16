@@ -1,0 +1,157 @@
+{
+  "utils": {
+    "error": "",
+    "close": "",
+    "connexion": "",
+    "loading": "",
+    "cgvu-and-confidentiality": "",
+    "accept-cgvu-and-confidentiality": "",
+    "continue": "",
+    "validate": "",
+    "success": "",
+    "validate-and-continue": "",
+    "error-default": "",
+    "reinit": "",
+    "update": "",
+    "modify": "",
+    "validate-and-modify": "",
+    "cancel": "",
+    "yes": "",
+    "no": ""
+  },
+  "package": {
+    "kosmos-auth": {
+      "error-internet": "",
+      "error-default": "",
+      "must-have-valid-email": "",
+      "reset-apple-signin": "",
+      "code-invalid": "",
+      "code-sent": "",
+      "enter-valid-phone": "",
+      "cant-be-same-phone": "",
+      "phone-already-in-use": "",
+      "code-is-required": "",
+      "phone-added-success": "",
+      "user-not-found": "",
+      "error-phone-not-exist": "",
+      "code-is-expired": "",
+      "email-must-be-verified": "",
+      "email-already-in-use": "",
+      "must-accept-cgu": "",
+      "password-security-length": "",
+      "password-security-min": "",
+      "password-security-maj": "",
+      "password-security-number": "",
+      "password-security-special": "",
+      "phone-update-success": "",
+      "cant-be-same-password": "",
+      "success-change-password": "",
+      "cant-be-same-email": ""
+    },
+    "skeleton": {
+      "auth": {
+        "verify-email": "",
+        "create-account-verify-email": "",
+        "tiers-signin": {
+          "get-password-title": ""
+        },
+        "no-code": "",
+        "resend-code": "",
+        "code-expire-in": "",
+        "reset-password-modal": {
+          "title": "",
+          "subtitle": ""
+        },
+        "verify-email-subtitle": "",
+        "login-phone-title": "",
+        "login-with-email": "",
+        "or-connect-with": "",
+        "no-account": "",
+        "create-account": "",
+        "not-connected": "",
+        "not-connected-redirect": "",
+        "verify-phone-title": "",
+        "login-title": "",
+        "login-with-phone": "",
+        "forgot-password": "",
+        "reset-password": "",
+        "already-have-account": "",
+        "signin": "",
+        "create-account-title": "",
+        "or-signup-with": "",
+        "verify-phone-code-title": "",
+        "create-account-verify-email-subtitle": ""
+      },
+      "new-cgu-must-be-accepted": "",
+      "profile": {
+        "logout": "",
+        "delete-account": "",
+        "delete-my-account": "",
+        "delete-my-account-subtitle": ""
+      }
+    },
+    "field": {
+      "auth": {
+        "password": {
+          "title": "",
+          "hint": ""
+        },
+        "phone": {
+          "title": "",
+          "hint": ""
+        },
+        "code": {
+          "title": ""
+        },
+        "email": {
+          "title": "",
+          "hint": ""
+        },
+        "email-or-id": {
+          "title": "",
+          "hint": ""
+        },
+        "repeat-password": {
+          "title": "",
+          "hint": ""
+        },
+        "actual-password": {
+          "title": "",
+          "hint": ""
+        },
+        "new-password": {
+          "title": "",
+          "hint": ""
+        },
+        "new-repeat-password": {
+          "title": "",
+          "hint": ""
+        }
+      }
+    },
+    "complete-profil": {
+      "title": ""
+    },
+    "settings": {
+      "node": {
+        "phone-number": {
+          "title": ""
+        },
+        "link": {
+          "${widget": {
+            "info}": ""
+          }
+        },
+        "change-password": {
+          "title": ""
+        },
+        "change-email": {
+          "title": ""
+        }
+      }
+    },
+    "validator": {
+      "code-invalid": ""
+    }
+  }
+}

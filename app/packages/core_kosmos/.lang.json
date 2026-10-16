@@ -1,0 +1,28 @@
+{
+  "package": {
+    "validator": {
+      "must-have-value": "Ce champs est obligatoire",
+
+      "email-invalid": "Veuillez-entrer un e-mail valide",
+
+      "password-invalid-length": "6 caractères minimum",
+      "password-invalid-maj": "1 majuscule minimum",
+      "password-invalid-min": "1 minuscule minimum",
+      "password-invalid-number": "1 chiffre minimum",
+      "password-invalid-special": "1 caractère spécial minimum (&?!@#)",
+      "password-not-match": "Les mots de passe sont différents",
+
+      "number-invalid": "Veuillez entrer un nombre valide",
+      "number-out-of-range": "Veuillez entrer un nombre entre {min} et {max}",
+      "number-out-of-min": "Veuillez entrer un nombre supérieur à {min}",
+      "number-out-of-max": "Veuillez entrer un nombre inférieur à {max}",
+
+      "date-invalid": "Veuillez entrer une date valide",
+      "date-out-of-range": "Veuillez entrer une date entre {min} et {max}",
+      "date-out-of-min": "Veuillez entrer une date supérieure à {min}",
+      "date-out-of-max": "Veuillez entrer une date inférieure à {max}",
+
+      "alpha-invalid": "Veuillez entrer une valeur valide"
+    }
+  }
+}

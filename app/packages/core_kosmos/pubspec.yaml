@@ -1,0 +1,66 @@
+name: core_kosmos
+description: A new Flutter package project.
+version: 2.0.1-pre
+homepage: none
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Interne package
+  url_strategy: ^0.3.0
+
+  local_auth: ^3.0.1
+  flutter_secure_storage: ^10.3.4
+  firebase_core: 4.7.0
+  cloud_firestore: 6.3.0
+  flutter_easyloading: ^3.0.5
+  firebase_auth: 6.4.0
+  firebase_storage: 13.3.0
+  permission_handler: ^12.0.3
+  firebase_messaging: 16.2.0
+  device_info_plus: ^11.5.0
+  firebase_in_app_messaging: 0.9.2
+  firebase_analytics: 12.3.0
+  firebase_analytics_web: 0.6.1+5
+  flutter_stripe_web: ^6.5.1
+  flutter_local_notifications: ^18.0.1
+  flutter_image_compress: ^2.4.0
+  mime: ^2.0.0
+  encrypt: ^5.0.3
+  intl_phone_number_input: ^0.7.5
+  shared_preferences: ^2.5.5
+  flutter_screenutil: ^5.9.3
+  responsive_framework: 0.2.0
+  get_it: ^9.2.1
+  easy_localization: ^3.0.8
+  auto_route: 5.0.4
+  hooks_riverpod: ^2.6.1
+  get: ^4.7.3
+  dartz: ^0.10.1
+  share_plus: ^12.0.2
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  photo_manager: ^3.9.0
+  file_picker: ^11.0.2
+  wechat_assets_picker: ^10.1.2
+  wechat_camera_picker: ^4.5.0
+  path_provider: ^2.1.5
+  flutter_stripe: ^11.5.0
+  image_picker: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  build_runner: ^2.4.13
+  freezed: ^2.5.2
+  auto_route_generator: ^5.0.3
+  json_serializable: ^6.8.0
+
