@@ -62,7 +62,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: fr.winafoot.app
       vars:
-        APP_STORE_APPLE_ID: 0000000000 # À REMPLACER: Apple ID de l'app dans App Store Connect
+        APP_STORE_APPLE_ID: 6825015285 # Apple ID de l'app dans App Store Connect
     triggering:
       events:
         - tag
