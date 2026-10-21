@@ -55,6 +55,11 @@ dependencies:
   ui_kosmos_v4:
     path: packages/ui_kosmos_v4
 
+# flutter_html 3.0.0 appelle html/src/query_selector.dart `matches`, supprimée
+# dans html 0.15.7 (échec de compilation web). À retirer après migration de flutter_html.
+dependency_overrides:
+  html: 0.15.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

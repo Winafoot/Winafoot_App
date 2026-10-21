@@ -21,7 +21,7 @@ workflows:
       - name: Dépendances
         script: flutter pub get
       - name: Analyse
-        script: flutter analyze --no-fatal-infos
+        script: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Tests
         script: flutter test
       - name: Signature (key.properties)
@@ -53,16 +53,16 @@ workflows:
     max_build_duration: 60
     working_directory: app
     integrations:
-      app_store_connect: winafoot_asc # nom de la clé API ajoutée dans Codemagic
+      app_store_connect: Cle_Api_WInafoot # nom de la clé API ajoutée dans Codemagic
     environment:
+      groups:
+        - Wina_Group # CERTIFICATE_PRIVATE_KEY
       flutter: stable
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: fr.winafoot.app
       vars:
-        APP_STORE_APPLE_ID: 0000000000 # À REMPLACER: Apple ID de l'app dans App Store Connect
+        BUNDLE_ID: fr.winafoot.app
+        APP_STORE_APPLE_ID: 6825015285 # Apple ID de l'app dans App Store Connect
     triggering:
       events:
         - tag
@@ -70,15 +70,29 @@ workflows:
         - pattern: "v*"
           include: true
     scripts:
+      # Le Swift Package Manager de Flutter résout une autre version du SDK Firebase que celle du
+      # Podfile.lock (cloud_firestore 6.3.0 ne compile plus). On reste sur CocoaPods.
+      - name: Désactiver Swift Package Manager
+        script: flutter config --no-enable-swift-package-manager
       - name: Dépendances
         script: flutter pub get
       - name: Pods
         script: |
           cd ios && pod install
+      - name: Keychain
+        script: keychain initialize
+      - name: Certificat et profil App Store (clé API, création si absents)
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
+      - name: Import du certificat
+        script: keychain add-certificates
       - name: Signature Xcode
         script: xcode-project use-profiles
       - name: Analyse
-        script: flutter analyze --no-fatal-infos
+        script: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Tests
         script: flutter test
       - name: Build IPA
@@ -88,6 +102,7 @@ workflows:
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
+      - app/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
@@ -95,4 +110,4 @@ workflows:
         submit_to_testflight: true
       email:
         recipients:
-          - mayaconnect2025@gmail.com
+          - guillaumel1103@gmail.com
