@@ -101,6 +101,7 @@ workflows:
             --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
+      - build/ios/ipa/*.ipa
       - app/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
