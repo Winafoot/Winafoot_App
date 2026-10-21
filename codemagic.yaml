@@ -1,0 +1,98 @@
+workflows:
+  android-release:
+    name: Android -> Google Play
+    instance_type: linux_x2
+    max_build_duration: 45
+    working_directory: app
+    environment:
+      flutter: stable
+      java: 17
+      groups:
+        - google_play # GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      android_signing:
+        - winafoot_keystore # référence du keystore uploadé dans Codemagic
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+    scripts:
+      - name: Dépendances
+        script: flutter pub get
+      - name: Analyse
+        script: flutter analyze --no-fatal-infos
+      - name: Tests
+        script: flutter test
+      - name: Signature (key.properties)
+        script: |
+          cat > android/key.properties <<EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          storeFile=$CM_KEYSTORE_PATH
+          EOF
+      - name: Build AAB
+        script: |
+          flutter build appbundle --release \
+            --build-number=$BUILD_NUMBER
+    artifacts:
+      - build/**/outputs/**/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+      email:
+        recipients:
+          - mayaconnect2025@gmail.com
+
+  ios-release:
+    name: iOS -> TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    working_directory: app
+    integrations:
+      app_store_connect: winafoot_asc # nom de la clé API ajoutée dans Codemagic
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: fr.winafoot.app
+      vars:
+        APP_STORE_APPLE_ID: 0000000000 # À REMPLACER: Apple ID de l'app dans App Store Connect
+    triggering:
+      events:
+        - tag
+      tag_patterns:
+        - pattern: "v*"
+          include: true
+    scripts:
+      - name: Dépendances
+        script: flutter pub get
+      - name: Pods
+        script: |
+          cd ios && pod install
+      - name: Signature Xcode
+        script: xcode-project use-profiles
+      - name: Analyse
+        script: flutter analyze --no-fatal-infos
+      - name: Tests
+        script: flutter test
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+      email:
+        recipients:
+          - mayaconnect2025@gmail.com

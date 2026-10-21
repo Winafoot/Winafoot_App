@@ -46,6 +46,10 @@ export const LIMITS = {
   resetPasswordAccount: { limit: 3, windowMs: HOUR },
   resetPasswordAccountDay: { limit: 6, windowMs: DAY },
 
+  // Inscription d'un coach depuis l'app : par IP seulement (aucun compte n'existe encore). Large devant
+  // un usage humain (un club peut inscrire plusieurs coachs depuis le même réseau), bas devant un script.
+  registerIp: { limit: 10, windowMs: HOUR },
+
   // Callables authentifiés : par uid (adaptateur).
   verificationUid: { limit: 3, windowMs: HOUR },
   deleteAccountUid: { limit: 3, windowMs: HOUR },

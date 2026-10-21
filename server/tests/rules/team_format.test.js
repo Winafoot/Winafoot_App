@@ -65,7 +65,7 @@ function coachDb() {
   return testEnv.authenticatedContext(UID).firestore();
 }
 
-describe('users/{uid}.teamFormat — immuable pour le coach', () => {
+describe('users/{uid}.teamFormat — immuable une fois posé', () => {
   beforeEach(() => seedCoach());
 
   it('refuse de le modifier (set merge)', async () => {

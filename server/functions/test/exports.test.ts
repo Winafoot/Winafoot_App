@@ -52,6 +52,7 @@ describe("exposed surface", () => {
     "phoneIsAlreadyUsed",
     "sendResetPassword",
     "sendEmailVerification",
+    "registerCoach",
     "deleteAccount",
     "addNotification",
     "createPlayer",
@@ -148,7 +149,7 @@ describe("wiring of the hardened callables", () => {
 // se transforme alors en facture (le coupe-circuit budgétaire met ensuite toute l'app en
 // maintenance).
 describe("instance cap of the public functions", () => {
-  it.each(["emailIsAlreadyUsed", "phoneIsAlreadyUsed", "sendResetPassword", "sendEmailVerification", "deleteAccount", "addNotification", "getSearchKey"])(
+  it.each(["emailIsAlreadyUsed", "phoneIsAlreadyUsed", "sendResetPassword", "sendEmailVerification", "registerCoach", "deleteAccount", "addNotification", "getSearchKey"])(
     "callable %s is capped",
     (name) => {
       expect((callables as Record<string, any>)[name].__endpoint.maxInstances).toBe(PUBLIC_MAX_INSTANCES);
@@ -185,6 +186,7 @@ describe("rate limiting wiring", () => {
 
   it.each([
     ["sendResetPassword", "limitedPublicCallableAdapter"],
+    ["registerCoach", "limitedPublicCallableAdapter"],
     ["sendEmailVerification", "limitedAuthedCallableAdapter"],
     ["deleteAccount", "limitedAuthedCallableAdapter"],
     ["addNotification", "limitedAuthedCallableAdapter"],
@@ -196,6 +198,7 @@ describe("rate limiting wiring", () => {
   // Le nom de l'adaptateur ne suffit pas : sans l'option, il ne limite rien.
   it.each([
     ["sendResetPassword", "perIp"],
+    ["registerCoach", "perIp"],
     ["sendEmailVerification", "perUid"],
     ["deleteAccount", "perUid"],
     ["addNotification", "perUid"],

@@ -44,6 +44,7 @@ jamais sur un identifiant fourni par le client. Les limites de débit sont compt
 | `emailIsAlreadyUsed`, `phoneIsAlreadyUsed` | App, avant connexion | Réponse constante (`true`), sans lecture de compte |
 | `sendResetPassword` | App, avant connexion | Réponse identique que le compte existe ou non ; limites par IP, par compte et globale |
 | `sendEmailVerification` | App, connecté | Adresse du compte Auth de l'appelant ; un envoi toutes les 6 h ; limite par compte |
+| `registerCoach` | App, avant connexion | Inscription d'un coach (e-mail, mot de passe, prénom, CGU) ; limite par IP ; crée le compte et ses fiches, sans rien conserver en cas d'échec |
 | `deleteAccount` | App, connecté | Son propre compte ; le compte d'un autre seulement pour un administrateur (contrôles ci-dessous, audit) ; jamais un administrateur |
 | `addNotification` | App, connecté | Expéditeur et destinataire = l'appelant ; limite par compte |
 | `createPlayer`, `deletePlayer` | App, connecté | Effectif de l'appelant, plafond appliqué en transaction sur le nombre réel de joueurs ; limite par compte |
@@ -254,7 +255,7 @@ npm --prefix cms run build && firebase deploy --only hosting:wina-admin --projec
   403 signale un service Cloud Run sans accès public.
 
   ```bash
-  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword sendEmailVerification deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
+  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword sendEmailVerification registerCoach deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
   for f in "${callables[@]}"; do
     printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{"data":{}}' "https://europe-west9-wina-c4c4a.cloudfunctions.net/$f")" "$f"
   done

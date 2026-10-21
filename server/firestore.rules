@@ -224,6 +224,8 @@ service cloud.firestore {
       // firstname, id, createdAt, teamFormat...
       //   coachName, teamName, category, division : « Finalisez votre profil »
       //     (CoachProfileRepository.saveTeamInfo, set merge) ;
+      //   teamFormat : posé UNE SEULE FOIS par le coach inscrit depuis l'app (même écran), jamais
+      //     modifié ni retiré ensuite (validTeamFormat) ; les comptes du back-office l'ont déjà ;
       //   email : recopié depuis Firebase Auth après vérification de la nouvelle adresse (EmailSync) ;
       //   cguAccepted, cguAcceptedDate : UserController.acceptCgu (horodatage client) ;
       //   online, lastOnline : setOnline (core_kosmos), à chaque changement de cycle
@@ -232,7 +234,7 @@ service cloud.firestore {
       //     routés aujourd'hui car canLoginWithPhone = false).
       function clientOwnedUserFields() {
         return [
-          'coachName', 'teamName', 'category', 'division',
+          'coachName', 'teamName', 'category', 'division', 'teamFormat',
           'email', 'cguAccepted', 'cguAcceptedDate',
           'online', 'lastOnline', 'phone', 'phoneNumber'
         ];
@@ -252,8 +254,16 @@ service cloud.firestore {
               && isStrOrNull(p.get('dialCode', null), 8));
       }
 
+      // Format du club (5, 8 ou 11) : écrit par le coach seulement s'il n'existe pas encore. Une fois
+      // posé il fixe le plafond d'effectif (maxPlayers) et ne bouge plus que par le back-office.
+      function validTeamFormat(d, changed) {
+        return !changed.hasAny(['teamFormat'])
+          || (!('teamFormat' in resource.data) && d.get('teamFormat', 0) in [5, 8, 11]);
+      }
+
       function validUserFields(d, changed) {
-        return strIfChanged(d, changed, 'coachName', 100)
+        return validTeamFormat(d, changed)
+          && strIfChanged(d, changed, 'coachName', 100)
           && strIfChanged(d, changed, 'teamName', 100)
           && strIfChanged(d, changed, 'category', 30)
           && strIfChanged(d, changed, 'division', 30)
@@ -270,8 +280,8 @@ service cloud.firestore {
       // (Admin SDK) pour un compte provisionné, createPlayer pour le premier joueur d'un compte
       // qui n'en aurait pas.
       allow create: if false;
-      // Liste blanche de champs (clientOwnedUserFields), donc `teamFormat` et `playerCount`
-      // restent immuables pour le client : ni ajout, ni modification, ni retrait. Le compteur
+      // Liste blanche de champs (clientOwnedUserFields). `teamFormat` ne peut qu'être AJOUTÉ une fois
+      // (validTeamFormat) ; `playerCount` reste immuable pour le client. Le compteur
       // d'effectif est tenu par les callables createPlayer / deletePlayer, et par eux seuls.
       // Un set() sans merge qui
       // réécrit la fiche sans les champs serveur est refusé aussi (ils apparaissent comme

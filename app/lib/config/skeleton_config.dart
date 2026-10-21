@@ -25,7 +25,11 @@ SkeletonAppConfig initSkeletonAppConfig() {
       // se fait par e-mail et mot de passe.
       enableLocalAuth: false,
       registerFirst: false,
-      canCreateAccount: false,
+      // Inscription libre : le lien « Créer maintenant » de la connexion ouvre
+      // RegisterPage (page 1), puis la passerelle ouvre « Finalisez votre profil »
+      // (page 2). On n'utilise pas la page de création du socle.
+      canCreateAccount: true,
+      createAccountRoute: '/auth/register',
       showBackButton: false,
       // Tant que `profilCompleted` est faux, la passerelle skeleton appelle ce
       // callback : on ouvre l'écran « Finalisez votre profil » (étape 1). Le

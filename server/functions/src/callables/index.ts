@@ -30,6 +30,13 @@ export const sendResetPassword = onCall(
   limitedPublicCallableAdapter("callables/auth/send_reset_password_secured", { scope: "reset-password", perIp: LIMITS.resetPasswordIp }),
 );
 
+// Public (avant connexion) : inscription d'un coach depuis l'app. Limité par IP ; crée le compte Auth et ses
+// fiches avec l'Admin SDK (les règles Firestore interdisent la création côté client).
+export const registerCoach = onCall(
+  PUBLIC,
+  limitedPublicCallableAdapter("callables/auth/register_coach", { scope: "register-coach", perIp: LIMITS.registerIp }),
+);
+
 // Authentifié : suppression du propre compte de l'appelant (ou admin) uniquement.
 export const deleteAccount = onCall(
   PUBLIC,

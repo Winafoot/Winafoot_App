@@ -1,6 +1,7 @@
 import 'package:wina/config/permission_config.dart';
 import 'package:wina/view/page/home_page.dart';
 import 'package:wina/view/page/maintenance_page.dart';
+import 'package:wina/view/page/register_page.dart';
 import 'package:wina/view/page/update_required_page.dart';
 import 'package:permissionrequest/permissons_package.dart';
 import 'package:skeleton/skeleton.dart';
@@ -42,6 +43,7 @@ import 'package:wina/view/page/settings/settings_page.dart';
       children: [
         AutoRoute(path: "login", page: LoginPage),
         AutoRoute(path: "login-with-phone", page: PhoneLoginPage),
+        AutoRoute(path: "register", page: RegisterPage),
       ],
     ),
 

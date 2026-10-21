@@ -855,6 +855,16 @@
       "aucun-joueur-disponible": "Aucun joueur disponible."
     }
   },
+  "account": {
+    "delete": {
+      "action": "Supprimer mon compte",
+      "title": "Supprimer votre compte ?",
+      "message": "Cette action est définitive. Votre profil, votre équipe, vos joueurs, vos compositions et vos matchs seront supprimés et ne pourront pas être récupérés.",
+      "keep": "Conserver mon compte",
+      "confirm": "Supprimer définitivement",
+      "error": "La suppression du compte a échoué. Vérifiez votre connexion et réessayez."
+    }
+  },
   "bar": {
     "settings": {
       "no-content": "Aucun contenu disponible."

@@ -2,13 +2,16 @@ import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:wina/data/coach_profile_repository.dart';
 import 'package:wina/models/coach_profile.dart';
+import 'package:wina/models/formation.dart' show PlayerCount;
+import 'package:wina/config/theme.dart';
 import 'package:wina/view/page/check_profil_step2_screen.dart';
 import 'package:wina/view/widget/app_notif.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
 
 /// Check profil — étape 1 : « Finalisez votre profil coach ».
 ///
-/// Collecte le nom du coach, le nom de l'équipe, la catégorie et la division ;
+/// Collecte le nom du coach (si inconnu), le nom de l'équipe, la catégorie, la division
+/// et le format de jeu (5, 8 ou 11 joueurs) ;
 /// « Continuer » enregistre ces informations puis passe à l'étape 2 (maillots).
 /// Affichée par la passerelle skeleton tant que `profilCompleted` est faux.
 ///
@@ -32,6 +35,15 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
   final TextEditingController _equipe = TextEditingController();
   TeamCategory? _category;
   TeamDivision? _division;
+  PlayerCount? _format;
+
+  /// Le compte porte déjà son format (posé par le back-office) : il se lit
+  /// mais ne se choisit plus, les règles Firestore le verrouillent.
+  bool _formatLocked = false;
+
+  /// Nom complet déjà connu (coach inscrit depuis l'app : son prénom) : le champ
+  /// n'est plus demandé à l'onboarding, seulement en modification.
+  bool _nameKnown = false;
   bool _busy = false;
 
   /// Vrai dès qu'un « Continuer » a échoué : les champs obligatoires restés
@@ -66,6 +78,9 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
         }
         _category ??= profile.category;
         _division ??= profile.division;
+        _format ??= profile.teamFormat;
+        _formatLocked = profile.teamFormat != null;
+        _nameKnown = coachName.isNotEmpty;
       });
     } catch (_) {
       // Pré-remplissage best-effort.
@@ -84,7 +99,8 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
     if (_nom.text.trim().isEmpty ||
         _equipe.text.trim().isEmpty ||
         _category == null ||
-        _division == null) {
+        _division == null ||
+        _format == null) {
       setState(() => _submitted = true);
       showAppNotif(
         context,
@@ -101,6 +117,8 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
         teamName: _equipe.text.trim(),
         category: _category!,
         division: _division!,
+        // Déjà posé : l'écrire de nouveau serait refusé par les règles.
+        teamFormat: _formatLocked ? null : _format,
       );
     } catch (e) {
       // L'étape 2 n'écrit que les maillots et `profilCompleted` : sans cette
@@ -148,15 +166,17 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
       // laisse `onBack` nul, le profil devant être complété avant d'entrer.
       onBack: widget.editMode ? () => Navigator.of(context).maybePop() : null,
       children: [
-        const CpLabel('Nom complet du coach*'),
-        sh(8),
-        CpTextField(
-          controller: _nom,
-          hint: 'Ex. John Doe',
-          onChanged: _onFieldChanged,
-          error: _submitted && _nom.text.trim().isEmpty,
-        ),
-        sh(18),
+        if (!_nameKnown || widget.editMode) ...<Widget>[
+          const CpLabel('Nom complet du coach*'),
+          sh(8),
+          CpTextField(
+            controller: _nom,
+            hint: 'Ex. John Doe',
+            onChanged: _onFieldChanged,
+            error: _submitted && _nom.text.trim().isEmpty,
+          ),
+          sh(18),
+        ],
         const CpLabel('Nom de votre équipe*'),
         sh(8),
         CpTextField(
@@ -185,6 +205,28 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
           onChanged: (TeamDivision v) => setState(() => _division = v),
           error: _submitted && _division == null,
         ),
+        sh(18),
+        const CpLabel('Format de jeu*'),
+        sh(8),
+        if (_formatLocked)
+          CpBox(
+            child: Text(
+              '${_format!.value} joueurs',
+              style: AppThemeStyle.regularStyle(15, AppColor.primaryLabels),
+            ),
+          )
+        else
+          CpDropdown<PlayerCount>(
+            value: _format,
+            values: const <PlayerCount>[
+              PlayerCount.five,
+              PlayerCount.eight,
+              PlayerCount.eleven,
+            ],
+            labelOf: (PlayerCount v) => '${v.value} joueurs',
+            onChanged: (PlayerCount v) => setState(() => _format = v),
+            error: _submitted && _format == null,
+          ),
         sh(28),
         CpButton(
           label: widget.editMode ? 'Enregistrer' : 'Continuer',
