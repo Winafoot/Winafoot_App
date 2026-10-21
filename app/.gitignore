@@ -62,3 +62,48 @@ app.*.map.json
 keys/
 *.p8
 *.mobileprovision
+
+# Signature Android / iOS (ne JAMAIS commiter)
+*.jks
+*.keystore
+android/key.properties
+android/local.properties
+*.p12
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.p8
+service-account*.json
+*-service-account*.json
+play-store-credentials*.json
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+**/xcuserdata/
+*.xcworkspace/xcuserdata/
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+
+# Android
+android/.gradle/
+android/captures/
+android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+*.iml
+
+# Plateformes non utilisées (app mobile uniquement)
+/linux/
+/macos/
+/windows/
+/web/
+
+# Fichiers Gradle Kotlin DSL générés en doublon du build.gradle Groovy
+android/build.gradle.kts
+android/settings.gradle.kts
+android/app/build.gradle.kts
+
+# Résidu de flutter create (ancien identifiant fr.winafoot.wina)
+android/app/src/main/kotlin/fr/winafoot/wina/
