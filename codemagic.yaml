@@ -53,7 +53,7 @@ workflows:
     max_build_duration: 60
     working_directory: app
     integrations:
-      app_store_connect: winafoot_asc # nom de la clé API ajoutée dans Codemagic
+      app_store_connect: Cle_Api_WInafoot # nom de la clé API ajoutée dans Codemagic
     environment:
       flutter: stable
       xcode: latest
