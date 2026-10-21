@@ -55,6 +55,8 @@ workflows:
     integrations:
       app_store_connect: Cle_Api_WInafoot # nom de la clé API ajoutée dans Codemagic
     environment:
+      groups:
+        - Wina_Group # CERTIFICATE_PRIVATE_KEY
       flutter: stable
       xcode: latest
       cocoapods: default
