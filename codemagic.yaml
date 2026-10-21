@@ -58,10 +58,8 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: fr.winafoot.app
       vars:
+        BUNDLE_ID: fr.winafoot.app
         APP_STORE_APPLE_ID: 6825015285 # Apple ID de l'app dans App Store Connect
     triggering:
       events:
@@ -75,6 +73,16 @@ workflows:
       - name: Pods
         script: |
           cd ios && pod install
+      - name: Keychain
+        script: keychain initialize
+      - name: Certificat et profil App Store (clé API, création si absents)
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY
+      - name: Import du certificat
+        script: keychain add-certificates
       - name: Signature Xcode
         script: xcode-project use-profiles
       - name: Analyse
