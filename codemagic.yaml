@@ -70,6 +70,10 @@ workflows:
         - pattern: "v*"
           include: true
     scripts:
+      # Le Swift Package Manager de Flutter résout une autre version du SDK Firebase que celle du
+      # Podfile.lock (cloud_firestore 6.3.0 ne compile plus). On reste sur CocoaPods.
+      - name: Désactiver Swift Package Manager
+        script: flutter config --no-enable-swift-package-manager
       - name: Dépendances
         script: flutter pub get
       - name: Pods
@@ -97,7 +101,7 @@ workflows:
             --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist
     artifacts:
-      - build/ios/ipa/*.ipa
+      - app/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:

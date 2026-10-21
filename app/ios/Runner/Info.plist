@@ -36,6 +36,8 @@
 		<string>Votre position n'est utilisée que si vous l'autorisez, pendant que vous utilisez Wina.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Le micro n'est utilisé que si vous choisissez d'enregistrer une vidéo à ajouter dans Wina.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Wina n'ajoute une image ou une vidéo à votre photothèque que si vous choisissez de l'enregistrer.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Vos photos ne sont consultées que si vous choisissez une image ou une vidéo à ajouter dans Wina.</string>
 		<key>UIApplicationSceneManifest</key>
