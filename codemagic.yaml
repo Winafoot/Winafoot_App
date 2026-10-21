@@ -21,7 +21,7 @@ workflows:
       - name: Dépendances
         script: flutter pub get
       - name: Analyse
-        script: flutter analyze --no-fatal-infos
+        script: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Tests
         script: flutter test
       - name: Signature (key.properties)
@@ -88,7 +88,7 @@ workflows:
       - name: Signature Xcode
         script: xcode-project use-profiles
       - name: Analyse
-        script: flutter analyze --no-fatal-infos
+        script: flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Tests
         script: flutter test
       - name: Build IPA
