@@ -6,6 +6,7 @@ import { DeletedUserRepositoryRepository } from "../../database/deleted_users/de
 import { UserRecord } from "firebase-admin/auth";
 import { HttpsError, logger } from "../../runtime/firebase";
 import { describeError } from "../../utils/describe_error";
+import { detachFromTeams } from "../../billing/linked_teams";
 
 interface DeleteAccountData {
   uid: string;
@@ -26,6 +27,14 @@ export default async (data: DeleteAccountData): Promise<true> => {
       throw new HttpsError("not-found", "Compte introuvable.");
     }
     logger.error(`[Error] deleteAccount: lecture du compte impossible : ${describeError(e)}`);
+    throw new HttpsError("internal", "La suppression du compte a échoué, réessayez.");
+  }
+
+  try {
+    // Comptes d'équipe liés : supprimés avec leur propriétaire (ou place libérée si c'est un compte lié).
+    await detachFromTeams(user.uid);
+  } catch (e) {
+    logger.error(`[Error] deleteAccount: comptes d'équipe non supprimés : ${describeError(e)}`);
     throw new HttpsError("internal", "La suppression du compte a échoué, réessayez.");
   }
 

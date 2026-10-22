@@ -17,8 +17,8 @@ import { ADMIN_MAX_INSTANCES, BUDGET_ALERT_MAX_INSTANCES, PUBLIC_MAX_INSTANCES, 
 // donc rester exporté.
 describe("exposed surface", () => {
   // Landing (support, suppression de compte) : exigés pour la soumission aux stores.
-  it("keeps the three HTTP endpoints of the landing page, and only those", () => {
-    expect(Object.keys(httpRequests).sort()).toEqual(["deleteAccountByEmail", "onSendLandingPageMail", "onSendLandingPageMailDeleteAccount"]);
+  it("keeps the HTTP endpoints, and only those", () => {
+    expect(Object.keys(httpRequests).sort()).toEqual(["deleteAccountByEmail", "onSendLandingPageMail", "onSendLandingPageMailDeleteAccount", "revenuecatWebhook"]);
   });
 
   it("keeps the nine background triggers, and only those", () => {
@@ -66,14 +66,17 @@ describe("exposed surface", () => {
     "createAdmin",
     "updateAdmin",
     "deleteAdmin",
+    "createLinkedTeam",
+    "resetLinkedTeamPassword",
+    "grantTestSubscription",
   ])("keeps the %s callable", (name) => {
     expect(callables).toHaveProperty(name);
   });
 
   // Le changement d'adresse passe par l'écran Paramètres de l'app (verifyBeforeUpdateEmail, côté client) :
   // les callables du socle sendChangeEmail et changeEmail n'avaient aucun appelant atteignable.
-  it("exposes exactly seventeen callables", () => {
-    expect(Object.keys(callables)).toHaveLength(17);
+  it("exposes exactly twenty-one callables", () => {
+    expect(Object.keys(callables)).toHaveLength(21);
     expect(callables).not.toHaveProperty("sendChangeEmail");
     expect(callables).not.toHaveProperty("changeEmail");
   });
@@ -84,7 +87,7 @@ describe("exposed surface", () => {
 // inaperçu.
 describe("wiring of the hardened callables", () => {
   // L'adaptateur authentifié refuse l'appel AVANT de charger le module du handler.
-  it.each(["sendEmailVerification", "deleteAccount", "addNotification", "createPlayer", "deletePlayer", "getSearchKey"])(
+  it.each(["sendEmailVerification", "deleteAccount", "addNotification", "createPlayer", "deletePlayer", "getSearchKey", "createLinkedTeam", "resetLinkedTeamPassword", "grantTestSubscription"])(
     "%s rejects an anonymous caller",
     async (name) => {
       const callable = (callables as Record<string, any>)[name];
@@ -149,7 +152,7 @@ describe("wiring of the hardened callables", () => {
 // se transforme alors en facture (le coupe-circuit budgétaire met ensuite toute l'app en
 // maintenance).
 describe("instance cap of the public functions", () => {
-  it.each(["emailIsAlreadyUsed", "phoneIsAlreadyUsed", "sendResetPassword", "sendEmailVerification", "registerCoach", "deleteAccount", "addNotification", "getSearchKey"])(
+  it.each(["emailIsAlreadyUsed", "phoneIsAlreadyUsed", "sendResetPassword", "sendEmailVerification", "registerCoach", "deleteAccount", "addNotification", "getSearchKey", "createLinkedTeam", "resetLinkedTeamPassword", "grantTestSubscription"])(
     "callable %s is capped",
     (name) => {
       expect((callables as Record<string, any>)[name].__endpoint.maxInstances).toBe(PUBLIC_MAX_INSTANCES);
@@ -161,7 +164,7 @@ describe("instance cap of the public functions", () => {
     expect((callables as Record<string, any>)[name].__endpoint.maxInstances).toBe(ADMIN_MAX_INSTANCES);
   });
 
-  it.each(["onSendLandingPageMail", "onSendLandingPageMailDeleteAccount", "deleteAccountByEmail"])("HTTP function %s is capped", (name) => {
+  it.each(["onSendLandingPageMail", "onSendLandingPageMailDeleteAccount", "deleteAccountByEmail", "revenuecatWebhook"])("HTTP function %s is capped", (name) => {
     expect((httpRequests as Record<string, any>)[name].__endpoint.maxInstances).toBe(PUBLIC_MAX_INSTANCES);
   });
 });
@@ -191,6 +194,8 @@ describe("rate limiting wiring", () => {
     ["deleteAccount", "limitedAuthedCallableAdapter"],
     ["addNotification", "limitedAuthedCallableAdapter"],
     ["getSearchKey", "limitedAuthedCallableAdapter"],
+    ["createLinkedTeam", "limitedAuthedCallableAdapter"],
+    ["resetLinkedTeamPassword", "limitedAuthedCallableAdapter"],
   ])("%s goes through %s", (name, adapter) => {
     expect(source).toMatch(new RegExp(`export const ${name} = onCall\\([^;]*${adapter}\\(`));
   });
@@ -203,6 +208,8 @@ describe("rate limiting wiring", () => {
     ["deleteAccount", "perUid"],
     ["addNotification", "perUid"],
     ["getSearchKey", "perUid"],
+    ["createLinkedTeam", "perUid"],
+    ["resetLinkedTeamPassword", "perUid"],
   ])("%s passes a %s limit", (name, option) => {
     expect(source).toMatch(new RegExp(`export const ${name} = onCall\\([^;]*${option}: LIMITS\\.`));
   });

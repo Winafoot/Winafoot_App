@@ -69,7 +69,11 @@ describe("registerCoach", () => {
     expect(await codeOf(registerCoach(payload({ email })))).toBe("invalid-argument");
   });
 
-  it.each(["court1!", "sansmajuscule1!", "SANSMINUSCULE1!", "SansChiffre!!", "SansSpecial12"])(
+  it("refuses the technical address of team accounts", async () => {
+    expect(await codeOf(registerCoach(payload({ email: "u15-lyon@equipes.wina.invalid" })))).toBe("invalid-argument");
+  });
+
+  it.each(["court1!","sansmajuscule1!", "SANSMINUSCULE1!", "SansChiffre!!", "SansSpecial12"])(
     "refuses the password %j that breaks the policy",
     async (password) => {
       expect(await codeOf(registerCoach(payload({ email: "mdp@club.test", password })))).toBe("invalid-argument");

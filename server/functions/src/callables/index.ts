@@ -62,6 +62,25 @@ export const deletePlayer = onCall(
   limitedAuthedCallableAdapter("callables/players/delete_player", { scope: "delete-player", perUid: LIMITS.deletePlayerUid }),
 );
 
+/// Abonnements : équipes liées (un compte par équipe, rattaché au compte propriétaire) ///
+// Authentifié : le quota d'équipes vient de l'abonnement lu côté serveur, jamais du client.
+export const createLinkedTeam = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/create_linked_team", { scope: "create-linked-team", perUid: LIMITS.createLinkedTeamUid }),
+);
+// Authentifié : seul le propriétaire du compte lié visé (ownerUid de sa fiche) peut redéfinir son mot de passe.
+export const resetLinkedTeamPassword = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/reset_linked_team_password", { scope: "reset-linked-team-password", perUid: LIMITS.resetLinkedTeamPasswordUid }),
+);
+
+// Authentifié : simule un achat pour l'appelant. Refusé tant que TEST_PURCHASES_ENABLED n'est pas "true" sur la
+// fonction (projet de test uniquement, jamais en production).
+export const grantTestSubscription = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/grant_test_subscription", { scope: "grant-test-subscription", perUid: LIMITS.grantTestSubscriptionUid }),
+);
+
 /// Recherche Algolia ///
 // Authentifié : la clé sécurisée est restreinte aux enregistrements de l'appelant (uid issu du jeton, payload ignoré).
 // Lie le SEUL secret de recherche (clé parente) ; la clé d'écriture n'est jamais liée ici.

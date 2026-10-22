@@ -6,6 +6,7 @@ import { HttpsError, logger } from "../../runtime/firebase";
 import { AdminCaller } from "../../runtime/v2_admin";
 import { ADMIN_TARGET_MESSAGE, isAdminRecord } from "./_admin_accounts";
 import { describeError } from "../../utils/describe_error";
+import { detachFromTeams } from "../../billing/linked_teams";
 
 export interface DeleteCoachData {
   uid: string;
@@ -62,6 +63,23 @@ export default async (data: DeleteCoachData, caller: AdminCaller): Promise<Delet
       error: String(e?.message ?? e),
     });
     throw new HttpsError("internal", "L'archivage du compte a échoué, rien n'a été supprimé, réessayez.");
+  }
+
+  try {
+    await detachFromTeams(data.uid);
+  } catch (e: any) {
+    logger.error(`[Error] deleteCoach: comptes d'équipe non supprimés : ${describeError(e)}`);
+    await AdminAuditRepository.instance.record({
+      action: "delete",
+      targetUid: data.uid,
+      targetEmail: email,
+      adminUid: caller.uid,
+      adminEmail: caller.email,
+      outcome: "failure",
+      failedStage: "teams",
+      error: String(e?.message ?? e),
+    });
+    throw new HttpsError("internal", "La suppression des équipes liées a échoué, rien n'a été supprimé, réessayez.");
   }
 
   try {

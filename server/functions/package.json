@@ -12,6 +12,8 @@
     "test:watch": "firebase emulators:exec --only auth,firestore --project demo-wina \"vitest\"",
     "set-admin": "tsx scripts/set-admin.ts",
     "backfill-player-count": "tsx scripts/backfill-player-count.ts",
+    "grant-existing-access": "tsx scripts/grant-existing-access.ts",
+    "grant-test-subscription": "tsx scripts/grant-test-subscription.ts",
     "algolia-reindex": "tsx scripts/algolia-reindex.ts"
   },
   "engines": {

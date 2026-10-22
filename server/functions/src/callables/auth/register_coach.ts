@@ -3,6 +3,7 @@ import { HttpsError, logger } from "../../runtime/firebase";
 import { describeError } from "../../utils/describe_error";
 import { assertPasswordPolicy } from "../admin/_password_policy";
 import { validateDisplayName } from "../admin/_admin_accounts";
+import { isLinkedEmail } from "../../billing/linked_teams";
 
 export interface RegisterCoachData {
   email: string;
@@ -39,6 +40,10 @@ export default async (data: RegisterCoachData): Promise<RegisterCoachResult> => 
   const firstname: string = data.firstname.trim();
 
   if (!EMAIL_PATTERN.test(email) || email.length > EMAIL_MAX_LENGTH) {
+    throw new HttpsError("invalid-argument", "Adresse e-mail invalide.");
+  }
+  // Cette adresse est celle des comptes d'équipe liés : un coach ne peut pas s'en servir.
+  if (isLinkedEmail(email)) {
     throw new HttpsError("invalid-argument", "Adresse e-mail invalide.");
   }
   if (firstname.length === 0) {
