@@ -13,6 +13,10 @@ import 'package:skeleton/skeleton.dart';
 /// `FirebaseFunctions.instance` viserait `us-central1`, où rien ne tourne.
 const String kCloudRegion = 'europe-west9';
 
+/// Domaine des adresses techniques des comptes d'équipe liés : l'identifiant saisi à la connexion devient
+/// `<identifiant>@equipes.wina.invalid` (même valeur que LINKED_EMAIL_DOMAIN côté serveur).
+const String kLinkedEmailDomain = 'equipes.wina.invalid';
+
 SkeletonAppConfig initSkeletonAppConfig() {
   return SkeletonAppConfig(
     cloudRegion: kCloudRegion,
@@ -21,6 +25,8 @@ SkeletonAppConfig initSkeletonAppConfig() {
     mainRouteInfo: const LoggedUserAppCoreRoute(),
     authentificationConfig: SkeletonAuthentificationConfig(
       userType: "client",
+      // Les comptes d'équipe liés se connectent par identifiant (sans « @ »).
+      identifierEmailDomain: kLinkedEmailDomain,
       // Connexion biométrique désactivée : l'app ne propose pas de l'activer, la connexion
       // se fait par e-mail et mot de passe.
       enableLocalAuth: false,

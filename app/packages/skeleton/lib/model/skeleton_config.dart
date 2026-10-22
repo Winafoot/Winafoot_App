@@ -203,6 +203,11 @@ class SkeletonAuthentificationConfig {
   /// par défaut ```true```.
   final bool requireProfilCompletion;
 
+  /// Si défini, une saisie sans « @ » est traitée comme un identifiant : elle
+  /// devient ```<identifiant>@<domaine>``` avant la connexion e-mail/mot de passe,
+  /// par défaut ```null``` (comportement inchangé).
+  final String? identifierEmailDomain;
+
   const SkeletonAuthentificationConfig(
       {this.emailMustBeVerified = false,
       this.webLoginPageTitleBuilder,
@@ -241,6 +246,7 @@ class SkeletonAuthentificationConfig {
       this.alreadyHaveAccount,
       this.showRequiredAsterixAuth = true,
       this.requireProfilCompletion = true,
+      this.identifierEmailDomain,
       this.verifyEmailButtonBuilder,
       this.phoneLoginButtonBuilder,
       this.loginButtonBuilder,

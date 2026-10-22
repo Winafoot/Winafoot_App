@@ -146,8 +146,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
           SizedBox(height: themeData.titleAndFormSpacing ?? formatHeight(44)),
           FormClassicField(
-            fieldName: "package.field.auth.email-or-id.title".tr(),
-            hintText: "package.field.auth.email-or-id.hint".tr(),
+            fieldName: (config?.authentificationConfig.identifierEmailDomain !=
+                        null
+                    ? "package.field.auth.email-or-identifier.title"
+                    : "package.field.auth.email-or-id.title")
+                .tr(),
+            hintText: (config?.authentificationConfig.identifierEmailDomain !=
+                        null
+                    ? "package.field.auth.email-or-identifier.hint"
+                    : "package.field.auth.email-or-id.hint")
+                .tr(),
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             focusNode: _emailOrIdFocusNode,
@@ -166,10 +174,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               }
             },
             validator: (value) {
-              final rep =
-                  config?.authentificationConfig.loginType == LoginType.id
-                      ? FieldValidator.fieldNotEmpty(value)
-                      : AuthValidator.validEmail(value);
+              // Avec un domaine d'identifiant, une saisie sans « @ » est un
+              // identifiant : il suffit qu'elle ne soit pas vide.
+              final bool isIdentifier =
+                  config?.authentificationConfig.identifierEmailDomain !=
+                          null &&
+                      !(value ?? '').contains('@');
+              final rep = isIdentifier ||
+                      config?.authentificationConfig.loginType == LoginType.id
+                  ? FieldValidator.fieldNotEmpty(value)
+                  : AuthValidator.validEmail(value);
               if (rep != null) {
                 setState(() => _isEmailError = true);
               } else {
@@ -720,6 +734,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         config?.authentificationConfig.loginType ?? LoginType.email;
     String email = savedEmail ?? emailOrId!;
     String pass = savedPass ?? password!;
+
+    /// Identifiant (sans « @ ») -> adresse technique du domaine configuré
+    final String? identifierDomain =
+        config?.authentificationConfig.identifierEmailDomain;
+    if (identifierDomain != null) {
+      email = LoginIdentifier.toEmail(email, identifierDomain);
+    }
 
     /// fetch email from FirebaseFirestore if login with id
     if (authType == LoginType.id && savedEmail == null) {
