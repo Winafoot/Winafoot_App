@@ -110,11 +110,15 @@ class CheckProfilScaffold extends StatelessWidget {
     required this.title,
     required this.children,
     this.onBack,
+    this.width,
   });
 
   final String title;
   final List<Widget> children;
   final VoidCallback? onBack;
+
+  /// Largeur de la carte ; par défaut celle, étroite, des écrans de complétion de profil.
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +140,7 @@ class CheckProfilScaffold extends StatelessWidget {
                     child: SingleChildScrollView(
                       padding: EdgeInsets.symmetric(vertical: formatHeight(20)),
                       child: Container(
-                        width: formatWidth(430),
+                        width: width ?? formatWidth(430),
                         padding: EdgeInsets.symmetric(
                           horizontal: formatWidth(28),
                           vertical: formatHeight(28),
