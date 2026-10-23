@@ -2,6 +2,7 @@ import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/orientation_controller.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/live_match.dart';
 import 'package:wina/providers/home_tab_provider.dart';
@@ -111,6 +112,7 @@ class CheckProfilScaffold extends StatelessWidget {
     required this.children,
     this.onBack,
     this.width,
+    this.portraitOnPhone = false,
   });
 
   final String title;
@@ -120,8 +122,19 @@ class CheckProfilScaffold extends StatelessWidget {
   /// Largeur de la carte ; par défaut celle, étroite, des écrans de complétion de profil.
   final double? width;
 
+  /// Sur téléphone, affiche l'écran en portrait (parcours d'entrée : inscription et
+  /// « Finalisez votre profil »). Faux pour les écrans de l'app, qui restent en paysage.
+  final bool portraitOnPhone;
+
   @override
   Widget build(BuildContext context) {
+    final Widget scaffold = _buildScaffold(context);
+    return portraitOnPhone ? PortraitScope(child: scaffold) : scaffold;
+  }
+
+  Widget _buildScaffold(BuildContext context) {
+    // Téléphone en portrait : la carte prend la largeur de l'écran, moins une marge.
+    final bool narrow = MediaQuery.sizeOf(context).width < 600;
     return Scaffold(
       backgroundColor: AppColor.background,
       body: SafeArea(
@@ -138,9 +151,12 @@ class CheckProfilScaffold extends StatelessWidget {
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(vertical: formatHeight(20)),
+                      padding: EdgeInsets.symmetric(
+                        vertical: formatHeight(20),
+                        horizontal: narrow ? formatWidth(16) : 0,
+                      ),
                       child: Container(
-                        width: width ?? formatWidth(430),
+                        width: narrow ? double.infinity : (width ?? formatWidth(430)),
                         padding: EdgeInsets.symmetric(
                           horizontal: formatWidth(28),
                           vertical: formatHeight(28),

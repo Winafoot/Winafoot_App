@@ -62,6 +62,7 @@ class _CheckProfilStep2ScreenState extends State<CheckProfilStep2Screen> {
   Widget build(BuildContext context) {
     return CheckProfilScaffold(
       title: 'app.check-profil-step2.titre'.tr(),
+      portraitOnPhone: true,
       onBack: () => Navigator.of(context).maybePop(),
       children: [
         JerseyForm(controller: _jerseys),

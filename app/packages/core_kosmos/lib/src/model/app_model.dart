@@ -58,6 +58,10 @@ class ResponsiveConfig {
   /// @Default: const Size(375, 812)
   final Size size;
 
+  /// Taille du design quand l'écran est en portrait. `null` : [size] reste
+  /// utilisée quelle que soit l'orientation.
+  final Size? portraitSize;
+
   /// Liste des breakpoints de l'application (séparation responsive).
   final List<ResponsiveBreakpoint> breakpoints;
 
@@ -66,6 +70,7 @@ class ResponsiveConfig {
 
   const ResponsiveConfig({
     this.size = const Size(375, 812),
+    this.portraitSize,
     this.breakpoints = const [
       ResponsiveBreakpoint.tag(800, name: PHONE),
       ResponsiveBreakpoint.tag(1100, name: TABLET),

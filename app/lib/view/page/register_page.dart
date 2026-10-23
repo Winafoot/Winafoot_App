@@ -163,6 +163,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Widget build(BuildContext context) {
     return CheckProfilScaffold(
       title: 'Créer mon compte',
+      portraitOnPhone: true,
       onBack: () => Navigator.of(context).maybePop(),
       children: <Widget>[
         const CpLabel('Adresse e-mail*'),
