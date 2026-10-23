@@ -74,8 +74,8 @@ export const resetLinkedTeamPassword = onCall(
   limitedAuthedCallableAdapter("callables/billing/reset_linked_team_password", { scope: "reset-linked-team-password", perUid: LIMITS.resetLinkedTeamPasswordUid }),
 );
 
-// Authentifié : simule un achat pour l'appelant. Refusé tant que TEST_PURCHASES_ENABLED n'est pas "true" sur la
-// fonction (projet de test uniquement, jamais en production).
+// Authentifié : simule un achat pour l'appelant. Refusé tant que app_config/config.test_purchases_enabled n'est pas
+// `true` (champ posé par l'administrateur pour une bêta fermée, à retirer avant le lancement public).
 export const grantTestSubscription = onCall(
   PUBLIC,
   limitedAuthedCallableAdapter("callables/billing/grant_test_subscription", { scope: "grant-test-subscription", perUid: LIMITS.grantTestSubscriptionUid }),

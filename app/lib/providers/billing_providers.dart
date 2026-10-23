@@ -4,15 +4,37 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:wina/billing/access_info.dart';
 import 'package:wina/billing/billing_service.dart';
+import 'package:wina/billing/fallback_billing_service.dart';
 import 'package:wina/billing/offers.dart';
 import 'package:wina/billing/test_billing_service.dart';
 import 'package:wina/data/linked_team_repository.dart';
 import 'package:wina/providers/auth_providers.dart';
 
-/// RevenueCat, sauf `--dart-define=TEST_BILLING=true` (build non release) : achats simulés côté serveur.
-final billingServiceProvider = Provider<BillingService>(
-  (ref) => TestBillingService.isActive ? TestBillingService() : RevenueCatBillingService(),
-);
+/// Un seul service RevenueCat pour toute la session : le SDK ne se configure qu'une fois.
+final revenueCatServiceProvider = Provider<RevenueCatBillingService>((ref) => RevenueCatBillingService());
+
+/// Interrupteur de l'achat simulé : `app_config/config.test_purchases_enabled`, posé par l'administrateur
+/// (lisible par tous, comme `paywall_enforced`). Absent ou illisible : désactivé.
+Future<bool> readTestPurchasesEnabled() async {
+  final DocumentSnapshot<Map<String, dynamic>> d = await FirebaseFirestore.instance
+      .collection('app_config')
+      .doc('config')
+      .get()
+      .timeout(const Duration(seconds: 8));
+  return d.data()?['test_purchases_enabled'] == true;
+}
+
+/// RevenueCat ; achats simulés (prix de démonstration) tant que RevenueCat n'a aucune offre et que
+/// l'administrateur a activé `test_purchases_enabled`. `--dart-define=TEST_BILLING=true` (build non release)
+/// force le mode simulé pour le développement.
+final billingServiceProvider = Provider<BillingService>((ref) {
+  if (TestBillingService.isActive) return const TestBillingService();
+  return FallbackBillingService(
+    primary: ref.watch(revenueCatServiceProvider),
+    fallback: const TestBillingService(forced: true),
+    testEnabled: readTestPurchasesEnabled,
+  );
+});
 
 /// Offres à vendre, par nombre d'équipes (1, 2, 3), prix issus du store. Erreur [BillingUnavailable]
 /// quand les clés RevenueCat ne sont pas dans le build.
