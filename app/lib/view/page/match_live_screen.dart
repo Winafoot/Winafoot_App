@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/data/match_repository.dart';
 import 'package:wina/models/coach_profile.dart';
@@ -171,6 +172,36 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
     Navigator.of(context).popUntil((Route<dynamic> r) => r.isFirst);
   }
 
+  /// Historique des actions en fenêtre (téléphone). `Consumer` : la liste se
+  /// met à jour quand on annule une action depuis la fenêtre.
+  void _openHistory() {
+    showDialog<void>(
+      context: context,
+      barrierColor: AppColor.scrim,
+      builder:
+          (BuildContext ctx) => Dialog(
+            backgroundColor: AppColor.background,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 80,
+              vertical: 16,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Consumer(
+                builder: (BuildContext context, WidgetRef ref, _) {
+                  final LiveMatch? live = ref.watch(liveMatchProvider);
+                  if (live == null) return const SizedBox.shrink();
+                  return _HistoryFeed(
+                    live: live,
+                    notifier: ref.read(liveMatchProvider.notifier),
+                  );
+                },
+              ),
+            ),
+          ),
+    );
+  }
+
   /// Ouvre l'éditeur de composition en cours de match (« Modifier
   /// composition ») : réattribue les joueurs déjà sur le terrain, puis applique
   /// la nouvelle composition au direct (stats / score / chrono conservés).
@@ -214,10 +245,12 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
             Column(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isPhoneLayout ? 16 : cW(40),
+                  ),
                   child: Column(
                     children: <Widget>[
-                      sh(16),
+                      cSh(isPhoneLayout ? 6 : 16),
                       MatchHeader(
                         title: 'app.match-live.titre'.tr(),
                         clock: live.clock,
@@ -250,7 +283,7 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                           ),
                         ],
                       ),
-                      sh(12),
+                      cSh(isPhoneLayout ? 6 : 12),
                       Container(height: 1, color: AppColor.divider),
                     ],
                   ),
@@ -258,16 +291,16 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
-                      formatWidth(40),
-                      formatHeight(14),
-                      formatWidth(40),
-                      formatHeight(14),
+                      isPhoneLayout ? 16 : cW(40),
+                      isPhoneLayout ? 6 : cH(14),
+                      isPhoneLayout ? 16 : cW(40),
+                      isPhoneLayout ? 6 : cH(14),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Expanded(
-                          flex: 5,
+                          flex: isPhoneLayout ? 3 : 5,
                           child: _LivePitch(
                             live: live,
                             byId: byId,
@@ -277,20 +310,26 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                             selectedJerseyAsset: selectedJerseyAsset,
                           ),
                         ),
-                        sw(20),
+                        cSw(isPhoneLayout ? 12 : 20),
+                        // Téléphone : l'historique sort de l'écran (bouton
+                        // dans le panneau joueur) pour laisser la place à la
+                        // saisie des statistiques.
+                        if (!isPhoneLayout) ...<Widget>[
+                          Expanded(
+                            flex: 3,
+                            child: _HistoryFeed(live: live, notifier: notifier),
+                          ),
+                          cSw(20),
+                        ],
                         Expanded(
-                          flex: 9,
+                          flex: isPhoneLayout ? 7 : 9,
                           child: _CenterStats(
                             live: live,
                             byId: byId,
                             notifier: notifier,
                             jerseyAsset: jerseyAsset,
+                            onOpenHistory: _openHistory,
                           ),
-                        ),
-                        sw(20),
-                        Expanded(
-                          flex: 3,
-                          child: _HistoryFeed(live: live, notifier: notifier),
                         ),
                       ],
                     ),
@@ -337,23 +376,20 @@ class _HeaderPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(r(999)),
+      borderRadius: BorderRadius.circular(cR(999)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(6),
-            vertical: formatHeight(6),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(6), vertical: cH(6)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(icon, size: sp(25), color: AppColor.primaryLabels),
-              sw(6),
+              Icon(icon, size: cIc(25), color: AppColor.primaryLabels),
+              cSw(6),
               Text(
                 label,
-                style: AppThemeStyle.boldStyle(13, AppColor.primaryLabels),
+                style: AppThemeStyle.boldStyle(cFs(13), AppColor.primaryLabels),
               ),
             ],
           ),
@@ -393,7 +429,7 @@ class _LivePitch extends StatelessWidget {
                 child: _ModifyCompoButton(onTap: onModifyCompo),
               ),
             ),
-            sw(8),
+            cSw(8),
             LabelPill(
               live.formationLabel,
               color: AppColor.surface,
@@ -402,13 +438,13 @@ class _LivePitch extends StatelessWidget {
             ),
           ],
         ),
-        sh(10),
+        cSh(10),
         Expanded(
           child: Center(
             child: AspectRatio(
               aspectRatio: 1668 / 2388,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(r(16)),
+                borderRadius: BorderRadius.circular(cR(16)),
                 child: LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints constraints) {
                     final double w = constraints.maxWidth;
@@ -482,15 +518,12 @@ class _ModifyCompoButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColor.surface,
-      borderRadius: BorderRadius.circular(r(12)),
+      borderRadius: BorderRadius.circular(cR(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(12),
-            vertical: formatHeight(7),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(7)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -499,13 +532,16 @@ class _ModifyCompoButton extends StatelessWidget {
                   'app.match-live.modifier-composition'.tr(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppThemeStyle.semiBStyle(13, AppColor.primaryLabels),
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(13),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
-              sw(6),
+              cSw(6),
               Icon(
                 Iconsax.arrow_circle_down,
-                size: sp(12),
+                size: cIc(12),
                 color: AppColor.primaryColor,
               ),
             ],
@@ -560,7 +596,7 @@ class _PlayerMarker extends StatelessWidget {
                   child: Text(
                     '$number',
                     style: AppThemeStyle.boldStyle(
-                      size * 0.32,
+                      cFs(size * 0.32),
                       numberColorForJerseyAsset(jersey),
                     ),
                   ),
@@ -568,12 +604,12 @@ class _PlayerMarker extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: formatHeight(2)),
+          SizedBox(height: cH(2)),
           Text(
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppThemeStyle.semiBStyle(10, AppColor.textLight),
+            style: AppThemeStyle.semiBStyle(cFs(10), AppColor.textLight),
           ),
         ],
       ),
@@ -587,15 +623,29 @@ class _CenterStats extends StatelessWidget {
     required this.byId,
     required this.notifier,
     required this.jerseyAsset,
+    required this.onOpenHistory,
   });
 
   final LiveMatch live;
   final Map<String, Player> byId;
   final LiveMatchNotifier notifier;
   final String jerseyAsset;
+  final VoidCallback onOpenHistory;
 
   @override
   Widget build(BuildContext context) {
+    if (isPhoneLayout) {
+      return _PhoneStatsPanel(
+        live: live,
+        byId: byId,
+        notifier: notifier,
+        jerseyAsset: jerseyAsset,
+        onOpenHistory: onOpenHistory,
+        onSubstitute:
+            (String pid, Player player) =>
+                _openSubstitute(context, pid, player),
+      );
+    }
     final String? pid = live.selectedPlayerId;
     final Player? player = pid != null ? byId[pid] : null;
 
@@ -611,7 +661,7 @@ class _CenterStats extends StatelessWidget {
           children: <Widget>[
             Text(
               'app.match-live.statistiques-joueur'.tr(),
-              style: AppThemeStyle.semiBStyle(16, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(cFs(16), AppColor.primaryLabels),
             ),
             if (player != null)
               Expanded(
@@ -620,8 +670,8 @@ class _CenterStats extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Image.asset(jerseyAsset, width: sp(30), height: sp(30)),
-                      sw(10),
+                      Image.asset(jerseyAsset, width: cIc(30), height: cIc(30)),
+                      cSw(10),
                       Flexible(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -632,21 +682,21 @@ class _CenterStats extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppThemeStyle.semiBStyle(
-                                15,
+                                cFs(15),
                                 AppColor.primaryLabels,
                               ),
                             ),
                             Text(
                               player.position.singular,
                               style: AppThemeStyle.regularStyle(
-                                12,
+                                cFs(12),
                                 AppColor.secondaryLabels,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      sw(12),
+                      cSw(12),
                       _ReplaceButton(
                         onTap: () => _openSubstitute(context, pid!, player),
                       ),
@@ -656,13 +706,16 @@ class _CenterStats extends StatelessWidget {
               ),
           ],
         ),
-        sh(12),
+        cSh(12),
         if (player == null)
           Expanded(
             child: Center(
               child: Text(
                 'app.match-live.selectionnez-joueur'.tr(),
-                style: AppThemeStyle.regularStyle(14, AppColor.secondaryLabels),
+                style: AppThemeStyle.regularStyle(
+                  cFs(14),
+                  AppColor.secondaryLabels,
+                ),
               ),
             ),
           )
@@ -708,6 +761,379 @@ class _CenterStats extends StatelessWidget {
             jerseyAsset: jerseyAsset,
             onConfirm: (String inId) => notifier.substitute(outId, inId),
           ),
+    );
+  }
+}
+
+/// Libellé court d'une catégorie (onglets du panneau téléphone).
+String _shortCategory(StatCategory c) {
+  switch (c) {
+    case StatCategory.passes:
+      return 'Passes';
+    case StatCategory.efficacite:
+      return 'Efficacité';
+    case StatCategory.tirs:
+      return 'Tirs';
+    case StatCategory.offensives:
+      return 'Offensif';
+    case StatCategory.coupsDePiedArretes:
+      return 'CPA';
+    case StatCategory.fautesSanctions:
+      return 'Fautes';
+    case StatCategory.gardienDefense:
+      return 'Défense';
+    case StatCategory.technique:
+      return 'Technique';
+    case StatCategory.duels:
+      return 'Duels';
+  }
+}
+
+/// Saisie des statistiques sur téléphone, sans long défilement : un onglet par
+/// catégorie (seules celles qui ont des statistiques suivies) et, dessous, les
+/// statistiques de la catégorie en tuiles qui se partagent la hauteur
+/// disponible. Un appui sur la tuile ajoute 1 ; « − » retire 1.
+class _PhoneStatsPanel extends StatefulWidget {
+  const _PhoneStatsPanel({
+    required this.live,
+    required this.byId,
+    required this.notifier,
+    required this.jerseyAsset,
+    required this.onOpenHistory,
+    required this.onSubstitute,
+  });
+
+  final LiveMatch live;
+  final Map<String, Player> byId;
+  final LiveMatchNotifier notifier;
+  final String jerseyAsset;
+  final VoidCallback onOpenHistory;
+  final void Function(String pid, Player player) onSubstitute;
+
+  @override
+  State<_PhoneStatsPanel> createState() => _PhoneStatsPanelState();
+}
+
+class _PhoneStatsPanelState extends State<_PhoneStatsPanel> {
+  StatCategory? _category;
+
+  @override
+  Widget build(BuildContext context) {
+    final String? pid = widget.live.selectedPlayerId;
+    final Player? player = pid != null ? widget.byId[pid] : null;
+
+    final List<StatDef> stats = <StatDef>[
+      for (final StatDef s in enabledStatsInCatalogOrder(
+        widget.live.enabledStatKeys,
+      ))
+        if (!s.bilanOnly) s,
+    ];
+    final List<StatCategory> categories = <StatCategory>[];
+    for (final StatDef s in stats) {
+      if (!categories.contains(s.category)) categories.add(s.category);
+    }
+    final StatCategory? current =
+        categories.contains(_category)
+            ? _category
+            : (categories.isEmpty ? null : categories.first);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _playerBar(pid, player),
+        const SizedBox(height: 6),
+        if (player == null)
+          Expanded(
+            child: Center(
+              child: Text(
+                'app.match-live.selectionnez-joueur'.tr(),
+                textAlign: TextAlign.center,
+                style: AppThemeStyle.regularStyle(
+                  cFs(14),
+                  AppColor.secondaryLabels,
+                ),
+              ),
+            ),
+          )
+        else ...<Widget>[
+          if (categories.length > 1) ...<Widget>[
+            _tabs(categories, current, pid!, stats),
+            const SizedBox(height: 6),
+          ],
+          Expanded(
+            child: _grid(
+              <StatDef>[
+                for (final StatDef s in stats)
+                  if (current == null || s.category == current) s,
+              ],
+              pid!,
+              player,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Ligne du haut : joueur sélectionné, historique, remplacement.
+  Widget _playerBar(String? pid, Player? player) {
+    return SizedBox(
+      height: 34,
+      child: Row(
+        children: <Widget>[
+          if (player != null) ...<Widget>[
+            Image.asset(widget.jerseyAsset, width: 26, height: 26),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    player.fullName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppThemeStyle.semiBStyle(
+                      cFs(15),
+                      AppColor.primaryLabels,
+                    ),
+                  ),
+                  Text(
+                    player.position.singular,
+                    style: AppThemeStyle.regularStyle(
+                      cFs(12),
+                      AppColor.secondaryLabels,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else
+            Expanded(
+              child: Text(
+                'app.match-live.statistiques-joueur'.tr(),
+                style: AppThemeStyle.semiBStyle(
+                  cFs(16),
+                  AppColor.primaryLabels,
+                ),
+              ),
+            ),
+          IconButton(
+            onPressed: widget.onOpenHistory,
+            tooltip: 'app.match-live.historique'.tr(),
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              Iconsax.clock,
+              size: 20,
+              color: AppColor.primaryLabels,
+            ),
+          ),
+          if (player != null)
+            _ReplaceButton(onTap: () => widget.onSubstitute(pid!, player)),
+        ],
+      ),
+    );
+  }
+
+  /// Onglets de catégorie, avec le cumul du joueur dans la catégorie.
+  Widget _tabs(
+    List<StatCategory> categories,
+    StatCategory? current,
+    String pid,
+    List<StatDef> stats,
+  ) {
+    // Pas de défilement : les onglets se partagent la largeur à parts égales
+    // et leur texte rétrécit si besoin. Le cumul n'est affiché que s'il reste
+    // de la place (peu de catégories).
+    final bool showTotal = categories.length <= 5;
+    return SizedBox(
+      height: 30,
+      child: Row(
+        children: <Widget>[
+          for (int i = 0; i < categories.length; i++) ...<Widget>[
+            if (i > 0) const SizedBox(width: 4),
+            Expanded(
+              child: _tab(
+                categories[i],
+                categories[i] == current,
+                pid,
+                stats,
+                showTotal,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _tab(
+    StatCategory c,
+    bool on,
+    String pid,
+    List<StatDef> stats,
+    bool showTotal,
+  ) {
+    int total = 0;
+    for (final StatDef s in stats) {
+      if (s.category == c && !s.isTotal) {
+        total += widget.live.statValue(pid, s.key);
+      }
+    }
+    final String label =
+        showTotal && total > 0
+            ? '${_shortCategory(c)} · $total'
+            : _shortCategory(c);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _category = c),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: on ? AppColor.primaryColor : AppColor.surface,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: AppThemeStyle.semiBStyle(
+              cFs(12),
+              on ? AppColor.textLight : AppColor.primaryLabels,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tuiles de la catégorie, réparties sur la hauteur disponible.
+  Widget _grid(List<StatDef> list, String pid, Player player) {
+    if (list.isEmpty) return const SizedBox.shrink();
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints c) {
+        const double gap = 6;
+        final int cols = list.length <= 6 ? 3 : 4;
+        final int rows = (list.length / cols).ceil();
+        final double tileH = ((c.maxHeight - gap * (rows - 1)) / rows).clamp(
+          46.0,
+          78.0,
+        );
+        // Ne défile que si, même au minimum, les tuiles ne tiennent pas.
+        return SingleChildScrollView(
+          child: Column(
+            children: <Widget>[
+              for (int r = 0; r < rows; r++) ...<Widget>[
+                if (r > 0) const SizedBox(height: gap),
+                SizedBox(
+                  height: tileH,
+                  child: Row(
+                    children: <Widget>[
+                      for (int k = 0; k < cols; k++) ...<Widget>[
+                        if (k > 0) const SizedBox(width: gap),
+                        Expanded(
+                          child:
+                              r * cols + k < list.length
+                                  ? _tile(list[r * cols + k], pid, player)
+                                  : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _tile(StatDef s, String pid, Player player) {
+    final int value = widget.live.statValue(pid, s.key);
+    final bool editable = !s.isTotal;
+    void bump(int delta) => widget.notifier.bump(
+      statKey: s.key,
+      statLabel: s.label,
+      playerName: player.fullName,
+      delta: delta,
+    );
+    final bool canMinus = editable && value > 0;
+    final bool canPlus = editable && value < maxStatValue(s.key);
+    return Material(
+      color: AppColor.surface,
+      borderRadius: BorderRadius.circular(10),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: <Widget>[
+          if (editable)
+            InkWell(
+              onTap: canMinus ? () => bump(-1) : null,
+              child: SizedBox(
+                width: 34,
+                height: double.infinity,
+                child: Icon(
+                  Iconsax.minus_cirlce,
+                  size: 20,
+                  color:
+                      canMinus
+                          ? AppColor.primaryLabels
+                          : AppColor.primaryLabels.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+          Expanded(
+            // Zone principale : un appui = +1 (saisie en un geste).
+            child: InkWell(
+              onTap: canPlus ? () => bump(1) : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      s.label,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppThemeStyle.regularStyle(
+                        cFs(12),
+                        AppColor.primaryLabels,
+                      ).copyWith(height: 1.1),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$value',
+                      style: AppThemeStyle.boldStyle(
+                        cFs(20),
+                        AppColor.primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (editable)
+            InkWell(
+              onTap: canPlus ? () => bump(1) : null,
+              child: SizedBox(
+                width: 34,
+                height: double.infinity,
+                child: Icon(
+                  Iconsax.add_circle,
+                  size: 20,
+                  color:
+                      canPlus
+                          ? AppColor.primaryLabels
+                          : AppColor.primaryLabels.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -758,7 +1184,7 @@ class _StatGrid extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Expanded(child: _column(groups.sublist(0, splitK))),
-        sw(12),
+        cSw(12),
         Expanded(child: _column(groups.sublist(splitK))),
       ],
     );
@@ -769,7 +1195,7 @@ class _StatGrid extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         for (int i = 0; i < groups.length; i++) ...<Widget>[
-          if (i > 0) sh(12),
+          if (i > 0) cSh(12),
           _StatCard(
             stats: groups[i],
             live: live,
@@ -805,13 +1231,10 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(16),
-        vertical: formatHeight(4),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(4)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -871,7 +1294,7 @@ class _StatRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: formatHeight(4)),
+      padding: EdgeInsets.symmetric(vertical: cH(4)),
       child: Row(
         children: <Widget>[
           Expanded(
@@ -879,16 +1302,19 @@ class _StatRow extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(13),
+                AppColor.primaryLabels,
+              ),
             ),
           ),
           if (editable) _StepButton(icon: Iconsax.minus_cirlce, onTap: onMinus),
           SizedBox(
-            width: formatWidth(40),
+            width: cW(56),
             child: Text(
               '$value',
               textAlign: TextAlign.center,
-              style: AppThemeStyle.mediumStyle(20, AppColor.primaryColor),
+              style: AppThemeStyle.mediumStyle(cFs(20), AppColor.primaryColor),
             ),
           ),
           if (editable) _StepButton(icon: Iconsax.add_circle, onTap: onPlus),
@@ -908,30 +1334,30 @@ class _ReplaceButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColor.surface,
-      borderRadius: BorderRadius.circular(r(999)),
+      borderRadius: BorderRadius.circular(cR(999)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(r(999)),
+            borderRadius: BorderRadius.circular(cR(999)),
             border: Border.all(color: AppColor.divider),
           ),
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(12),
-            vertical: formatHeight(8),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(8)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
                 'app.match-live.remplacer'.tr(),
-                style: AppThemeStyle.mediumStyle(13, AppColor.primaryLabels),
+                style: AppThemeStyle.mediumStyle(
+                  cFs(13),
+                  AppColor.primaryLabels,
+                ),
               ),
-              sw(6),
+              cSw(6),
               Icon(
                 Iconsax.arrow_circle_right,
-                size: sp(18),
+                size: cIc(18),
                 color: AppColor.primaryLabels,
               ),
             ],
@@ -975,18 +1401,15 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
             : out.fullName;
     return Dialog(
       backgroundColor: AppColor.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r(20))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cR(20)),
+      ),
       insetPadding: EdgeInsets.symmetric(
-        horizontal: formatWidth(320),
-        vertical: formatHeight(110),
+        horizontal: cW(320),
+        vertical: cH(110),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          formatWidth(28),
-          formatHeight(16),
-          formatWidth(28),
-          formatHeight(22),
-        ),
+        padding: EdgeInsets.fromLTRB(cW(28), cH(16), cW(28), cH(22)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -995,10 +1418,10 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
               alignment: Alignment.centerRight,
               child: InkResponse(
                 onTap: () => Navigator.of(context).pop(),
-                radius: sp(20),
+                radius: cIc(20),
                 child: Icon(
                   Iconsax.close_circle,
-                  size: sp(20),
+                  size: cIc(20),
                   color: AppColor.secondaryLabels,
                 ),
               ),
@@ -1006,10 +1429,13 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
             Center(
               child: Text(
                 'app.match-live.remplacer-joueur'.tr(),
-                style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+                style: AppThemeStyle.semiBStyle(
+                  cFs(18),
+                  AppColor.primaryLabels,
+                ),
               ),
             ),
-            sh(18),
+            cSh(18),
             Row(
               children: <Widget>[
                 Expanded(
@@ -1017,39 +1443,42 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
                     outTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppThemeStyle.semiBStyle(15, AppColor.primaryColor),
+                    style: AppThemeStyle.semiBStyle(
+                      cFs(15),
+                      AppColor.primaryColor,
+                    ),
                   ),
                 ),
-                sw(8),
+                cSw(8),
                 Text(
                   '${out.strongFoot.adjective} - ${out.position.singular}',
                   style: AppThemeStyle.regularStyle(
-                    13,
+                    cFs(13),
                     AppColor.secondaryLabels,
                   ),
                 ),
               ],
             ),
-            sh(16),
+            cSh(16),
             if (widget.bench.isEmpty)
               Padding(
-                padding: EdgeInsets.symmetric(vertical: formatHeight(16)),
+                padding: EdgeInsets.symmetric(vertical: cH(16)),
                 child: Text(
                   'app.match-live.aucun-remplacant'.tr(),
                   textAlign: TextAlign.center,
                   style: AppThemeStyle.regularStyle(
-                    13,
+                    cFs(13),
                     AppColor.secondaryLabels,
                   ),
                 ),
               )
             else
               ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: formatHeight(170)),
+                constraints: BoxConstraints(maxHeight: cH(170)),
                 child: SingleChildScrollView(
                   child: Wrap(
-                    spacing: formatWidth(12),
-                    runSpacing: formatHeight(12),
+                    spacing: cW(12),
+                    runSpacing: cH(12),
                     children: <Widget>[
                       for (final Player p in widget.bench)
                         PlayerPickTile(
@@ -1062,7 +1491,7 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
                   ),
                 ),
               ),
-            sh(20),
+            cSh(20),
             _ConfirmReplaceButton(
               enabled: _selectedId != null,
               onTap: () {
@@ -1096,16 +1525,16 @@ class _ConfirmReplaceButton extends StatelessWidget {
           enabled
               ? AppColor.primaryColor
               : AppColor.primaryColor.withValues(alpha: 0.4),
-      borderRadius: BorderRadius.circular(r(28)),
+      borderRadius: BorderRadius.circular(cR(28)),
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(r(28)),
+        borderRadius: BorderRadius.circular(cR(28)),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: formatHeight(15)),
+          padding: EdgeInsets.symmetric(vertical: cH(15)),
           child: Center(
             child: Text(
               'app.match-live.remplacer'.tr(),
-              style: AppThemeStyle.semiBStyle(15, AppColor.textLight),
+              style: AppThemeStyle.semiBStyle(cFs(15), AppColor.textLight),
             ),
           ),
         ),
@@ -1124,7 +1553,7 @@ class _StepButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double d = sp(26);
+    final double d = cIc(38);
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
@@ -1136,7 +1565,7 @@ class _StepButton extends StatelessWidget {
           height: d,
           child: Icon(
             icon,
-            size: sp(22),
+            size: cIc(32),
             color:
                 onTap == null
                     ? AppColor.primaryLabels.withValues(alpha: 0.3)
@@ -1161,22 +1590,22 @@ class _HistoryFeed extends StatelessWidget {
       children: <Widget>[
         Text(
           'app.match-live.historique'.tr(),
-          style: AppThemeStyle.semiBStyle(16, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(16), AppColor.primaryLabels),
         ),
-        sh(12),
+        cSh(12),
         Expanded(
           child:
               live.events.isEmpty
                   ? Text(
                     'app.match-live.aucune-action'.tr(),
                     style: AppThemeStyle.regularStyle(
-                      13,
+                      cFs(13),
                       AppColor.secondaryLabels,
                     ),
                   )
                   : ListView.separated(
                     itemCount: live.events.length,
-                    separatorBuilder: (_, _) => sh(8),
+                    separatorBuilder: (_, _) => cSh(8),
                     itemBuilder:
                         (BuildContext context, int i) => _EventTile(
                           event: live.events[i],
@@ -1212,13 +1641,10 @@ class _EventTile extends StatelessWidget {
             );
     final String sign = event.delta > 0 ? '+1' : '-1';
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(12),
-        vertical: formatHeight(8),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(8)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(10)),
+        borderRadius: BorderRadius.circular(cR(10)),
       ),
       child: Row(
         children: <Widget>[
@@ -1229,32 +1655,32 @@ class _EventTile extends StatelessWidget {
                 Text(
                   when,
                   style: AppThemeStyle.regularStyle(
-                    11,
+                    cFs(11),
                     AppColor.secondaryLabels,
                   ),
                 ),
-                sh(2),
+                cSh(2),
                 Text.rich(
                   TextSpan(
                     children: <InlineSpan>[
                       TextSpan(
                         text: event.playerName,
                         style: AppThemeStyle.semiBStyle(
-                          13,
+                          cFs(13),
                           AppColor.primaryLabels,
                         ),
                       ),
                       TextSpan(
                         text: ' · ${event.statLabel} ',
                         style: AppThemeStyle.regularStyle(
-                          13,
+                          cFs(13),
                           AppColor.secondaryLabels,
                         ),
                       ),
                       TextSpan(
                         text: sign,
                         style: AppThemeStyle.boldStyle(
-                          13,
+                          cFs(13),
                           AppColor.primaryColor,
                         ),
                       ),
@@ -1271,10 +1697,10 @@ class _EventTile extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             onTap: onRemove,
             child: Padding(
-              padding: EdgeInsets.all(sp(8)),
+              padding: EdgeInsets.all(cIc(8)),
               child: Icon(
                 Iconsax.close_circle,
-                size: sp(15),
+                size: cIc(15),
                 color: AppColor.secondaryLabels,
               ),
             ),

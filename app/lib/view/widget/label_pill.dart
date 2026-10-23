@@ -1,5 +1,5 @@
-import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 
 /// Petite pilule d'étiquette arrondie (schéma de formation, libellé court).
@@ -26,12 +26,12 @@ class LabelPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(horizontalPadding),
-        vertical: formatHeight(verticalPadding),
+        horizontal: cW(horizontalPadding),
+        vertical: cH(verticalPadding),
       ),
       decoration: BoxDecoration(
         color: color ?? AppColor.chipBackground,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Text(
         label,

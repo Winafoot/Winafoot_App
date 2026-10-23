@@ -1,6 +1,8 @@
+import 'package:wina/view/page/gerer_equipe_nav.dart';
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/coach_profile.dart';
 import 'package:wina/models/player.dart';
@@ -35,9 +37,7 @@ int _subPoolFirst(CompositionDraft draft) => _starterPoolSize(draft) + 1;
 /// intervalle contigu, ce qui laisse l'écran fonctionnel en toutes circonstances.
 List<int> subNumbersOf(CompositionDraft draft) =>
     draft.subNumbers.isEmpty
-        ? <int>[
-          for (int i = 0; i < kSubPoolSize; i++) _subPoolFirst(draft) + i,
-        ]
+        ? <int>[for (int i = 0; i < kSubPoolSize; i++) _subPoolFirst(draft) + i]
         : (draft.subNumbers.toList()..sort());
 
 /// Étiquette glissée depuis le panneau « Brassard de capitaine ».
@@ -131,18 +131,18 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
       action: WizardCtaButton(
         label: 'app.gerer-equipe-numbers.suivant'.tr(),
         onTap:
-            () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const GererEquipeCompositionScreen(),
-              ),
+            () => openGererScreen(
+              context,
+              kGererCompositionRoute,
+              () => const GererEquipeCompositionScreen(),
             ),
       ),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          formatWidth(40),
-          formatHeight(8),
-          formatWidth(40),
-          formatHeight(12),
+          isPhoneLayout ? 16 : cW(40),
+          cH(8),
+          isPhoneLayout ? 16 : cW(40),
+          cH(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +152,7 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
               maxPlayers:
                   ref.watch(maxSquadSizeProvider).valueOrNull ?? kMaxSquadSize,
             ),
-            sh(14),
+            cSh(14),
             Expanded(
               child: SingleChildScrollView(
                 child: Row(
@@ -165,12 +165,12 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
                             PlayerPosition.gardien.label,
                             ofPosition(PlayerPosition.gardien),
                           ),
-                          sh(20),
+                          cSh(20),
                           group(
                             PlayerPosition.milieu.label,
                             ofPosition(PlayerPosition.milieu),
                           ),
-                          sh(20),
+                          cSh(20),
                           group(
                             'app.gerer-equipe-numbers.remplacants'.tr(),
                             substitutes(),
@@ -181,7 +181,7 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    sw(24),
+                    cSw(24),
                     Expanded(
                       child: Column(
                         children: <Widget>[
@@ -189,7 +189,7 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
                             PlayerPosition.defenseur.label,
                             ofPosition(PlayerPosition.defenseur),
                           ),
-                          sh(20),
+                          cSh(20),
                           group(
                             PlayerPosition.attaquant.label,
                             ofPosition(PlayerPosition.attaquant),
@@ -197,9 +197,9 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    sw(24),
+                    cSw(24),
                     SizedBox(
-                      width: formatWidth(230),
+                      width: isPhoneLayout ? 175 : cW(230),
                       child: _RightRail(draft: draft),
                     ),
                   ],
@@ -235,22 +235,19 @@ class _Header extends StatelessWidget {
           children: <Widget>[
             Text(
               'app.gerer-equipe-numbers.detail-joueurs'.tr(),
-              style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(cFs(18), AppColor.primaryLabels),
             ),
-            sh(6),
+            cSh(6),
             Text(
               'app.gerer-equipe-numbers.effectif'.tr(
                 args: <String>['$playerCount', '$maxPlayers'],
               ),
-              style: AppThemeStyle.mediumStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(cFs(13), AppColor.primaryLabels),
             ),
           ],
         ),
-        sw(16),
-        _CreerJoueurButton(
-          playerCount: playerCount,
-          maxPlayers: maxPlayers,
-        ),
+        cSw(16),
+        _CreerJoueurButton(playerCount: playerCount, maxPlayers: maxPlayers),
       ],
     );
   }
@@ -272,7 +269,7 @@ class _CreerJoueurButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         onTap:
             full
                 ? null
@@ -282,13 +279,10 @@ class _CreerJoueurButton extends StatelessWidget {
                   ),
                 ),
         child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(16),
-            vertical: formatHeight(11),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(11)),
           decoration: BoxDecoration(
             color: full ? AppColor.disabled : AppColor.surface,
-            borderRadius: BorderRadius.circular(r(999)),
+            borderRadius: BorderRadius.circular(cR(999)),
             border: Border.all(color: AppColor.divider),
           ),
           child: Row(
@@ -296,12 +290,15 @@ class _CreerJoueurButton extends StatelessWidget {
             children: <Widget>[
               Text(
                 'app.gerer-equipe-numbers.creer-joueur'.tr(),
-                style: AppThemeStyle.semiBStyle(14, AppColor.primaryLabels),
+                style: AppThemeStyle.semiBStyle(
+                  cFs(14),
+                  AppColor.primaryLabels,
+                ),
               ),
-              sw(6),
+              cSw(6),
               Icon(
                 Iconsax.arrow_circle_right,
-                size: sp(18),
+                size: cIc(18),
                 color: AppColor.primaryLabels,
               ),
             ],
@@ -343,65 +340,71 @@ class _PositionGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(16),
-            vertical: formatHeight(9),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(9)),
           decoration: BoxDecoration(
             color: AppColor.surface,
-            borderRadius: BorderRadius.circular(r(20)),
+            borderRadius: BorderRadius.circular(cR(20)),
           ),
           child: Row(
             children: <Widget>[
               Expanded(
                 child: Text(
                   title,
-                  style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
               SizedBox(
-                width: formatWidth(70),
+                width: cW(70),
                 child: Text(
                   'app.gerer-equipe-numbers.pied-fort'.tr(),
                   textAlign: TextAlign.right,
-                  style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+                  style: AppThemeStyle.regularStyle(
+                    cFs(13),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
-              sw(16),
+              cSw(16),
               SizedBox(
-                width: formatWidth(80),
+                width: cW(80),
                 child: Text(
                   'app.gerer-equipe-numbers.numero'.tr(),
                   textAlign: TextAlign.right,
-                  style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+                  style: AppThemeStyle.regularStyle(
+                    cFs(13),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
             ],
           ),
         ),
         if (players.isEmpty) ...<Widget>[
-          sh(8),
+          cSh(8),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: formatWidth(16)),
+            padding: EdgeInsets.symmetric(horizontal: cW(16)),
             child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: formatWidth(6),
-                vertical: formatHeight(4),
-              ),
+              padding: EdgeInsets.symmetric(horizontal: cW(6), vertical: cH(4)),
               decoration: BoxDecoration(
                 color: AppColor.rosterRowSurface,
-                borderRadius: BorderRadius.circular(r(10)),
+                borderRadius: BorderRadius.circular(cR(10)),
               ),
               child: Text(
                 emptyLabel ??
                     'app.gerer-equipe-numbers.aucun-joueur-poste'.tr(),
-                style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+                style: AppThemeStyle.regularStyle(
+                  cFs(12),
+                  AppColor.secondaryLabels,
+                ),
               ),
             ),
           ),
         ],
         for (final Player p in players) ...<Widget>[
-          sh(10),
+          cSh(10),
           _PlayerRow(
             player: p,
             number: draft.numbers[p.id],
@@ -439,7 +442,7 @@ class _PlayerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(16)),
+      padding: EdgeInsets.symmetric(horizontal: cW(16)),
       child: DragTarget<Object>(
         onWillAcceptWithDetails:
             (DragTargetDetails<Object> details) =>
@@ -449,16 +452,13 @@ class _PlayerRow extends StatelessWidget {
         builder: (BuildContext context, List<Object?> candidates, _) {
           final bool hovering = candidates.isNotEmpty;
           return Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: formatWidth(6),
-              vertical: formatHeight(4),
-            ),
+            padding: EdgeInsets.symmetric(horizontal: cW(6), vertical: cH(4)),
             decoration: BoxDecoration(
               color:
                   hovering
                       ? AppColor.rosterRowHovered
                       : AppColor.rosterRowSurface,
-              borderRadius: BorderRadius.circular(r(10)),
+              borderRadius: BorderRadius.circular(cR(10)),
             ),
             child: Row(
               children: <Widget>[
@@ -467,31 +467,34 @@ class _PlayerRow extends StatelessWidget {
                     player.fullName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppThemeStyle.mediumStyle(15, AppColor.rosterName),
+                    style: AppThemeStyle.mediumStyle(
+                      cFs(15),
+                      AppColor.rosterName,
+                    ),
                   ),
                 ),
                 SizedBox(
-                  width: formatWidth(70),
+                  width: cW(70),
                   child: Text(
                     player.strongFoot.label,
                     textAlign: TextAlign.right,
                     style: AppThemeStyle.mediumStyle(
-                      15,
+                      cFs(15),
                       AppColor.primaryLabels,
                     ),
                   ),
                 ),
-                sw(16),
+                cSw(16),
                 SizedBox(
-                  width: formatWidth(80),
+                  width: cW(80),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
-                      if (isCaptain) ...<Widget>[const _CaptainTag(), sw(4)],
+                      if (isCaptain) ...<Widget>[const _CaptainTag(), cSw(4)],
                       GestureDetector(
                         onTap: onTap,
                         child: _JerseyIcon(
-                          size: sp(30),
+                          size: cIc(30),
                           isSub: isSub,
                           number: number,
                         ),
@@ -515,7 +518,7 @@ class _CaptainTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(_kCaptainAsset, width: sp(28));
+    return Image.asset(_kCaptainAsset, width: cIc(28));
   }
 }
 
@@ -544,21 +547,69 @@ class _RightRail extends StatelessWidget {
             isSub: false,
           ),
         ),
-        sh(16),
-        _RailPanel(
-          title: 'app.gerer-equipe-numbers.numeros-remplacants'.tr(),
-          child: _RailJerseyGrid(
-            numbers: subNumbersOf(draft),
-            taken: taken,
-            isSub: true,
+        cSh(16),
+        _AddSubstitutesButton(hasSubs: draft.subNumbers.isNotEmpty),
+        if (draft.subNumbers.isNotEmpty) ...<Widget>[
+          cSh(16),
+          _RailPanel(
+            title: 'app.gerer-equipe-numbers.numeros-remplacants'.tr(),
+            child: _RailJerseyGrid(
+              numbers: subNumbersOf(draft),
+              taken: taken,
+              isSub: true,
+            ),
           ),
-        ),
-        sh(16),
+        ],
+        cSh(16),
         _RailPanel(
           title: 'app.gerer-equipe-numbers.brassard-capitaine'.tr(),
           child: _CaptainDraggable(assigned: draft.captainId != null),
         ),
       ],
+    );
+  }
+}
+
+/// Bouton « Ajouter les remplaçants » : ouvre le choix des numéros réservés aux
+/// remplaçants (ils apparaissent ensuite dans leur panneau, à glisser sur un
+/// joueur).
+class _AddSubstitutesButton extends ConsumerWidget {
+  const _AddSubstitutesButton({required this.hasSubs});
+
+  final bool hasSubs;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Material(
+      color: AppColor.primaryColor,
+      borderRadius: BorderRadius.circular(cR(20)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(cR(20)),
+        onTap: () => showSubNumbersDialog(context, ref),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(11)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(
+                Iconsax.add_circle,
+                size: cIc(18),
+                color: AppColor.textLight,
+              ),
+              cSw(8),
+              Flexible(
+                child: Text(
+                  hasSubs
+                      ? 'app.gerer-equipe-numbers.modifier-remplacants'.tr()
+                      : 'app.gerer-equipe-numbers.ajouter-remplacants'.tr(),
+                  textAlign: TextAlign.center,
+                  style: AppThemeStyle.semiBStyle(cFs(13), AppColor.textLight),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -575,20 +626,17 @@ class _RailPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(14),
-            vertical: formatHeight(9),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(9)),
           decoration: BoxDecoration(
             color: AppColor.surface,
-            borderRadius: BorderRadius.circular(r(20)),
+            borderRadius: BorderRadius.circular(cR(20)),
           ),
           child: Text(
             title,
-            style: AppThemeStyle.mediumStyle(14, AppColor.primaryLabels),
+            style: AppThemeStyle.mediumStyle(cFs(14), AppColor.primaryLabels),
           ),
         ),
-        sh(10),
+        cSh(10),
         child,
       ],
     );
@@ -609,33 +657,20 @@ class _RailJerseyGrid extends StatelessWidget {
   final Set<int> taken;
   final bool isSub;
 
-  /// 4 puces par ligne (design 1:421/1:424).
-  static const int perRow = 4;
-
+  /// 4 puces par ligne quand la largeur le permet (design 1:421/1:424) ; un
+  /// `Wrap` replie sur moins de colonnes dans un panneau étroit (téléphone)
+  /// au lieu de déborder.
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Wrap(
+      spacing: isPhoneLayout ? 6 : 8,
+      runSpacing: cH(8),
       children: <Widget>[
-        for (int start = 0; start < numbers.length; start += perRow)
-          Padding(
-            padding: EdgeInsets.only(bottom: formatHeight(8)),
-            child: Row(
-              children: <Widget>[
-                for (
-                  int i = start;
-                  i < (start + perRow).clamp(0, numbers.length);
-                  i++
-                ) ...<Widget>[
-                  if (i != start) sw(8),
-                  _DraggableJerseyTile(
-                    number: numbers[i],
-                    isSub: isSub,
-                    taken: taken.contains(numbers[i]),
-                  ),
-                ],
-              ],
-            ),
+        for (final int n in numbers)
+          _DraggableJerseyTile(
+            number: n,
+            isSub: isSub,
+            taken: taken.contains(n),
           ),
       ],
     );
@@ -656,7 +691,7 @@ class _DraggableJerseyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Widget tile = _JerseyIcon(
-      size: 44,
+      size: isPhoneLayout ? 34 : 44,
       isSub: isSub,
       number: number,
       opacity: taken ? 0.36 : 1,
@@ -747,36 +782,33 @@ class _SubNumbersDialogState extends ConsumerState<_SubNumbersDialog> {
 
     return Dialog(
       backgroundColor: AppColor.surface,
-      insetPadding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r(20))),
+      insetPadding: EdgeInsets.symmetric(horizontal: cW(40)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cR(20)),
+      ),
       child: ConstrainedBox(
         // La coquille des autres popups (560) laissait une large bande vide à
-        // droite de la grille, qui ne fait que 6 puces de sp(42). On la cale
+        // droite de la grille, qui ne fait que 6 puces de cIc(42). On la cale
         // sur son contenu. Le titre passe alors sur deux lignes — mesuré, il
         // faudrait remonter au-delà de 460 pour le tenir sur une seule, ce qui
         // ramènerait la largeur au défaut qu'on corrige ici.
-        constraints: BoxConstraints(maxWidth: formatWidth(430)),
+        constraints: BoxConstraints(maxWidth: cW(430)),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            formatWidth(24),
-            formatHeight(16),
-            formatWidth(24),
-            formatHeight(22),
-          ),
+          padding: EdgeInsets.fromLTRB(cW(24), cH(16), cW(24), cH(22)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  SizedBox(width: sp(20)),
+                  SizedBox(width: cIc(20)),
                   Expanded(
                     child: Text(
                       'app.gerer-equipe-numbers.selectionner-numeros-remplacants'
                           .tr(),
                       textAlign: TextAlign.center,
                       style: AppThemeStyle.semiBStyle(
-                        17,
+                        cFs(17),
                         AppColor.primaryLabels,
                       ),
                     ),
@@ -785,13 +817,13 @@ class _SubNumbersDialogState extends ConsumerState<_SubNumbersDialog> {
                     onTap: () => Navigator.of(context).pop(),
                     child: Icon(
                       Iconsax.close_circle,
-                      size: sp(20),
+                      size: cIc(20),
                       color: AppColor.secondaryLabels,
                     ),
                   ),
                 ],
               ),
-              sh(16),
+              cSh(16),
               // « Scroll si besoin de joueurs » (annotation de la maquette) :
               // la grille descend jusqu'à 36, elle ne tient pas toujours.
               Flexible(
@@ -812,7 +844,7 @@ class _SubNumbersDialogState extends ConsumerState<_SubNumbersDialog> {
                   ),
                 ),
               ),
-              sh(18),
+              cSh(18),
               WizardCtaButton(
                 label: 'app.gerer-equipe-numbers.valider'.tr(),
                 enabled: _selected.isNotEmpty,
@@ -887,30 +919,27 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
 
     return Dialog(
       backgroundColor: AppColor.surface,
-      insetPadding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r(20))),
+      insetPadding: EdgeInsets.symmetric(horizontal: cW(40)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cR(20)),
+      ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: formatWidth(560)),
+        constraints: BoxConstraints(maxWidth: cW(560)),
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            formatWidth(24),
-            formatHeight(16),
-            formatWidth(24),
-            formatHeight(22),
-          ),
+          padding: EdgeInsets.fromLTRB(cW(24), cH(16), cW(24), cH(22)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  SizedBox(width: sp(20)),
+                  SizedBox(width: cIc(20)),
                   Expanded(
                     child: Text(
                       'app.gerer-equipe-numbers.attribuer-numero'.tr(),
                       textAlign: TextAlign.center,
                       style: AppThemeStyle.semiBStyle(
-                        17,
+                        cFs(17),
                         AppColor.primaryLabels,
                       ),
                     ),
@@ -919,33 +948,36 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
                     onTap: () => Navigator.of(context).pop(),
                     child: Icon(
                       Iconsax.close_circle,
-                      size: sp(20),
+                      size: cIc(20),
                       color: AppColor.secondaryLabels,
                     ),
                   ),
                 ],
               ),
-              sh(10),
+              cSh(10),
               Row(
                 children: <Widget>[
                   Text(
                     widget.player.fullName,
-                    style: AppThemeStyle.mediumStyle(15, AppColor.primaryColor),
+                    style: AppThemeStyle.mediumStyle(
+                      cFs(15),
+                      AppColor.primaryColor,
+                    ),
                   ),
                   const Spacer(),
                   Text(
                     '${widget.player.strongFoot.adjective} - '
                     '${widget.player.position.singular}',
                     style: AppThemeStyle.mediumStyle(
-                      15,
+                      cFs(15),
                       AppColor.primaryLabels,
                     ),
                   ),
                 ],
               ),
-              sh(12),
+              cSh(12),
               Container(height: 1, color: AppColor.divider),
-              sh(16),
+              cSh(16),
               _PickerJerseyGrid(
                 isSub: false,
                 numbers: <int>[
@@ -955,7 +987,7 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
                 isSelected: (int n) => !_selectedIsSub && _selectedNumber == n,
                 onTap: (int n) => _select(n, false),
               ),
-              sh(14),
+              cSh(14),
               _PickerJerseyGrid(
                 isSub: true,
                 numbers: subNumbersOf(widget.draft),
@@ -963,20 +995,20 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
                 isSelected: (int n) => _selectedIsSub && _selectedNumber == n,
                 onTap: (int n) => _select(n, true),
               ),
-              sh(18),
+              cSh(18),
               WizardCtaButton(
                 label: 'app.gerer-equipe-numbers.attribuer'.tr(),
                 enabled: _selectedNumber != null,
                 onTap: () => widget.onConfirm(_selectedNumber!, _selectedIsSub),
               ),
               if (widget.draft.numbers.containsKey(playerId)) ...<Widget>[
-                sh(8),
+                cSh(8),
                 TextButton(
                   onPressed: widget.onClear,
                   child: Text(
                     'app.gerer-equipe-numbers.retirer-numero'.tr(),
                     style: AppThemeStyle.semiBStyle(
-                      13,
+                      cFs(13),
                       AppColor.secondaryLabels,
                     ),
                   ),
@@ -1035,7 +1067,7 @@ class _PickerJerseyGrid extends StatelessWidget {
       children: <Widget>[
         for (int start = 0; start < numbers.length; start += perRow)
           Padding(
-            padding: EdgeInsets.only(bottom: formatHeight(10)),
+            padding: EdgeInsets.only(bottom: cH(10)),
             child: Row(
               mainAxisSize: centered ? MainAxisSize.min : MainAxisSize.max,
               children: <Widget>[
@@ -1044,7 +1076,7 @@ class _PickerJerseyGrid extends StatelessWidget {
                   i < (start + perRow).clamp(0, numbers.length);
                   i++
                 ) ...<Widget>[
-                  if (i != start) sw(10),
+                  if (i != start) cSw(10),
                   _SelectableJerseyTile(
                     number: numbers[i],
                     isSub: subOnSelect ? isSelected(numbers[i]) : isSub,
@@ -1085,21 +1117,21 @@ class _SelectableJerseyTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Widget tile = _JerseyIcon(
-      size: sp(42),
+      size: cIc(42),
       isSub: isSub,
       number: number,
       opacity: taken ? 0.36 : 1,
     );
     return InkResponse(
       onTap: onTap,
-      radius: sp(30),
+      radius: cIc(30),
       child:
           selected && showBorder
               ? Container(
-                padding: EdgeInsets.all(formatWidth(2)),
+                padding: EdgeInsets.all(cW(2)),
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColor.primaryColor, width: 2),
-                  borderRadius: BorderRadius.circular(r(8)),
+                  borderRadius: BorderRadius.circular(cR(8)),
                 ),
                 child: tile,
               )
@@ -1160,7 +1192,7 @@ class _JerseyIcon extends ConsumerWidget {
               child: Text(
                 '$number',
                 style: AppThemeStyle.boldStyle(
-                  size * 0.32,
+                  cFs(size * 0.32),
                   numberColorForJerseyAsset(jersey),
                 ),
               ),

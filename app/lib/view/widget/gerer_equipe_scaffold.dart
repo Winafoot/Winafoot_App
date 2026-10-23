@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/view/widget/app_background.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
@@ -46,15 +47,17 @@ class GererEquipeScaffold extends StatelessWidget {
             Column(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isPhoneLayout ? 16 : cW(40),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      sh(18),
+                      cSh(isPhoneLayout ? 8 : 18),
                       _Header(onBack: onBack, trailing: headerTrailing),
-                      sh(14),
+                      cSh(isPhoneLayout ? 6 : 14),
                       Container(height: 1, color: AppColor.divider),
-                      sh(20),
+                      cSh(isPhoneLayout ? 6 : 20),
                       if (action == null)
                         Center(child: _title())
                       else if (leading == null)
@@ -83,7 +86,7 @@ class GererEquipeScaffold extends StatelessWidget {
                     ],
                   ),
                 ),
-                sh(8),
+                cSh(isPhoneLayout ? 4 : 8),
                 // PAS de `SingleChildScrollView` ici, contrairement au jumeau
                 // `MatchWizardScaffold` : une contrainte de
                 // hauteur non bornée casserait deux des six écrans hôtes —
@@ -101,8 +104,13 @@ class GererEquipeScaffold extends StatelessWidget {
     );
   }
 
-  Widget _title() =>
-      Text(title, style: AppThemeStyle.semiBStyle(30, AppColor.primaryLabels));
+  Widget _title() => Text(
+    title,
+    style: AppThemeStyle.semiBStyle(
+      isPhoneLayout ? cFs(24) : cFs(30),
+      AppColor.primaryLabels,
+    ),
+  );
 }
 
 class _Header extends StatelessWidget {
@@ -118,18 +126,22 @@ class _Header extends StatelessWidget {
         CustomBackButton(
           onTap: onBack ?? () => Navigator.of(context).maybePop(),
         ),
-        sw(7),
-        Container(width: 1, height: formatHeight(28), color: AppColor.divider),
-        sw(7),
-        Icon(Iconsax.people, size: sp(26), color: AppColor.primaryColor),
-        sw(10),
+        cSw(7),
+        Container(
+          width: 1,
+          height: isPhoneLayout ? 20 : cH(28),
+          color: AppColor.divider,
+        ),
+        cSw(7),
+        Icon(Iconsax.people, size: cIc(26), color: AppColor.primaryColor),
+        cSw(10),
         Text(
           'app.gerer-equipe-scaffold.titre'.tr(),
-          style: AppThemeStyle.semiBStyle(28, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(28), AppColor.primaryLabels),
         ),
         const Spacer(),
-        if (trailing != null) ...<Widget>[trailing!, sw(18)],
-        const WinaWordmark(size: 34),
+        if (trailing != null) ...<Widget>[trailing!, cSw(18)],
+        WinaWordmark(size: isPhoneLayout ? 22 : 34),
       ],
     );
   }

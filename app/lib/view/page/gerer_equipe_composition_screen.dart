@@ -1,9 +1,11 @@
+import 'package:wina/view/page/gerer_equipe_nav.dart';
 import 'dart:async';
 
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/custom_composition.dart';
 import 'package:wina/models/formation.dart';
@@ -48,30 +50,29 @@ class GererEquipeCompositionScreen extends ConsumerWidget {
         label: 'app.gerer-equipe-composition.suivant'.tr(),
         enabled: draft.hasFormation,
         onTap:
-            () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder:
-                    (_) => GererEquipePlacementScreen(
-                      allowedPlayerIds: allowedPlayerIds,
-                    ),
+            () => openGererScreen(
+              context,
+              kGererPlacementRoute,
+              () => GererEquipePlacementScreen(
+                allowedPlayerIds: allowedPlayerIds,
               ),
             ),
       ),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          formatWidth(40),
-          formatHeight(8),
-          formatWidth(40),
+          isPhoneLayout ? 16 : cW(40),
+          cH(8),
+          isPhoneLayout ? 16 : cW(40),
           0,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             SizedBox(
-              width: formatWidth(370),
+              width: isPhoneLayout ? 190 : cW(370),
               child: _ChosenPreview(formation: draft.formation),
             ),
-            sw(24),
+            cSw(24),
             Expanded(
               child: _CompositionsList(
                 standards: standards,
@@ -101,10 +102,10 @@ class _ChosenPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(formatWidth(12)),
+      padding: EdgeInsets.all(cW(12)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(18)),
+        borderRadius: BorderRadius.circular(cR(18)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -114,22 +115,28 @@ class _ChosenPreview extends StatelessWidget {
             children: <Widget>[
               Text(
                 'app.gerer-equipe-composition.composition-choisie'.tr(),
-                style: AppThemeStyle.semiBStyle(14, AppColor.primaryLabels),
+                style: AppThemeStyle.semiBStyle(
+                  cFs(14),
+                  AppColor.primaryLabels,
+                ),
               ),
               const Spacer(),
               if (formation != null) _LabelPill(formation!.label),
             ],
           ),
-          sh(12),
+          cSh(12),
           Flexible(
             child: FormationPitch(formation: formation, markerFraction: 0.15),
           ),
           if (formation == null) ...[
-            sh(10),
+            cSh(10),
             Text(
               'app.gerer-equipe-composition.aide-choix'.tr(),
               textAlign: TextAlign.center,
-              style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(12),
+                AppColor.secondaryLabels,
+              ),
             ),
           ],
         ],
@@ -189,8 +196,8 @@ class _CompositionsListState extends State<_CompositionsList> {
 
   Widget _grid(List<Formation> list) {
     return Wrap(
-      spacing: formatWidth(14),
-      runSpacing: formatHeight(14),
+      spacing: cW(14),
+      runSpacing: cH(14),
       children: <Widget>[
         for (final Formation f in list)
           _CompoCard(
@@ -205,8 +212,8 @@ class _CompositionsListState extends State<_CompositionsList> {
 
   Widget _customGrid(List<CustomComposition> list) {
     return Wrap(
-      spacing: formatWidth(14),
-      runSpacing: formatHeight(14),
+      spacing: cW(14),
+      runSpacing: cH(14),
       children: <Widget>[
         for (final CustomComposition c in list)
           _CompoCard(
@@ -233,7 +240,7 @@ class _CompositionsListState extends State<_CompositionsList> {
             : widget.standards;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: formatHeight(12)),
+      padding: EdgeInsets.only(bottom: cH(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -245,13 +252,13 @@ class _CompositionsListState extends State<_CompositionsList> {
               onClear: _clearSearch,
             ),
           ),
-          sh(14),
+          cSh(14),
           if (searching) ...<Widget>[
             Text(
               'app.gerer-equipe-composition.resultats-recherche'.tr(),
-              style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(cFs(15), AppColor.primaryLabels),
             ),
-            sh(10),
+            cSh(10),
             if (filtered.isEmpty)
               EmptyStatePlaceholder(
                 title: 'app.gerer-equipe-composition.aucun-resultat'.tr(),
@@ -259,7 +266,7 @@ class _CompositionsListState extends State<_CompositionsList> {
                     'app.gerer-equipe-composition.aucun-resultat-sous-titre'
                         .tr(),
                 titleSize: 18,
-                padding: EdgeInsets.symmetric(vertical: formatHeight(40)),
+                padding: EdgeInsets.symmetric(vertical: cH(40)),
               )
             else
               _grid(filtered),
@@ -268,27 +275,33 @@ class _CompositionsListState extends State<_CompositionsList> {
               children: <Widget>[
                 Text(
                   'app.gerer-equipe-composition.mes-compositions'.tr(),
-                  style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
                 ),
                 const Spacer(),
                 _CreateCompoButton(onTap: widget.onCreate),
               ],
             ),
-            sh(10),
+            cSh(10),
             if (widget.customs.isEmpty)
               Text(
                 'app.gerer-equipe-composition.aucune-composition-personnalisee'
                     .tr(),
-                style: AppThemeStyle.regularStyle(13, AppColor.secondaryLabels),
+                style: AppThemeStyle.regularStyle(
+                  cFs(13),
+                  AppColor.secondaryLabels,
+                ),
               )
             else
               _customGrid(widget.customs),
-            sh(18),
+            cSh(18),
             Text(
               'app.gerer-equipe-composition.compositions-standards'.tr(),
-              style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(cFs(15), AppColor.primaryLabels),
             ),
-            sh(10),
+            cSh(10),
             _grid(widget.standards),
           ],
         ],
@@ -325,11 +338,11 @@ class _CompoCard extends StatelessWidget {
         opacity: dimmed ? 0.3 : 1,
         duration: const Duration(milliseconds: 200),
         child: Container(
-          width: formatWidth(190),
-          padding: EdgeInsets.all(formatWidth(8)),
+          width: cW(190),
+          padding: EdgeInsets.all(cW(8)),
           decoration: BoxDecoration(
             color: AppColor.surface,
-            borderRadius: BorderRadius.circular(r(14)),
+            borderRadius: BorderRadius.circular(cR(14)),
             border: Border.all(
               color: selected ? AppColor.primaryColor : AppColor.divider,
               width: selected ? 2 : 1,
@@ -343,14 +356,14 @@ class _CompoCard extends StatelessWidget {
                 children: <Widget>[
                   _LabelPill(formation.label),
                   if (name != null) ...<Widget>[
-                    sw(6),
+                    cSw(6),
                     Expanded(
                       child: Text(
                         name!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppThemeStyle.mediumStyle(
-                          12,
+                          cFs(12),
                           AppColor.primaryLabels,
                         ),
                       ),
@@ -358,16 +371,16 @@ class _CompoCard extends StatelessWidget {
                   ] else
                     const Spacer(),
                   if (selected) ...<Widget>[
-                    sw(4),
+                    cSw(4),
                     Icon(
                       Iconsax.tick_circle,
-                      size: sp(18),
+                      size: cIc(18),
                       color: AppColor.primaryColor,
                     ),
                   ],
                 ],
               ),
-              sh(8),
+              cSh(8),
               FormationPitch(formation: formation, markerFraction: 0.19),
             ],
           ),
@@ -385,17 +398,14 @@ class _LabelPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(12),
-        vertical: formatHeight(5),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(5)),
       decoration: BoxDecoration(
         color: AppColor.chipBackground,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Text(
         label,
-        style: AppThemeStyle.semiBStyle(12, AppColor.primaryLabels),
+        style: AppThemeStyle.semiBStyle(cFs(12), AppColor.primaryLabels),
       ),
     );
   }
@@ -411,27 +421,24 @@ class _CreateCompoButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColor.chipBackground,
-      borderRadius: BorderRadius.circular(r(12)),
+      borderRadius: BorderRadius.circular(cR(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(14),
-            vertical: formatHeight(8),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(8)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Icon(
                 Iconsax.add_copy,
-                size: sp(16),
+                size: cIc(16),
                 color: AppColor.primaryColor,
               ),
-              sw(6),
+              cSw(6),
               Text(
                 'app.gerer-equipe-composition.creer-composition'.tr(),
-                style: AppThemeStyle.semiBStyle(13, AppColor.primaryColor),
+                style: AppThemeStyle.semiBStyle(cFs(13), AppColor.primaryColor),
               ),
             ],
           ),
@@ -484,21 +491,21 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: formatWidth(260),
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(14)),
+      width: cW(260),
+      padding: EdgeInsets.symmetric(horizontal: cW(14)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Row(
         children: <Widget>[
           Icon(
             Iconsax.search_normal_1_copy,
-            size: sp(16),
+            size: cIc(16),
             color: AppColor.secondaryLabels,
           ),
-          sw(8),
+          cSw(8),
           Expanded(
             child: TextField(
               controller: controller,
@@ -508,13 +515,16 @@ class _SearchField extends StatelessWidget {
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
               inputFormatters: <TextInputFormatter>[FormationSearchFormatter()],
-              style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(13),
+                AppColor.primaryLabels,
+              ),
               decoration: InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
                 hintText: 'app.recherche.compositions-hint'.tr(),
                 hintStyle: AppThemeStyle.regularStyle(
-                  13,
+                  cFs(13),
                   AppColor.secondaryLabels,
                 ),
               ),
@@ -523,10 +533,10 @@ class _SearchField extends StatelessWidget {
           if (controller.text.isNotEmpty)
             InkResponse(
               onTap: onClear,
-              radius: sp(18),
+              radius: cIc(18),
               child: Icon(
                 Iconsax.close_circle,
-                size: sp(16),
+                size: cIc(16),
                 color: AppColor.secondaryLabels,
               ),
             ),

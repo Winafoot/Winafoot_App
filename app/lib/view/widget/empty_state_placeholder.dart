@@ -1,5 +1,5 @@
-import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 
 /// État vide standard : icône optionnelle (en [AppColor.disabled]) + titre +
@@ -30,8 +30,8 @@ class EmptyStatePlaceholder extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           if (icon != null) ...<Widget>[
-            Icon(icon, size: sp(iconSize), color: AppColor.disabled),
-            sh(14),
+            Icon(icon, size: cIc(iconSize), color: AppColor.disabled),
+            cSh(14),
           ],
           Text(
             title,
@@ -39,11 +39,14 @@ class EmptyStatePlaceholder extends StatelessWidget {
             style: AppThemeStyle.semiBStyle(titleSize, AppColor.primaryLabels),
           ),
           if (subtitle != null) ...<Widget>[
-            sh(icon != null ? 6 : 8),
+            cSh(icon != null ? 6 : 8),
             Text(
               subtitle!,
               textAlign: TextAlign.center,
-              style: AppThemeStyle.regularStyle(13, AppColor.secondaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(13),
+                AppColor.secondaryLabels,
+              ),
             ),
           ],
         ],

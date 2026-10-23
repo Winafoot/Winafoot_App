@@ -1,6 +1,6 @@
-import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 
 /// Barre de recherche en pilule (loupe, saisie, croix d'effacement), au style de
@@ -27,34 +27,37 @@ class SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: formatWidth(240),
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(14)),
+      width: cW(240),
+      padding: EdgeInsets.symmetric(horizontal: cW(14)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Row(
         children: <Widget>[
           Icon(
             Iconsax.search_normal_1_copy,
-            size: sp(16),
+            size: cIc(16),
             color: AppColor.secondaryLabels,
           ),
-          sw(8),
+          cSw(8),
           Expanded(
             child: TextField(
               controller: controller,
               onChanged: onChanged,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(13),
+                AppColor.primaryLabels,
+              ),
               decoration: InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
                 hintText: hintText,
                 hintStyle: AppThemeStyle.regularStyle(
-                  13,
+                  cFs(13),
                   AppColor.secondaryLabels,
                 ),
               ),
@@ -63,10 +66,10 @@ class SearchField extends StatelessWidget {
           if (controller.text.isNotEmpty)
             InkResponse(
               onTap: onClear,
-              radius: sp(18),
+              radius: cIc(18),
               child: Icon(
                 Iconsax.close_circle,
-                size: sp(16),
+                size: cIc(16),
                 color: AppColor.secondaryLabels,
               ),
             ),

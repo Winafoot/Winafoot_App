@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/view/widget/app_background.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
@@ -38,21 +39,26 @@ class MatchWizardScaffold extends StatelessWidget {
             Column(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isPhoneLayout ? 16 : cW(40),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      sh(18),
+                      cSh(isPhoneLayout ? 8 : 18),
                       _WizardHeader(onBack: onBack),
-                      sh(14),
+                      cSh(isPhoneLayout ? 6 : 14),
                       Container(height: 1, color: AppColor.divider),
                     ],
                   ),
                 ),
-                sh(26),
+                cSh(isPhoneLayout ? 8 : 26),
                 Text(
                   title,
-                  style: AppThemeStyle.semiBStyle(30, AppColor.primaryLabels),
+                  style: AppThemeStyle.semiBStyle(
+                    isPhoneLayout ? cFs(26) : cFs(30),
+                    AppColor.primaryLabels,
+                  ),
                 ),
                 // Clavier ouvert, le body est amputé de la hauteur du
                 // clavier : le contenu défile au lieu de déborder.
@@ -76,7 +82,7 @@ class MatchWizardScaffold extends StatelessWidget {
                                 bottom:
                                     bottomCta != null &&
                                             View.of(ctx).viewInsets.bottom > 0
-                                        ? formatHeight(92)
+                                        ? cH(92)
                                         : 0,
                               ),
                               child: ConstrainedBox(
@@ -88,13 +94,18 @@ class MatchWizardScaffold extends StatelessWidget {
                             ),
                   ),
                 ),
+                if (isPhoneLayout && bottomCta != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 10),
+                    child: bottomCta!,
+                  ),
               ],
             ),
-            if (bottomCta != null)
+            if (!isPhoneLayout && bottomCta != null)
               Positioned(
                 left: 0,
                 right: 0,
-                bottom: formatHeight(30),
+                bottom: cH(30),
                 child: Center(child: bottomCta!),
               ),
           ],
@@ -116,17 +127,21 @@ class _WizardHeader extends StatelessWidget {
         CustomBackButton(
           onTap: onBack ?? () => Navigator.of(context).maybePop(),
         ),
-        sw(14),
-        Container(width: 1, height: formatHeight(30), color: AppColor.divider),
-        sw(14),
-        WhistleIcon(size: sp(24), color: AppColor.primaryColor),
-        sw(10),
+        cSw(14),
+        Container(
+          width: 1,
+          height: isPhoneLayout ? 20 : cH(30),
+          color: AppColor.divider,
+        ),
+        cSw(14),
+        WhistleIcon(size: cIc(24), color: AppColor.primaryColor),
+        cSw(10),
         Text(
           'app.match-wizard.coup-denvoi'.tr(),
-          style: AppThemeStyle.semiBStyle(28, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(28), AppColor.primaryLabels),
         ),
         const Spacer(),
-        const WinaWordmark(size: 34),
+        WinaWordmark(size: isPhoneLayout ? 22 : 34),
       ],
     );
   }
@@ -142,13 +157,10 @@ class TeamLabelBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(14),
-        vertical: formatHeight(8),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(8)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(20)),
+        borderRadius: BorderRadius.circular(cR(20)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: AppColor.primaryLabels.withValues(alpha: 0.06),
@@ -160,14 +172,17 @@ class TeamLabelBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Iconsax.people, size: sp(15), color: AppColor.primaryColor),
-          sw(8),
+          Icon(Iconsax.people, size: cIc(15), color: AppColor.primaryColor),
+          cSw(8),
           Flexible(
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(13),
+                AppColor.primaryLabels,
+              ),
             ),
           ),
         ],
@@ -185,17 +200,14 @@ class InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(14),
-        vertical: formatHeight(7),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(7)),
       decoration: BoxDecoration(
         color: AppColor.chipBackground,
-        borderRadius: BorderRadius.circular(r(18)),
+        borderRadius: BorderRadius.circular(cR(18)),
       ),
       child: Text(
         label,
-        style: AppThemeStyle.mediumStyle(13, AppColor.primaryLabels),
+        style: AppThemeStyle.mediumStyle(cFs(13), AppColor.primaryLabels),
       ),
     );
   }
@@ -209,7 +221,7 @@ class VsBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       'app.match-wizard.vs'.tr(),
-      style: AppThemeStyle.boldStyle(30, AppColor.primaryColor),
+      style: AppThemeStyle.boldStyle(cFs(30), AppColor.primaryColor),
     );
   }
 }
@@ -244,57 +256,84 @@ class LabeledPillDropdown<T> extends StatelessWidget {
     if (leadingOf == null) return Text(labelOf(v));
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: <Widget>[leadingOf!(v), sw(10), Text(labelOf(v))],
+      children: <Widget>[leadingOf!(v), cSw(10), Text(labelOf(v))],
     );
   }
 
+  /// Ligne « libellé … valeur » affichée dans le bouton fermé.
+  Widget _closedRow(Widget valueWidget) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppThemeStyle.regularStyle(
+              cFs(14),
+              AppColor.secondaryLabels,
+            ),
+          ),
+        ),
+        cSw(12),
+        valueWidget,
+      ],
+    );
+  }
+
+  /// Le `DropdownButton` est `isExpanded` : toute la pilule est cliquable,
+  /// pas seulement la valeur et le chevron.
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(left: formatWidth(18), right: formatWidth(10)),
+      // Téléphone : le bouton « dense » est fin, on garde une zone tactile de
+      // ~36 dp (toute la pilule reste cliquable).
+      padding: EdgeInsets.only(
+        left: cW(18),
+        right: cW(10),
+        top: isPhoneLayout ? 8 : 0,
+        bottom: isPhoneLayout ? 8 : 0,
+      ),
       decoration: BoxDecoration(
         color: AppColor.chipBackground,
-        borderRadius: BorderRadius.circular(r(14)),
+        borderRadius: BorderRadius.circular(cR(14)),
       ),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.regularStyle(14, AppColor.secondaryLabels),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          isExpanded: true,
+          // Hauteur 48 imposée par défaut : trop haut pour un téléphone paysage.
+          isDense: isPhoneLayout,
+          itemHeight: isPhoneLayout ? null : kMinInteractiveDimension,
+          borderRadius: BorderRadius.circular(cR(12)),
+          hint: _closedRow(
+            Text(
+              'utils.choose'.tr(),
+              style: AppThemeStyle.regularStyle(
+                cFs(14),
+                AppColor.secondaryLabels,
+              ),
             ),
           ),
-          // Écart minimum garanti libellé ↔ valeur : un `Spacer()` seul
-          // tombe à 0 dès que la largeur imposée est saturée.
-          sw(12),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              isDense: true,
-              borderRadius: BorderRadius.circular(r(12)),
-              hint: Text(
-                'utils.choose'.tr(),
-                style: AppThemeStyle.regularStyle(14, AppColor.secondaryLabels),
-              ),
-              icon: Icon(
-                Iconsax.arrow_down_1_copy,
-                size: sp(20),
-                color: AppColor.primaryLabels,
-              ),
-              style: AppThemeStyle.regularStyle(14, AppColor.primaryLabels),
-              dropdownColor: AppColor.surface,
-              items: <DropdownMenuItem<T>>[
-                for (final T v in values)
-                  DropdownMenuItem<T>(value: v, child: _item(v)),
+          selectedItemBuilder:
+              (BuildContext context) => <Widget>[
+                for (final T v in values) _closedRow(_item(v)),
               ],
-              onChanged: (T? v) {
-                if (v != null) onChanged(v);
-              },
-            ),
+          icon: Icon(
+            Iconsax.arrow_down_1_copy,
+            size: cIc(20),
+            color: AppColor.primaryLabels,
           ),
-        ],
+          style: AppThemeStyle.regularStyle(cFs(14), AppColor.primaryLabels),
+          dropdownColor: AppColor.surface,
+          items: <DropdownMenuItem<T>>[
+            for (final T v in values)
+              DropdownMenuItem<T>(value: v, child: _item(v)),
+          ],
+          onChanged: (T? v) {
+            if (v != null) onChanged(v);
+          },
+        ),
       ),
     );
   }
@@ -316,36 +355,33 @@ class WizardCtaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double badge = sp(22);
+    final double badge = cIc(22);
     final Color bg =
         enabled
             ? AppColor.primaryColor
             : AppColor.primaryColor.withValues(alpha: 0.4);
     return Material(
       color: bg,
-      borderRadius: BorderRadius.circular(r(28)),
+      borderRadius: BorderRadius.circular(cR(28)),
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(r(28)),
+        borderRadius: BorderRadius.circular(cR(28)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(28),
-            vertical: formatHeight(15),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(28), vertical: cH(15)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
                 label,
-                style: AppThemeStyle.semiBStyle(15, AppColor.textLight),
+                style: AppThemeStyle.semiBStyle(cFs(15), AppColor.textLight),
               ),
-              sw(10),
+              cSw(10),
               SizedBox(
                 width: badge,
                 height: badge,
                 child: Icon(
                   Iconsax.arrow_circle_right,
-                  size: sp(13),
+                  size: cIc(13),
                   color: AppColor.textLight,
                 ),
               ),

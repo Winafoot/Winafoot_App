@@ -1,5 +1,5 @@
-import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
 import 'package:wina/view/widget/custom_back_button.dart';
@@ -42,14 +42,18 @@ class PageHeader extends StatelessWidget {
       children: <Widget>[
         if (onBack != null) ...<Widget>[
           CustomBackButton(onTap: onBack!),
-          if (backDivider) ...<Widget>[sw(7), const HeaderDivider(), sw(7)] else
-            sw(14),
+          if (backDivider) ...<Widget>[
+            cSw(7),
+            const HeaderDivider(),
+            cSw(7),
+          ] else
+            cSw(14),
         ],
-        Icon(icon, size: sp(iconSize), color: AppColor.primaryColor),
-        sw(10),
+        Icon(icon, size: cIc(iconSize), color: AppColor.primaryColor),
+        cSw(10),
         Text(
           title,
-          style: AppThemeStyle.semiBStyle(28, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(28), AppColor.primaryLabels),
         ),
         const Spacer(),
         ...actions,

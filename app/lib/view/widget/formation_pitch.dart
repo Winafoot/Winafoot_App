@@ -1,4 +1,4 @@
-import 'package:core_kosmos/core_kosmos.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:flutter/material.dart';
 import 'package:wina/models/formation.dart';
 
@@ -29,7 +29,7 @@ class FormationPitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final Formation? f = formation;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(r(borderRadius)),
+      borderRadius: BorderRadius.circular(cR(borderRadius)),
       child: AspectRatio(
         aspectRatio: 1668 / 2388,
         child: LayoutBuilder(

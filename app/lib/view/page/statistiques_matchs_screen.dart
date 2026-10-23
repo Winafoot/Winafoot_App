@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/data/search/union_search.dart';
 import 'package:wina/models/coach_profile.dart';
@@ -122,22 +123,24 @@ class _StatistiquesMatchsScreenState
     return Column(
       children: <Widget>[
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+          padding: EdgeInsets.symmetric(
+            horizontal: isPhoneLayout ? 16 : cW(40),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              sh(18),
+              cSh(isPhoneLayout ? 8 : 18),
               PageHeader(
                 icon: Iconsax.chart_21,
                 title: 'app.statistiques-matchs.titre'.tr(),
                 actions: <Widget>[
                   const NotificationBell(),
-                  sw(16),
+                  cSw(16),
                   const SettingsButton(),
-                  sw(18),
+                  cSw(18),
                 ],
               ),
-              sh(14),
+              cSh(isPhoneLayout ? 6 : 14),
               VerticalDivider(),
             ],
           ),
@@ -195,16 +198,16 @@ class _StatistiquesMatchsScreenState
               }
               return Padding(
                 padding: EdgeInsets.fromLTRB(
-                  formatWidth(40),
-                  formatHeight(16),
-                  formatWidth(40),
-                  formatHeight(kBottomNavClearance),
+                  isPhoneLayout ? 16 : cW(40),
+                  isPhoneLayout ? 8 : cH(16),
+                  isPhoneLayout ? 16 : cW(40),
+                  cH(kBottomNavClearance),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     SizedBox(
-                      width: formatWidth(309),
+                      width: cW(309),
                       child: _MatchList(
                         matches: visible,
                         pending: _pending,
@@ -219,7 +222,7 @@ class _StatistiquesMatchsScreenState
                         onQuery: _union.input,
                       ),
                     ),
-                    sw(27),
+                    cSw(27),
                     Expanded(
                       child: _Detail(
                         match: selected,
@@ -235,9 +238,9 @@ class _StatistiquesMatchsScreenState
                             }),
                       ),
                     ),
-                    sw(31),
+                    cSw(31),
                     SizedBox(
-                      width: formatWidth(354),
+                      width: cW(354),
                       height: double.infinity,
                       child: _PitchCard(
                         composition: comp,
@@ -263,7 +266,7 @@ class _StatistiquesMatchsScreenState
                   child: Text(
                     'app.statistiques-matchs.erreur-chargement'.tr(),
                     style: AppThemeStyle.mediumStyle(
-                      15,
+                      cFs(15),
                       AppColor.secondaryLabels,
                     ),
                   ),
@@ -287,49 +290,49 @@ class _LoadingSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        formatWidth(40),
-        formatHeight(16),
-        formatWidth(40),
-        formatHeight(kBottomNavClearance),
+        cW(40),
+        cH(16),
+        cW(40),
+        cH(kBottomNavClearance),
       ),
       child: AppSkeleton(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             SizedBox(
-              width: formatWidth(309),
+              width: cW(309),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   const SkeletonBox(height: 18, width: 140, radius: 4),
-                  sh(6),
+                  cSh(6),
                   const SkeletonBox(height: 31, radius: 999),
-                  sh(15),
+                  cSh(15),
                   for (int i = 0; i < 4; i++) ...<Widget>[
-                    if (i > 0) sh(7),
+                    if (i > 0) cSh(7),
                     const SkeletonBox(height: 114),
                   ],
                 ],
               ),
             ),
-            sw(27),
+            cSw(27),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   const SkeletonBox(height: 18, width: 180, radius: 4),
-                  sh(6),
+                  cSh(6),
                   const SkeletonBox(height: 66),
-                  sh(8),
+                  cSh(8),
                   const SkeletonBox(height: 88),
-                  sh(7),
+                  cSh(7),
                   const SkeletonBox(height: 88),
                 ],
               ),
             ),
-            sw(31),
+            cSw(31),
             SizedBox(
-              width: formatWidth(354),
+              width: cW(354),
               height: double.infinity,
               child: const SkeletonBox(),
             ),
@@ -350,12 +353,9 @@ class _GreenChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(11),
-        vertical: formatHeight(5),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(11), vertical: cH(5)),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -367,7 +367,7 @@ class _GreenChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+        style: AppThemeStyle.regularStyle(cFs(13), AppColor.primaryLabels),
       ),
     );
   }
@@ -393,17 +393,17 @@ class _MatchList extends StatelessWidget {
   final ValueChanged<String> onQuery;
 
   OutlineInputBorder _border(Color color, double width) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(r(999)),
+    borderRadius: BorderRadius.circular(cR(999)),
     borderSide: BorderSide(color: color, width: width),
   );
 
   /// Champ de recherche, épinglé en haut de la liste pendant le défilement.
   Widget _searchField() {
     return SizedBox(
-      height: formatHeight(31),
+      height: cH(31),
       child: TextField(
         onChanged: onQuery,
-        style: AppThemeStyle.regularStyle(12, AppColor.inkNavy),
+        style: AppThemeStyle.regularStyle(cFs(12), AppColor.inkNavy),
         cursorColor: AppColor.primaryColor,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
@@ -411,20 +411,17 @@ class _MatchList extends StatelessWidget {
           filled: false,
           hintText: 'app.statistiques-matchs.rechercher'.tr(),
           hintStyle: AppThemeStyle.regularStyle(
-            12,
+            cFs(12),
             AppColor.inkNavy.withValues(alpha: .4),
           ),
-          contentPadding: EdgeInsets.symmetric(horizontal: formatWidth(8)),
+          contentPadding: EdgeInsets.symmetric(horizontal: cW(8)),
           prefixIcon: Padding(
             // 20 px : la loupe s'aligne sur l'écusson des cartes de match
             // juste en dessous, dans la même colonne (voir _MatchCard).
-            padding: EdgeInsets.only(
-              left: formatWidth(20),
-              right: formatWidth(7),
-            ),
+            padding: EdgeInsets.only(left: cW(20), right: cW(7)),
             child: Icon(
               Iconsax.search_normal_copy,
-              size: sp(16),
+              size: cIc(16),
               color: AppColor.inkNavy.withValues(alpha: .4),
             ),
           ),
@@ -453,9 +450,12 @@ class _MatchList extends StatelessWidget {
             children: <Widget>[
               Text(
                 'app.statistiques-matchs.tous-les-matchs'.tr(),
-                style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+                style: AppThemeStyle.semiBStyle(
+                  cFs(18),
+                  AppColor.primaryLabels,
+                ),
               ),
-              sh(4),
+              cSh(4),
             ],
           ),
         ),
@@ -476,7 +476,7 @@ class _MatchList extends StatelessWidget {
         else
           SliverList.separated(
             itemCount: matches.length,
-            separatorBuilder: (_, _) => sh(7),
+            separatorBuilder: (_, _) => cSh(7),
             itemBuilder: (BuildContext context, int i) {
               final GameMatch m = matches[i];
               return _MatchCard(
@@ -500,7 +500,7 @@ class _PinnedSearchHeader extends SliverPersistentHeaderDelegate {
 
   final Widget child;
 
-  double get _height => formatHeight(31 + 15);
+  double get _height => cH(31 + 15);
 
   @override
   double get minExtent => _height;
@@ -541,16 +541,11 @@ class _MatchCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        height: formatHeight(114),
-        padding: EdgeInsets.fromLTRB(
-          formatWidth(20),
-          formatHeight(14),
-          formatWidth(12),
-          formatHeight(10),
-        ),
+        height: isPhoneLayout ? 80 : cH(114),
+        padding: EdgeInsets.fromLTRB(cW(20), cH(14), cW(12), cH(10)),
         decoration: BoxDecoration(
           color: AppColor.surface,
-          borderRadius: BorderRadius.circular(r(12)),
+          borderRadius: BorderRadius.circular(cR(12)),
           border:
               selected
                   ? Border.all(color: AppColor.primaryColor, width: 2)
@@ -563,24 +558,24 @@ class _MatchCard extends StatelessWidget {
             Row(
               children: <Widget>[
                 TeamCrest(size: 19, color: match.ownJersey?.color.color),
-                sw(11),
+                cSw(11),
                 Expanded(
                   child: Text(
                     teamName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppThemeStyle.mediumStyle(
-                      15,
+                      cFs(15),
                       AppColor.primaryLabels,
                     ),
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.only(right: formatWidth(8)),
+                  padding: EdgeInsets.only(right: cW(8)),
                   child: Text(
                     '${match.scoreUs}-${match.scoreThem}',
                     style: AppThemeStyle.mediumStyle(
-                      15,
+                      cFs(15),
                       AppColor.primaryLabels,
                     ),
                   ),
@@ -588,16 +583,19 @@ class _MatchCard extends StatelessWidget {
               ],
             ),
             Padding(
-              padding: EdgeInsets.only(left: formatWidth(3)),
+              padding: EdgeInsets.only(left: cW(3)),
               child: Text(
                 'VS',
-                style: AppThemeStyle.mediumStyle(15, AppColor.primaryColor),
+                style: AppThemeStyle.mediumStyle(
+                  cFs(15),
+                  AppColor.primaryColor,
+                ),
               ),
             ),
             Row(
               children: <Widget>[
                 TeamCrest(size: 19, color: match.opponent.jerseyColor?.color),
-                sw(11),
+                cSw(11),
                 Expanded(
                   child: Text(
                     match.opponent.name.isEmpty
@@ -606,7 +604,7 @@ class _MatchCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppThemeStyle.mediumStyle(
-                      15,
+                      cFs(15),
                       AppColor.primaryLabels,
                     ),
                   ),
@@ -684,10 +682,7 @@ class _Detail extends StatelessWidget {
   /// Ouvre le bilan individuel pour la période donnée. Sans joueur
   /// sélectionné sur le terrain, propose d'abord le popup de choix du joueur
   /// (design « choix – 1 »).
-  Future<void> _openIndividuel(
-    BuildContext context,
-    MatchPeriod period,
-  ) async {
+  Future<void> _openIndividuel(BuildContext context, MatchPeriod period) async {
     Player? player = selectedFromPitch ? selectedPlayer : null;
     if (player == null) {
       final List<({int? number, Player player})> starters = _starters;
@@ -705,11 +700,7 @@ class _Detail extends StatelessWidget {
     if (!context.mounted) return;
     _push(
       context,
-      BilanIndividuelScreen(
-        match: match,
-        period: period,
-        playerId: player?.id,
-      ),
+      BilanIndividuelScreen(match: match, period: period, playerId: player?.id),
     );
   }
 
@@ -722,17 +713,17 @@ class _Detail extends StatelessWidget {
         match.statsFor(MatchPeriod.firstHalf).status !=
         PeriodStatus.unavailable;
     return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: formatHeight(8)),
+      padding: EdgeInsets.only(bottom: cH(8)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
             'app.statistiques-matchs.statistiques-globales'.tr(),
-            style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+            style: AppThemeStyle.semiBStyle(cFs(18), AppColor.primaryLabels),
           ),
-          sh(3),
+          cSh(3),
           _ScoreCard(match: match),
-          sh(8),
+          cSh(8),
           BilanCard(
             title: 'app.statistiques-matchs.bilan-collectif'.tr(),
             halvesAvailable: halvesAvailable,
@@ -742,7 +733,7 @@ class _Detail extends StatelessWidget {
                   BilanCollectifScreen(match: match, period: period),
                 ),
           ),
-          sh(7),
+          cSh(7),
           BilanCard(
             title: 'app.statistiques-matchs.bilan-individuel'.tr(),
             halvesAvailable: halvesAvailable,
@@ -766,28 +757,27 @@ class _Detail extends StatelessWidget {
                           fontSize: 9,
                           asset: _kJerseyBlackAsset,
                         ),
-                        sw(8),
+                        cSw(8),
                         Text(
                           selectedPlayer!.fullName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppThemeStyle.mediumStyle(
-                            12,
+                            cFs(12),
                             AppColor.primaryColor,
                           ),
                         ),
                       ],
                     ),
-            onPeriod:
-                (MatchPeriod period) => _openIndividuel(context, period),
+            onPeriod: (MatchPeriod period) => _openIndividuel(context, period),
           ),
           if (comp != null) ...<Widget>[
-            sh(13),
+            cSh(13),
             Text(
               'app.statistiques-matchs.joueurs'.tr(),
-              style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(cFs(18), AppColor.primaryLabels),
             ),
-            sh(2),
+            cSh(2),
             Roster(
               composition: comp,
               byId: byId,
@@ -810,15 +800,10 @@ class _ScoreCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        formatWidth(19),
-        formatHeight(8),
-        formatWidth(17),
-        formatHeight(8),
-      ),
+      padding: EdgeInsets.fromLTRB(cW(19), cH(8), cW(17), cH(8)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Column(
         children: <Widget>[
@@ -826,33 +811,45 @@ class _ScoreCard extends StatelessWidget {
             children: <Widget>[
               Text(
                 'app.statistiques-matchs.score-final'.tr(),
-                style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+                style: AppThemeStyle.mediumStyle(
+                  cFs(15),
+                  AppColor.primaryLabels,
+                ),
               ),
               const Spacer(),
               if (match.resultLabel != null) ...<Widget>[
                 _GreenChip(label: match.resultLabel!),
-                sw(13),
+                cSw(13),
               ],
               Padding(
-                padding: EdgeInsets.only(right: formatWidth(8)),
+                padding: EdgeInsets.only(right: cW(8)),
                 child: Text(
                   '${match.scoreUs}-${match.scoreThem}',
-                  style: AppThemeStyle.mediumStyle(22, AppColor.primaryLabels),
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(22),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
             ],
           ),
-          sh(2),
+          cSh(2),
           Row(
             children: <Widget>[
               Text(
                 'app.statistiques-matchs.temps-total'.tr(),
-                style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+                style: AppThemeStyle.mediumStyle(
+                  cFs(15),
+                  AppColor.primaryLabels,
+                ),
               ),
               const Spacer(),
               Text(
                 match.durationLabel,
-                style: AppThemeStyle.semiBStyle(17, AppColor.primaryLabels),
+                style: AppThemeStyle.semiBStyle(
+                  cFs(17),
+                  AppColor.primaryLabels,
+                ),
               ),
             ],
           ),
@@ -893,15 +890,10 @@ class BilanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(
-        formatWidth(16),
-        formatHeight(11),
-        formatWidth(16),
-        formatHeight(12),
-      ),
+      padding: EdgeInsets.fromLTRB(cW(16), cH(11), cW(16), cH(12)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -911,15 +903,21 @@ class BilanCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
               if (trailing != null) trailing!,
             ],
           ),
           if (helper != null)
-            Text(helper!, style: AppThemeStyle.regularStyle(12, helperColor)),
-          sh(helper == null ? 6 : 9),
+            Text(
+              helper!,
+              style: AppThemeStyle.regularStyle(cFs(12), helperColor),
+            ),
+          cSh(helper == null ? 6 : 9),
           Row(
             children: <Widget>[
               _PeriodLink(
@@ -969,9 +967,9 @@ class _PeriodLink extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Text(label, style: AppThemeStyle.semiBStyle(14, color)),
-          sw(7),
-          Icon(Iconsax.arrow_circle_right, size: sp(13), color: color),
+          Text(label, style: AppThemeStyle.semiBStyle(cFs(14), color)),
+          cSw(7),
+          Icon(Iconsax.arrow_circle_right, size: cIc(13), color: color),
         ],
       ),
     );
@@ -984,10 +982,10 @@ class _PeriodDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(19)),
+      padding: EdgeInsets.symmetric(horizontal: cW(19)),
       child: Container(
         width: 0.5,
-        height: formatHeight(25),
+        height: cH(25),
         color: AppColor.inkNavy.withValues(alpha: .2),
       ),
     );
@@ -1027,7 +1025,7 @@ class Roster extends StatelessWidget {
                 : null;
         final Player? p = pid != null ? byId[pid] : null;
         if (p == null) continue;
-        if (rows.isNotEmpty) rows.add(sh(5));
+        if (rows.isNotEmpty) rows.add(cSh(5));
         rows.add(
           _RosterRow(
             player: p,
@@ -1038,9 +1036,9 @@ class Roster extends StatelessWidget {
         );
       }
       if (rows.isEmpty) continue;
-      if (children.isNotEmpty) children.add(sh(20));
+      if (children.isNotEmpty) children.add(cSh(20));
       children.add(_RosterHeader(label: pos.label));
-      children.add(sh(9));
+      children.add(cSh(9));
       children.addAll(rows);
     }
     // Un remplacant n'occupe aucun emplacement de schema : il est absent de
@@ -1054,7 +1052,7 @@ class Roster extends StatelessWidget {
     for (final String pid in composition.substituteIds) {
       final Player? p = byId[pid];
       if (p == null) continue;
-      if (subRows.isNotEmpty) subRows.add(sh(5));
+      if (subRows.isNotEmpty) subRows.add(cSh(5));
       subRows.add(
         _RosterRow(
           player: p,
@@ -1065,11 +1063,11 @@ class Roster extends StatelessWidget {
       );
     }
     if (subRows.isNotEmpty) {
-      if (children.isNotEmpty) children.add(sh(20));
+      if (children.isNotEmpty) children.add(cSh(20));
       children.add(
         _RosterHeader(label: 'app.match-stats-board.remplacants'.tr()),
       );
-      children.add(sh(9));
+      children.add(cSh(9));
       children.addAll(subRows);
     }
     return Column(
@@ -1087,31 +1085,34 @@ class _RosterHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: formatHeight(35),
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(16)),
+      height: cH(35),
+      padding: EdgeInsets.symmetric(horizontal: cW(16)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Row(
         children: <Widget>[
           SizedBox(
-            width: formatWidth(183),
+            width: cW(183),
             child: Text(
               label,
-              style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
             ),
           ),
           SizedBox(
-            width: formatWidth(121),
+            width: cW(121),
             child: Text(
               'app.statistiques-matchs.pied-fort'.tr(),
-              style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(13),
+                AppColor.primaryLabels,
+              ),
             ),
           ),
           Text(
             'app.statistiques-matchs.numero'.tr(),
-            style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+            style: AppThemeStyle.regularStyle(cFs(13), AppColor.primaryLabels),
           ),
         ],
       ),
@@ -1139,33 +1140,30 @@ class _RosterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(16),
-        vertical: formatHeight(4),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(4)),
       // Sans fond, le nom vert devient illisible sur la photo de pelouse du
       // bas de page (AppBackground).
       decoration: BoxDecoration(
         color:
             selected ? AppColor.rosterRowHighlight : AppColor.rosterRowSurface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Row(
         children: <Widget>[
           SizedBox(
-            width: formatWidth(183),
+            width: cW(183),
             child: Text(
               player.fullName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.mediumStyle(15, AppColor.rosterName),
+              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.rosterName),
             ),
           ),
           SizedBox(
-            width: formatWidth(121),
+            width: cW(121),
             child: Text(
               player.strongFoot.label,
-              style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
             ),
           ),
           _JerseyNumber(number: number, asset: jerseyAsset),
@@ -1196,7 +1194,7 @@ class _JerseyNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double d = sp(size);
+    final double d = cIc(size);
     return SizedBox(
       width: d,
       height: d,
@@ -1276,16 +1274,13 @@ class _PitchCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final MatchComposition? comp = composition;
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(9),
-        vertical: formatHeight(6),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(9), vertical: cH(6)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(r(10)),
+        borderRadius: BorderRadius.circular(cR(10)),
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final double w = constraints.maxWidth;
@@ -1300,21 +1295,21 @@ class _PitchCard extends StatelessWidget {
                   for (int i = 0; i < comp.slots.length; i++)
                     if (_playerAt(comp, i) != null) _marker(comp, i, w, h, m),
                   Positioned(
-                    top: formatHeight(8),
-                    right: formatWidth(9),
+                    top: cH(8),
+                    right: cW(9),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: formatWidth(15),
-                        vertical: formatHeight(4),
+                        horizontal: cW(15),
+                        vertical: cH(4),
                       ),
                       decoration: BoxDecoration(
                         color: AppColor.surface,
-                        borderRadius: BorderRadius.circular(r(999)),
+                        borderRadius: BorderRadius.circular(cR(999)),
                       ),
                       child: Text(
                         comp.formationLabel,
                         style: AppThemeStyle.regularStyle(
-                          15,
+                          cFs(15),
                           AppColor.primaryLabels,
                         ),
                       ),
@@ -1384,7 +1379,7 @@ class PlayerMarker extends StatelessWidget {
                   child: Text(
                     '$number',
                     style: AppThemeStyle.semiBStyle(
-                      14,
+                      cFs(14),
                       numberColorForJerseyAsset(
                         selected ? _kJerseyBlackAsset : jerseyAsset,
                       ),
@@ -1406,7 +1401,7 @@ class PlayerMarker extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppThemeStyle.mediumStyle(
-              10,
+              cFs(10),
               AppColor.textLight,
             ).copyWith(fontSize: m * 0.21),
           ),
@@ -1431,7 +1426,7 @@ class _CaptainBadge extends StatelessWidget {
       padding: EdgeInsets.only(left: m * 0.08, right: m * 0.05),
       decoration: BoxDecoration(
         color: AppColor.primaryLabels,
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1439,7 +1434,7 @@ class _CaptainBadge extends StatelessWidget {
           Text(
             'app.statistiques-matchs.capitaine-abrege'.tr(),
             style: AppThemeStyle.mediumStyle(
-              10,
+              cFs(10),
               AppColor.textLight,
             ).copyWith(fontSize: m * 0.21),
           ),
@@ -1479,18 +1474,15 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: AppColor.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r(12))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cR(12)),
+      ),
       child: SizedBox(
-        width: formatWidth(461),
+        width: cW(461),
         child: Stack(
           children: <Widget>[
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                formatWidth(71),
-                formatHeight(47),
-                formatWidth(71),
-                formatHeight(30),
-              ),
+              padding: EdgeInsets.fromLTRB(cW(71), cH(47), cW(71), cH(30)),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1498,26 +1490,29 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
                   Text(
                     'app.statistiques-matchs.consulter-bilan-titre'.tr(),
                     textAlign: TextAlign.center,
-                    style: AppThemeStyle.semiBStyle(17, AppColor.primaryLabels),
-                  ),
-                  sh(20),
-                  Text(
-                    'app.statistiques-matchs.champ-joueur'.tr(),
-                    style: AppThemeStyle.mediumStyle(
-                      11,
+                    style: AppThemeStyle.semiBStyle(
+                      cFs(17),
                       AppColor.primaryLabels,
                     ),
                   ),
-                  sh(2),
+                  cSh(20),
+                  Text(
+                    'app.statistiques-matchs.champ-joueur'.tr(),
+                    style: AppThemeStyle.mediumStyle(
+                      cFs(11),
+                      AppColor.primaryLabels,
+                    ),
+                  ),
+                  cSh(2),
                   _playerField(),
-                  sh(35),
+                  cSh(35),
                   _consulterButton(context),
-                  sh(16),
+                  cSh(16),
                   Text(
                     'app.statistiques-matchs.champs-obligatoires'.tr(),
                     textAlign: TextAlign.center,
                     style: AppThemeStyle.regularStyle(
-                      13,
+                      cFs(13),
                       AppColor.primaryLabels,
                     ),
                   ),
@@ -1525,14 +1520,14 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
               ),
             ),
             Positioned(
-              top: formatHeight(14),
-              right: formatWidth(14),
+              top: cH(14),
+              right: cW(14),
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.of(context).pop(),
                 child: Icon(
                   Iconsax.close_circle,
-                  size: sp(21),
+                  size: cIc(21),
                   color: AppColor.primaryLabels.withValues(alpha: .25),
                 ),
               ),
@@ -1548,7 +1543,9 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
     return PopupMenuButton<int>(
       initialValue: _index,
       color: AppColor.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r(12))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cR(12)),
+      ),
       onSelected: (int i) => setState(() => _index = i),
       itemBuilder:
           (BuildContext context) => <PopupMenuEntry<int>>[
@@ -1557,15 +1554,15 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
                 value: i,
                 child: Text(
                   _label(widget.starters[i]),
-                  style: AppThemeStyle.regularStyle(13, AppColor.inkNavy),
+                  style: AppThemeStyle.regularStyle(cFs(13), AppColor.inkNavy),
                 ),
               ),
           ],
       child: Container(
-        height: formatHeight(47),
-        padding: EdgeInsets.symmetric(horizontal: formatWidth(19)),
+        height: cH(47),
+        padding: EdgeInsets.symmetric(horizontal: cW(19)),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(r(999)),
+          borderRadius: BorderRadius.circular(cR(999)),
           border: Border.all(
             color: AppColor.primaryLabels.withValues(alpha: .3),
             width: 0.5,
@@ -1578,12 +1575,12 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
                 _label(widget.starters[_index]),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppThemeStyle.regularStyle(13, AppColor.inkNavy),
+                style: AppThemeStyle.regularStyle(cFs(13), AppColor.inkNavy),
               ),
             ),
             Icon(
               Iconsax.arrow_down_1,
-              size: sp(13),
+              size: cIc(13),
               color: AppColor.primaryLabels,
             ),
           ],
@@ -1597,9 +1594,9 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
     return GestureDetector(
       onTap: () => Navigator.of(context).pop(widget.starters[_index].player),
       child: Container(
-        height: formatHeight(45),
+        height: cH(45),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(r(999)),
+          borderRadius: BorderRadius.circular(cR(999)),
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -1614,12 +1611,12 @@ class _BilanIndividuelPickerState extends State<_BilanIndividuelPicker> {
           children: <Widget>[
             Text(
               'app.statistiques-matchs.consulter'.tr(),
-              style: AppThemeStyle.semiBStyle(14, AppColor.textLight),
+              style: AppThemeStyle.semiBStyle(cFs(14), AppColor.textLight),
             ),
-            sw(7),
+            cSw(7),
             Icon(
               Iconsax.arrow_circle_right,
-              size: sp(11),
+              size: cIc(11),
               color: AppColor.textLight,
             ),
           ],

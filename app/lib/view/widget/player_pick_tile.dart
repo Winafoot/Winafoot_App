@@ -1,5 +1,5 @@
-import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/player.dart';
 
@@ -30,14 +30,11 @@ class PlayerPickTile extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        width: formatWidth(96),
-        padding: EdgeInsets.symmetric(
-          horizontal: formatWidth(8),
-          vertical: formatHeight(8),
-        ),
+        width: cW(96),
+        padding: EdgeInsets.symmetric(horizontal: cW(8), vertical: cH(8)),
         decoration: BoxDecoration(
           color: AppColor.background,
-          borderRadius: BorderRadius.circular(r(12)),
+          borderRadius: BorderRadius.circular(cR(12)),
           border: Border.all(
             color: selected ? AppColor.primaryColor : AppColor.divider,
             width: selected ? 2 : 1,
@@ -46,14 +43,14 @@ class PlayerPickTile extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Image.asset(jerseyAsset, width: sp(34), height: sp(34)),
-            sh(6),
+            Image.asset(jerseyAsset, width: cIc(34), height: cIc(34)),
+            cSh(6),
             Text(
               player.fullName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppThemeStyle.mediumStyle(
-                11,
+                cFs(11),
                 selected ? AppColor.primaryColor : AppColor.primaryLabels,
               ),
             ),

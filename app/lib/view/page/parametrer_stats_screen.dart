@@ -1,5 +1,6 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/match_providers.dart';
@@ -69,7 +70,7 @@ class _ParametrerStatsScreenState extends ConsumerState<ParametrerStatsScreen> {
         'app.parametrer-stats.selection'.tr(
           args: <String>['${_selected.length}', '${kStatToggles.length}'],
         ),
-        style: AppThemeStyle.mediumStyle(15, AppColor.secondaryLabels),
+        style: AppThemeStyle.mediumStyle(cFs(15), AppColor.secondaryLabels),
       ),
       action: WizardCtaButton(
         label: 'utils.validate'.tr(),
@@ -78,16 +79,16 @@ class _ParametrerStatsScreenState extends ConsumerState<ParametrerStatsScreen> {
       ),
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(
-          formatWidth(40),
+          isPhoneLayout ? 16 : cW(40),
           0,
-          formatWidth(40),
-          formatHeight(16),
+          isPhoneLayout ? 16 : cW(40),
+          cH(16),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             for (int i = 0; i < _kColumns.length; i++) ...<Widget>[
-              if (i > 0) sw(16),
+              if (i > 0) cSw(16),
               Expanded(child: _column(_kColumns[i])),
             ],
           ],
@@ -109,7 +110,7 @@ class _ParametrerStatsScreenState extends ConsumerState<ParametrerStatsScreen> {
                 value: _selected.contains(s.key),
                 onChanged: (bool on) => _toggle(s.key, on),
               ),
-              sh(10),
+              cSh(10),
             ],
         ],
       ],
@@ -126,16 +127,12 @@ class _ThemeTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        left: formatWidth(4),
-        top: formatHeight(6),
-        bottom: formatHeight(10),
-      ),
+      padding: EdgeInsets.only(left: cW(4), top: cH(6), bottom: cH(10)),
       child: Text(
         label,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+        style: AppThemeStyle.semiBStyle(cFs(15), AppColor.primaryLabels),
       ),
     );
   }
@@ -155,11 +152,11 @@ class _StatToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(left: formatWidth(16), right: formatWidth(8)),
-      height: formatHeight(44),
+      padding: EdgeInsets.only(left: cW(16), right: cW(8)),
+      height: isPhoneLayout ? 34 : cH(44),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: AppColor.primaryLabels.withValues(alpha: 0.05),
@@ -175,19 +172,24 @@ class _StatToggle extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.mediumStyle(14, AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(cFs(14), AppColor.primaryLabels),
             ),
           ),
-          sw(8),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            activeThumbColor: AppColor.textLight,
-            activeTrackColor: AppColor.primaryColor,
-            inactiveThumbColor: AppColor.textLight,
-            inactiveTrackColor: AppColor.disabled,
-            trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+          cSw(8),
+          Transform.scale(
+            // Le Switch Material garde sa taille native : on le réduit pour
+            // qu'il tienne dans la pastille compacte du téléphone.
+            scale: isPhoneLayout ? 0.7 : 1,
+            child: Switch(
+              value: value,
+              onChanged: onChanged,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              activeThumbColor: AppColor.textLight,
+              activeTrackColor: AppColor.primaryColor,
+              inactiveThumbColor: AppColor.textLight,
+              inactiveTrackColor: AppColor.disabled,
+              trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+            ),
           ),
         ],
       ),

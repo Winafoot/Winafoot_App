@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:wina/config/orientation_controller.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/live_match.dart';
 import 'package:wina/providers/home_tab_provider.dart';
@@ -143,7 +144,7 @@ class CheckProfilScaffold extends StatelessWidget {
             const AppBackground(),
             Column(
               children: [
-                sh(24),
+                cSh(24),
                 // `tappable: false` : cet écran est empilé sur le navigator ROOT
                 // par le paquet skeleton ; un retour accueil contournerait la
                 // complétion de profil obligatoire.
@@ -152,18 +153,18 @@ class CheckProfilScaffold extends StatelessWidget {
                   child: Center(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
-                        vertical: formatHeight(20),
-                        horizontal: narrow ? formatWidth(16) : 0,
+                        vertical: cH(20),
+                        horizontal: narrow ? cW(16) : 0,
                       ),
                       child: Container(
-                        width: narrow ? double.infinity : (width ?? formatWidth(430)),
+                        width: narrow ? double.infinity : (width ?? cW(430)),
                         padding: EdgeInsets.symmetric(
-                          horizontal: formatWidth(28),
-                          vertical: formatHeight(28),
+                          horizontal: cW(28),
+                          vertical: cH(28),
                         ),
                         decoration: BoxDecoration(
                           color: AppColor.surface,
-                          borderRadius: BorderRadius.circular(r(20)),
+                          borderRadius: BorderRadius.circular(cR(20)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -172,20 +173,20 @@ class CheckProfilScaffold extends StatelessWidget {
                               children: [
                                 if (onBack != null) ...[
                                   CustomBackButton(onTap: onBack!),
-                                  sw(12),
+                                  cSw(12),
                                 ],
                                 Flexible(
                                   child: Text(
                                     title,
                                     style: AppThemeStyle.semiBStyle(
-                                      18,
+                                      cFs(18),
                                       AppColor.primaryLabels,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            sh(22),
+                            cSh(22),
                             ...children,
                           ],
                         ),
@@ -212,7 +213,7 @@ class CpLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: AppThemeStyle.mediumStyle(13, AppColor.primaryLabels),
+      style: AppThemeStyle.mediumStyle(cFs(13), AppColor.primaryLabels),
     );
   }
 }
@@ -230,13 +231,10 @@ class CpBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(20),
-        vertical: formatHeight(12),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(20), vertical: cH(12)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         border: Border.all(
           color: error ? DefaultColor.error : AppColor.divider,
           width: error ? 1.5 : 1,
@@ -282,12 +280,15 @@ class CpTextField extends StatelessWidget {
         autocorrect: !obscure,
         enableSuggestions: !obscure,
         cursorColor: AppColor.primaryColor,
-        style: AppThemeStyle.regularStyle(15, AppColor.primaryLabels),
+        style: AppThemeStyle.regularStyle(cFs(15), AppColor.primaryLabels),
         decoration: InputDecoration(
           isCollapsed: true,
           border: InputBorder.none,
           hintText: hint,
-          hintStyle: AppThemeStyle.regularStyle(15, AppColor.secondaryLabels),
+          hintStyle: AppThemeStyle.regularStyle(
+            cFs(15),
+            AppColor.secondaryLabels,
+          ),
         ),
       ),
     );
@@ -316,7 +317,7 @@ class CpDropdown<T> extends StatelessWidget {
 
   Widget _item(T v) {
     if (leadingOf == null) return Text(labelOf(v));
-    return Row(children: [leadingOf!(v), sw(10), Text(labelOf(v))]);
+    return Row(children: [leadingOf!(v), cSw(10), Text(labelOf(v))]);
   }
 
   @override
@@ -328,17 +329,20 @@ class CpDropdown<T> extends StatelessWidget {
           value: value,
           isExpanded: true,
           isDense: true,
-          borderRadius: BorderRadius.circular(r(12)),
+          borderRadius: BorderRadius.circular(cR(12)),
           hint: Text(
             'utils.choose'.tr(),
-            style: AppThemeStyle.regularStyle(15, AppColor.secondaryLabels),
+            style: AppThemeStyle.regularStyle(
+              cFs(15),
+              AppColor.secondaryLabels,
+            ),
           ),
           icon: Icon(
             Iconsax.arrow_down_1_copy,
-            size: sp(22),
+            size: cIc(22),
             color: AppColor.primaryLabels,
           ),
-          style: AppThemeStyle.regularStyle(15, AppColor.primaryLabels),
+          style: AppThemeStyle.regularStyle(cFs(15), AppColor.primaryLabels),
           items: [
             for (final T v in values)
               DropdownMenuItem<T>(value: v, child: _item(v)),
@@ -361,7 +365,7 @@ class CpRequiredNote extends StatelessWidget {
     return Center(
       child: Text(
         'app.check-profil-form.champs-obligatoires'.tr(),
-        style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+        style: AppThemeStyle.regularStyle(cFs(12), AppColor.secondaryLabels),
       ),
     );
   }
@@ -386,7 +390,7 @@ class CpButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double badge = sp(22);
+    final double badge = cIc(22);
     // `surface` est le blanc des cartes : un bouton soft posé sur une carte
     // (les 5 appelants le sont) devenait invisible, alors que la maquette
     // montre une pilule vert pâle. `background` est cette teinte (#EFF4EF).
@@ -395,23 +399,23 @@ class CpButton extends StatelessWidget {
     final Color badgeBg = soft ? AppColor.primaryLabels : AppColor.textLight;
     return Material(
       color: bg,
-      borderRadius: BorderRadius.circular(r(radius)),
+      borderRadius: BorderRadius.circular(cR(radius)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(radius)),
+        borderRadius: BorderRadius.circular(cR(radius)),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: formatHeight(15)),
+          padding: EdgeInsets.symmetric(vertical: cH(15)),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label, style: AppThemeStyle.semiBStyle(15, fg)),
-              sw(7),
+              Text(label, style: AppThemeStyle.semiBStyle(cFs(15), fg)),
+              cSw(7),
               SizedBox(
                 width: badge,
                 height: badge,
                 child: Icon(
                   Iconsax.arrow_circle_right,
-                  size: sp(13),
+                  size: cIc(13),
                   color: badgeBg,
                 ),
               ),
