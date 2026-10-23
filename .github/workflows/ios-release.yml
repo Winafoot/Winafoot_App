@@ -63,6 +63,8 @@ jobs:
           TEAM_ID=$(/usr/libexec/PlistBuddy -c "Print TeamIdentifier:0" "$RUNNER_TEMP/profile.plist")
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp "$RUNNER_TEMP/profile.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+          echo "TEAM_ID=$TEAM_ID" >> "$GITHUB_ENV"
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
 
           cat > "$RUNNER_TEMP/export_options.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -77,6 +79,14 @@ jobs:
           </dict>
           </plist>
           PLIST
+
+      # Le projet Xcode est en signature automatique avec une autre équipe : sans compte Apple connecté,
+      # l'archive échoue (« No Accounts »). On le passe en signature manuelle avec le profil importé,
+      # uniquement sur le runner (équivalent de `xcode-project use-profiles` de Codemagic).
+      - name: Signature manuelle du projet Xcode
+        run: |
+          perl -pi -e 's/DEVELOPMENT_TEAM = [A-Z0-9]+;/DEVELOPMENT_TEAM = $ENV{TEAM_ID};\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "$ENV{PROFILE_NAME}";\n\t\t\t\t"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";/g' ios/Runner.xcodeproj/project.pbxproj
+          grep -n "DEVELOPMENT_TEAM\|CODE_SIGN_STYLE\|PROVISIONING_PROFILE_SPECIFIER" ios/Runner.xcodeproj/project.pbxproj
 
       - name: Analyse
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
