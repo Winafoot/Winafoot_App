@@ -14,21 +14,23 @@ const VALIDITY_DAYS = 30;
 /**
  * Simule un achat pour l'appelant tant que les produits des stores ne sont pas disponibles.
  *
- * Coupé par défaut : sans la variable d'environnement `TEST_PURCHASES_ENABLED=true` sur la fonction
- * (functions/.env du projet de test), l'appel est refusé. Ne jamais l'activer sur le projet de production :
- * il donne un abonnement gratuit à tout compte connecté.
+ * Coupé par défaut : l'appel est refusé tant que `app_config/config.test_purchases_enabled` n'est pas `true`.
+ * L'administrateur pose ce champ dans la console Firebase pour une bêta fermée, et le repasse à `false` (ou le
+ * supprime) quand les produits des stores existent : tant qu'il est actif, il donne un abonnement gratuit de
+ * 30 jours à tout compte connecté.
  *
  * Écrit les mêmes champs que le webhook RevenueCat (`subscription`, `access`), valables 30 jours, et
  * marque la fiche `testGrant: true` (comme scripts/grant-test-subscription.ts).
  */
 export default async (data: GrantTestSubscriptionRequest, caller: AuthedCaller): Promise<true> => {
-  if (process.env.TEST_PURCHASES_ENABLED !== "true") {
+  const db = firestore();
+  const cfg = await db.collection("app_config").doc("config").get();
+  if (cfg.get("test_purchases_enabled") !== true) {
     throw new HttpsError("failed-precondition", "test-purchases-disabled");
   }
   const product = parseProduct(data?.productId);
   if (product == null) throw new HttpsError("invalid-argument", "Formule inconnue.");
 
-  const db = firestore();
   const ownerRef = db.collection("users").doc(caller.uid);
   const now = Date.now();
   const sub: SubscriptionData = {

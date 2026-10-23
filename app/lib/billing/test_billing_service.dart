@@ -6,11 +6,19 @@ import 'package:wina/billing/plan.dart';
 import 'package:wina/config/skeleton_config.dart';
 
 /// Achats simulés, pour tester le parcours d'abonnement tant que les produits des stores ne sont pas
-/// disponibles. Activé par `--dart-define=TEST_BILLING=true`, JAMAIS dans un build release.
+/// disponibles. Deux façons de l'activer :
+/// - `--dart-define=TEST_BILLING=true` (développement, jamais dans un build release) ;
+/// - [forced], par `FallbackBillingService`, quand RevenueCat n'a pas encore d'offres et que l'administrateur a
+///   posé `app_config/config.test_purchases_enabled` : possible en release, c'est le serveur qui garde la porte.
 ///
 /// `purchase` appelle le callable `grantTestSubscription`, qui pose `subscription` et `access` sur le compte
-/// comme le webhook RevenueCat. Le serveur le refuse tant que `TEST_PURCHASES_ENABLED` n'y est pas activé.
+/// comme le webhook RevenueCat. Le serveur le refuse tant que `test_purchases_enabled` n'est pas `true`.
 class TestBillingService implements BillingService {
+  const TestBillingService({this.forced = false});
+
+  /// Actif sans `--dart-define`, même en release (voir ci-dessus).
+  final bool forced;
+
   static const bool _enabled = bool.fromEnvironment('TEST_BILLING');
 
   /// Mode test demandé ET build non release : un build release ignore le drapeau.
@@ -23,8 +31,10 @@ class TestBillingService implements BillingService {
     3: (9.99, 99.99),
   };
 
+  bool get _on => forced || isActive;
+
   @override
-  bool get isAvailable => isActive;
+  bool get isAvailable => _on;
 
   @override
   Future<void> logIn(String uid) async {}
@@ -50,7 +60,7 @@ class TestBillingService implements BillingService {
 
   @override
   Future<PurchaseResult> purchase(String productId) async {
-    if (!isActive) throw const BillingUnavailable();
+    if (!_on) throw const BillingUnavailable();
     try {
       await FirebaseFunctions.instanceFor(region: kCloudRegion)
           .httpsCallable('grantTestSubscription')

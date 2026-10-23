@@ -212,6 +212,13 @@ sous-collections et ses fichiers, et archive l'adresse dans `deleted_users`.
   4. poser `paywall_enforced: true` dans `app_config/config`.
 
   Retour arrière : repasser `paywall_enforced` à `false`.
+- **Achats simulés (bêta fermée)** : tant que RevenueCat n'a aucune offre (produits des stores pas encore
+  créés), poser `test_purchases_enabled: true` dans `app_config/config` (console Firebase). L'app affiche alors
+  des prix de démonstration et le bouton « S'abonner » appelle `grantTestSubscription`, qui donne 30 jours
+  d'abonnement au compte. Dès que RevenueCat renvoie de vraies offres, l'app les utilise à la place, sans
+  nouveau build. **Repasser le champ à `false` (ou le supprimer) avant le lancement public** : tant qu'il est
+  actif, tout compte connecté peut se donner un abonnement gratuit. Le champ remplace l'ancienne variable
+  d'environnement `TEST_PURCHASES_ENABLED`, devenue sans effet.
 - **Coût** : quand le mur est actif, les règles lisent un document de plus par requête sur les données
   d'équipe.
 

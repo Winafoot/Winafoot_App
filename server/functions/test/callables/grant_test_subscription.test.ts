@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { firestore } from "firebase-admin";
 import { seedCoach } from "../helpers";
 import grantTestSubscription from "../../src/callables/billing/grant_test_subscription";
@@ -14,20 +14,28 @@ async function codeOf(promise: Promise<unknown>): Promise<string> {
   return "no-error";
 }
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
+/** Pose (ou non) l'interrupteur de l'administrateur, comme dans la console Firebase. */
+async function setTestPurchases(value: unknown): Promise<void> {
+  await firestore().doc("app_config/config").set({ test_purchases_enabled: value });
+}
 
 describe("grantTestSubscription", () => {
-  it("refuse tout appel tant que TEST_PURCHASES_ENABLED n'est pas activé", async () => {
+  it("refuse tout appel tant que test_purchases_enabled n'est pas activé", async () => {
     const uid = await seedCoach("owner@club.test", { firstname: "Ibrahim" });
 
     expect(await codeOf(grantTestSubscription({ productId: "wina_2teams_annual" }, caller(uid)))).toBe("failed-precondition:test-purchases-disabled");
     expect((await firestore().doc(`users/${uid}`).get()).get("subscription")).toBeUndefined();
   });
 
+  it("refuse quand test_purchases_enabled vaut autre chose que true", async () => {
+    await setTestPurchases("true");
+    const uid = await seedCoach("owner@club.test", { firstname: "Ibrahim" });
+
+    expect(await codeOf(grantTestSubscription({ productId: "wina_2teams_annual" }, caller(uid)))).toBe("failed-precondition:test-purchases-disabled");
+  });
+
   it("pose l'abonnement et l'accès du propriétaire quand il est activé", async () => {
-    vi.stubEnv("TEST_PURCHASES_ENABLED", "true");
+    await setTestPurchases(true);
     const uid = await seedCoach("owner@club.test", { firstname: "Ibrahim" });
 
     await grantTestSubscription({ productId: "wina_2teams_annual" }, caller(uid));
@@ -40,14 +48,14 @@ describe("grantTestSubscription", () => {
   });
 
   it("refuse un produit inconnu", async () => {
-    vi.stubEnv("TEST_PURCHASES_ENABLED", "true");
+    await setTestPurchases(true);
     const uid = await seedCoach("owner@club.test", { firstname: "Ibrahim" });
 
     expect(await codeOf(grantTestSubscription({ productId: "autre" }, caller(uid)))).toBe("invalid-argument");
   });
 
   it("refuse un compte d'équipe lié", async () => {
-    vi.stubEnv("TEST_PURCHASES_ENABLED", "true");
+    await setTestPurchases(true);
     const uid = await seedCoach("linked@club.test", { firstname: "Lien" });
     await firestore().doc(`users/${uid}`).set({ ownerUid: "someone" }, { merge: true });
 
