@@ -44,9 +44,9 @@ export 'package:ui_kosmos_v4/switch/theme/switch_theme.dart';
 export 'package:ui_kosmos_v4/shimmer/shimmer.dart';
 
 /// Cellule
-export 'package:ui_kosmos_v4/Settings/cellule.dart';
-export 'package:ui_kosmos_v4/Settings/theme/cellule_theme.dart';
-export 'package:ui_kosmos_v4/Settings/model/cellule_model.dart';
+export 'package:ui_kosmos_v4/settings/cellule.dart';
+export 'package:ui_kosmos_v4/settings/theme/cellule_theme.dart';
+export 'package:ui_kosmos_v4/settings/model/cellule_model.dart';
 
 /// Picker
 export 'package:ui_kosmos_v4/picker/single_date.dart';
