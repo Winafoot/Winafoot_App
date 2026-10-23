@@ -15,10 +15,14 @@ jobs:
         working-directory: app
     env:
       BUNDLE_ID: fr.winafoot.app
-      # Variable de dépôt IOS_BUILD_NUMBER_OFFSET = dernier numéro de build déjà envoyé sur TestFlight.
-      BUILD_NUMBER: ${{ github.run_number + fromJSON(vars.IOS_BUILD_NUMBER_OFFSET || '0') }}
     steps:
       - uses: actions/checkout@v4
+
+      # Variable de dépôt IOS_BUILD_NUMBER_OFFSET = dernier numéro de build déjà envoyé sur TestFlight.
+      - name: Numéro de build
+        env:
+          OFFSET: ${{ vars.IOS_BUILD_NUMBER_OFFSET }}
+        run: echo "BUILD_NUMBER=$(( ${{ github.run_number }} + ${OFFSET:-0} ))" >> "$GITHUB_ENV"
 
       - uses: subosito/flutter-action@v2
         with:
