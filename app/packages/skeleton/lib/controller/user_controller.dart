@@ -127,12 +127,16 @@ abstract class UserController {
     final SkeletonAppConfig? config = getAppModel()
         .getDependenciesFromName<SkeletonAppConfig>("skeleton_app_config");
     if (user != null) {
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user.uid)
-          .collection("metadata")
-          .doc("metadata")
-          .update({"fcmToken": null});
+      // Nettoyage best-effort : hors ligne, `update` ne se termine pas, et une règle ou App Check
+      // peut le refuser. Dans les deux cas la déconnexion ne doit jamais rester bloquée ici.
+      try {
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(user.uid)
+            .collection("metadata")
+            .doc("metadata")
+            .update({"fcmToken": null}).timeout(const Duration(seconds: 5));
+      } catch (_) {}
     }
     await LocalConfigController.setData("authorized_push_notif",
         boolValue: null);

@@ -38,6 +38,17 @@ describe("deleteAccount (secured): own account", () => {
     expect(archived.size).toBe(1);
   });
 
+  it("deletes the linked team accounts with their owner", async () => {
+    const owner = await seedCoach("boss@club.test");
+    const team = await auth().createUser({ email: "u15-a@equipes.wina.invalid" });
+    await firestore().doc(`users/${team.uid}`).set({ ownerUid: owner, teamIndex: 2 });
+
+    await deleteAccount({ uid: owner }, asUser(owner));
+
+    await expect(auth().getUser(team.uid)).rejects.toMatchObject({ code: "auth/user-not-found" });
+    expect((await firestore().doc(`users/${team.uid}`).get()).exists).toBe(false);
+  });
+
   it("reports an unknown account as an HttpsError, never as a resolved error object", async () => {
     await expect(deleteAccount({ uid: "ghost" }, asUser("ghost"))).rejects.toMatchObject({ code: "not-found" });
   });

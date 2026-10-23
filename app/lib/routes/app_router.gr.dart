@@ -11,21 +11,23 @@
 // ignore_for_file: type=lint
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i7;
-import 'package:flutter/material.dart' as _i8;
-import 'package:flutter/widgets.dart' as _i10;
+
+import 'package:auto_route/auto_route.dart' as _i8;
+import 'package:flutter/material.dart' as _i9;
+import 'package:flutter/widgets.dart' as _i11;
 import 'package:permissionrequest/permissons_package.dart' as _i4;
 import 'package:skeleton/skeleton.dart' as _i1;
 
-import '../config/permission_config.dart' as _i9;
+import '../config/permission_config.dart' as _i10;
 import '../view/page/home_page.dart' as _i5;
 import '../view/page/maintenance_page.dart' as _i2;
+import '../view/page/register_page.dart' as _i7;
 import '../view/page/settings/settings_page.dart' as _i6;
 import '../view/page/update_required_page.dart' as _i3;
 
-class AppRouter extends _i7.RootStackRouter {
+class AppRouter extends _i8.RootStackRouter {
   AppRouter({
-    _i8.GlobalKey<_i8.NavigatorState>? navigatorKey,
+    _i9.GlobalKey<_i9.NavigatorState>? navigatorKey,
     required this.isConnectedGuard,
     required this.permissionSeenGuard,
     required this.isNotConnectedGuard,
@@ -33,20 +35,20 @@ class AppRouter extends _i7.RootStackRouter {
 
   final _i1.IsConnectedGuard isConnectedGuard;
 
-  final _i9.PermissionSeenGuard permissionSeenGuard;
+  final _i10.PermissionSeenGuard permissionSeenGuard;
 
   final _i1.IsNotConnectedGuard isNotConnectedGuard;
 
   @override
-  final Map<String, _i7.PageFactory> pagesMap = {
+  final Map<String, _i8.PageFactory> pagesMap = {
     LoggedUserAppCoreRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i1.LoggedUserAppCorePage(),
       );
     },
     AuthParentRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i1.AuthParentPage(),
       );
@@ -56,7 +58,7 @@ class AppRouter extends _i7.RootStackRouter {
       final args = routeData.argsAs<LegalInformationRouteArgs>(
           orElse: () =>
               LegalInformationRouteArgs(info: pathParams.getString('info')));
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: _i1.LegalInformationPage(
           key: args.key,
@@ -65,7 +67,7 @@ class AppRouter extends _i7.RootStackRouter {
       );
     },
     MaintenanceRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i2.MaintenancePage(),
       );
@@ -73,7 +75,7 @@ class AppRouter extends _i7.RootStackRouter {
     UpdateRequiredRoute.name: (routeData) {
       final args = routeData.argsAs<UpdateRequiredRouteArgs>(
           orElse: () => const UpdateRequiredRouteArgs());
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: _i3.UpdateRequiredPage(
           key: args.key,
@@ -84,7 +86,7 @@ class AppRouter extends _i7.RootStackRouter {
     PermissionRoute.name: (routeData) {
       final args = routeData.argsAs<PermissionRouteArgs>(
           orElse: () => const PermissionRouteArgs());
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: _i4.PermissionPage(
           key: args.key,
@@ -93,19 +95,19 @@ class AppRouter extends _i7.RootStackRouter {
       );
     },
     HomeRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i5.HomePage(),
       );
     },
     ProfileParentRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i1.ProfileParentPage(),
       );
     },
     SettingsWebRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i6.SettingsWebPage(),
       );
@@ -115,7 +117,7 @@ class AppRouter extends _i7.RootStackRouter {
       final args = routeData.argsAs<SubNodeRouteArgs>(
           orElse: () => SubNodeRouteArgs(
               parentCelluleTag: pathParams.getString('nodeTag')));
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: _i1.SubNodePage(
           key: args.key,
@@ -127,13 +129,13 @@ class AppRouter extends _i7.RootStackRouter {
       );
     },
     ChangePasswordRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i1.ChangePasswordPage(),
       );
     },
     ChangePhoneRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i1.ChangePhonePage(),
       );
@@ -141,7 +143,7 @@ class AppRouter extends _i7.RootStackRouter {
     LoginRoute.name: (routeData) {
       final args = routeData.argsAs<LoginRouteArgs>(
           orElse: () => const LoginRouteArgs());
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: _i1.LoginPage(
           key: args.key,
@@ -150,22 +152,28 @@ class AppRouter extends _i7.RootStackRouter {
       );
     },
     PhoneLoginRoute.name: (routeData) {
-      return _i7.MaterialPageX<dynamic>(
+      return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
         child: const _i1.PhoneLoginPage(),
+      );
+    },
+    RegisterRoute.name: (routeData) {
+      return _i8.MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: const _i7.RegisterPage(),
       );
     },
   };
 
   @override
-  List<_i7.RouteConfig> get routes => [
-        _i7.RouteConfig(
+  List<_i8.RouteConfig> get routes => [
+        _i8.RouteConfig(
           '/#redirect',
           path: '/',
           redirectTo: 'app',
           fullMatch: true,
         ),
-        _i7.RouteConfig(
+        _i8.RouteConfig(
           LoggedUserAppCoreRoute.name,
           path: 'app',
           guards: [
@@ -173,47 +181,47 @@ class AppRouter extends _i7.RootStackRouter {
             permissionSeenGuard,
           ],
           children: [
-            _i7.RouteConfig(
+            _i8.RouteConfig(
               '#redirect',
               path: '',
               parent: LoggedUserAppCoreRoute.name,
               redirectTo: 'home',
               fullMatch: true,
             ),
-            _i7.RouteConfig(
+            _i8.RouteConfig(
               HomeRoute.name,
               path: 'home',
               parent: LoggedUserAppCoreRoute.name,
             ),
-            _i7.RouteConfig(
+            _i8.RouteConfig(
               ProfileParentRoute.name,
               path: 'profile',
               parent: LoggedUserAppCoreRoute.name,
               guards: [isConnectedGuard],
               children: [
-                _i7.RouteConfig(
+                _i8.RouteConfig(
                   '#redirect',
                   path: '',
                   parent: ProfileParentRoute.name,
                   redirectTo: 'settings',
                   fullMatch: true,
                 ),
-                _i7.RouteConfig(
+                _i8.RouteConfig(
                   SettingsWebRoute.name,
                   path: 'settings',
                   parent: ProfileParentRoute.name,
                 ),
-                _i7.RouteConfig(
+                _i8.RouteConfig(
                   SubNodeRoute.name,
                   path: 'settings/:nodeTag',
                   parent: ProfileParentRoute.name,
                 ),
-                _i7.RouteConfig(
+                _i8.RouteConfig(
                   ChangePasswordRoute.name,
                   path: 'security/password',
                   parent: ProfileParentRoute.name,
                 ),
-                _i7.RouteConfig(
+                _i8.RouteConfig(
                   ChangePhoneRoute.name,
                   path: 'security/phone-number',
                   parent: ProfileParentRoute.name,
@@ -222,40 +230,45 @@ class AppRouter extends _i7.RootStackRouter {
             ),
           ],
         ),
-        _i7.RouteConfig(
+        _i8.RouteConfig(
           AuthParentRoute.name,
           path: '/auth',
           guards: [isNotConnectedGuard],
           children: [
-            _i7.RouteConfig(
+            _i8.RouteConfig(
               LoginRoute.name,
               path: 'login',
               parent: AuthParentRoute.name,
             ),
-            _i7.RouteConfig(
+            _i8.RouteConfig(
               PhoneLoginRoute.name,
               path: 'login-with-phone',
               parent: AuthParentRoute.name,
             ),
+            _i8.RouteConfig(
+              RegisterRoute.name,
+              path: 'register',
+              parent: AuthParentRoute.name,
+            ),
           ],
         ),
-        _i7.RouteConfig(
+        _i8.RouteConfig(
           LegalInformationRoute.name,
           path: 'legal-information/:info',
         ),
-        _i7.RouteConfig(
+        _i8.RouteConfig(
           MaintenanceRoute.name,
           path: '/maintenance',
         ),
-        _i7.RouteConfig(
+        _i8.RouteConfig(
           UpdateRequiredRoute.name,
           path: '/update-required',
         ),
-        _i7.RouteConfig(
+        _i8.RouteConfig(
           PermissionRoute.name,
           path: 'permission',
         ),
-        _i7.RouteConfig(
+        _i8.RouteConfig(
           '*#redirect',
           path: '*',
           redirectTo: '/',
@@ -266,8 +279,8 @@ class AppRouter extends _i7.RootStackRouter {
 
 /// generated route for
 /// [_i1.LoggedUserAppCorePage]
-class LoggedUserAppCoreRoute extends _i7.PageRouteInfo<void> {
-  const LoggedUserAppCoreRoute({List<_i7.PageRouteInfo>? children})
+class LoggedUserAppCoreRoute extends _i8.PageRouteInfo<void> {
+  const LoggedUserAppCoreRoute({List<_i8.PageRouteInfo>? children})
       : super(
           LoggedUserAppCoreRoute.name,
           path: 'app',
@@ -279,8 +292,8 @@ class LoggedUserAppCoreRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i1.AuthParentPage]
-class AuthParentRoute extends _i7.PageRouteInfo<void> {
-  const AuthParentRoute({List<_i7.PageRouteInfo>? children})
+class AuthParentRoute extends _i8.PageRouteInfo<void> {
+  const AuthParentRoute({List<_i8.PageRouteInfo>? children})
       : super(
           AuthParentRoute.name,
           path: '/auth',
@@ -293,9 +306,9 @@ class AuthParentRoute extends _i7.PageRouteInfo<void> {
 /// generated route for
 /// [_i1.LegalInformationPage]
 class LegalInformationRoute
-    extends _i7.PageRouteInfo<LegalInformationRouteArgs> {
+    extends _i8.PageRouteInfo<LegalInformationRouteArgs> {
   LegalInformationRoute({
-    _i10.Key? key,
+    _i11.Key? key,
     required String info,
   }) : super(
           LegalInformationRoute.name,
@@ -316,7 +329,7 @@ class LegalInformationRouteArgs {
     required this.info,
   });
 
-  final _i10.Key? key;
+  final _i11.Key? key;
 
   final String info;
 
@@ -328,7 +341,7 @@ class LegalInformationRouteArgs {
 
 /// generated route for
 /// [_i2.MaintenancePage]
-class MaintenanceRoute extends _i7.PageRouteInfo<void> {
+class MaintenanceRoute extends _i8.PageRouteInfo<void> {
   const MaintenanceRoute()
       : super(
           MaintenanceRoute.name,
@@ -340,9 +353,9 @@ class MaintenanceRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i3.UpdateRequiredPage]
-class UpdateRequiredRoute extends _i7.PageRouteInfo<UpdateRequiredRouteArgs> {
+class UpdateRequiredRoute extends _i8.PageRouteInfo<UpdateRequiredRouteArgs> {
   UpdateRequiredRoute({
-    _i10.Key? key,
+    _i11.Key? key,
     String? storeUrl,
   }) : super(
           UpdateRequiredRoute.name,
@@ -362,7 +375,7 @@ class UpdateRequiredRouteArgs {
     this.storeUrl,
   });
 
-  final _i10.Key? key;
+  final _i11.Key? key;
 
   final String? storeUrl;
 
@@ -374,9 +387,9 @@ class UpdateRequiredRouteArgs {
 
 /// generated route for
 /// [_i4.PermissionPage]
-class PermissionRoute extends _i7.PageRouteInfo<PermissionRouteArgs> {
+class PermissionRoute extends _i8.PageRouteInfo<PermissionRouteArgs> {
   PermissionRoute({
-    _i10.Key? key,
+    _i11.Key? key,
     List<_i4.PermissionDataModel>? permissions,
   }) : super(
           PermissionRoute.name,
@@ -396,7 +409,7 @@ class PermissionRouteArgs {
     this.permissions,
   });
 
-  final _i10.Key? key;
+  final _i11.Key? key;
 
   final List<_i4.PermissionDataModel>? permissions;
 
@@ -408,7 +421,7 @@ class PermissionRouteArgs {
 
 /// generated route for
 /// [_i5.HomePage]
-class HomeRoute extends _i7.PageRouteInfo<void> {
+class HomeRoute extends _i8.PageRouteInfo<void> {
   const HomeRoute()
       : super(
           HomeRoute.name,
@@ -420,8 +433,8 @@ class HomeRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i1.ProfileParentPage]
-class ProfileParentRoute extends _i7.PageRouteInfo<void> {
-  const ProfileParentRoute({List<_i7.PageRouteInfo>? children})
+class ProfileParentRoute extends _i8.PageRouteInfo<void> {
+  const ProfileParentRoute({List<_i8.PageRouteInfo>? children})
       : super(
           ProfileParentRoute.name,
           path: 'profile',
@@ -433,7 +446,7 @@ class ProfileParentRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.SettingsWebPage]
-class SettingsWebRoute extends _i7.PageRouteInfo<void> {
+class SettingsWebRoute extends _i8.PageRouteInfo<void> {
   const SettingsWebRoute()
       : super(
           SettingsWebRoute.name,
@@ -445,9 +458,9 @@ class SettingsWebRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i1.SubNodePage]
-class SubNodeRoute extends _i7.PageRouteInfo<SubNodeRouteArgs> {
+class SubNodeRoute extends _i8.PageRouteInfo<SubNodeRouteArgs> {
   SubNodeRoute({
-    _i10.Key? key,
+    _i11.Key? key,
     required String parentCelluleTag,
     _i1.KosmosSettingsConfig? settingsConfig,
     String? themeName,
@@ -477,7 +490,7 @@ class SubNodeRouteArgs {
     this.theme,
   });
 
-  final _i10.Key? key;
+  final _i11.Key? key;
 
   final String parentCelluleTag;
 
@@ -495,7 +508,7 @@ class SubNodeRouteArgs {
 
 /// generated route for
 /// [_i1.ChangePasswordPage]
-class ChangePasswordRoute extends _i7.PageRouteInfo<void> {
+class ChangePasswordRoute extends _i8.PageRouteInfo<void> {
   const ChangePasswordRoute()
       : super(
           ChangePasswordRoute.name,
@@ -507,7 +520,7 @@ class ChangePasswordRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i1.ChangePhonePage]
-class ChangePhoneRoute extends _i7.PageRouteInfo<void> {
+class ChangePhoneRoute extends _i8.PageRouteInfo<void> {
   const ChangePhoneRoute()
       : super(
           ChangePhoneRoute.name,
@@ -519,10 +532,10 @@ class ChangePhoneRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i1.LoginPage]
-class LoginRoute extends _i7.PageRouteInfo<LoginRouteArgs> {
+class LoginRoute extends _i8.PageRouteInfo<LoginRouteArgs> {
   LoginRoute({
-    _i10.Key? key,
-    void Function(_i10.BuildContext)? onLoginSuccess,
+    _i11.Key? key,
+    void Function(_i11.BuildContext)? onLoginSuccess,
   }) : super(
           LoginRoute.name,
           path: 'login',
@@ -541,9 +554,9 @@ class LoginRouteArgs {
     this.onLoginSuccess,
   });
 
-  final _i10.Key? key;
+  final _i11.Key? key;
 
-  final void Function(_i10.BuildContext)? onLoginSuccess;
+  final void Function(_i11.BuildContext)? onLoginSuccess;
 
   @override
   String toString() {
@@ -553,7 +566,7 @@ class LoginRouteArgs {
 
 /// generated route for
 /// [_i1.PhoneLoginPage]
-class PhoneLoginRoute extends _i7.PageRouteInfo<void> {
+class PhoneLoginRoute extends _i8.PageRouteInfo<void> {
   const PhoneLoginRoute()
       : super(
           PhoneLoginRoute.name,
@@ -561,4 +574,16 @@ class PhoneLoginRoute extends _i7.PageRouteInfo<void> {
         );
 
   static const String name = 'PhoneLoginRoute';
+}
+
+/// generated route for
+/// [_i7.RegisterPage]
+class RegisterRoute extends _i8.PageRouteInfo<void> {
+  const RegisterRoute()
+      : super(
+          RegisterRoute.name,
+          path: 'register',
+        );
+
+  static const String name = 'RegisterRoute';
 }

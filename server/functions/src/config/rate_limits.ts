@@ -46,6 +46,10 @@ export const LIMITS = {
   resetPasswordAccount: { limit: 3, windowMs: HOUR },
   resetPasswordAccountDay: { limit: 6, windowMs: DAY },
 
+  // Inscription d'un coach depuis l'app : par IP seulement (aucun compte n'existe encore). Large devant
+  // un usage humain (un club peut inscrire plusieurs coachs depuis le même réseau), bas devant un script.
+  registerIp: { limit: 10, windowMs: HOUR },
+
   // Callables authentifiés : par uid (adaptateur).
   verificationUid: { limit: 3, windowMs: HOUR },
   deleteAccountUid: { limit: 3, windowMs: HOUR },
@@ -55,6 +59,10 @@ export const LIMITS = {
   deletePlayerUid: { limit: 60, windowMs: HOUR },
   // Clé de recherche Algolia (valable 1 h, gardée en mémoire par l'app) : quelques renouvellements par heure suffisent.
   searchKeyUid: { limit: 30, windowMs: HOUR },
+  // Équipes liées : au plus 2 par abonnement, quelques essais d'identifiant ou de mot de passe suffisent.
+  createLinkedTeamUid: { limit: 10, windowMs: HOUR },
+  resetLinkedTeamPasswordUid: { limit: 10, windowMs: HOUR },
+  grantTestSubscriptionUid: { limit: 20, windowMs: HOUR },
 
   // Endpoints HTTP de la landing.
   deleteMailIp: { limit: 10, windowMs: 15 * MINUTE },

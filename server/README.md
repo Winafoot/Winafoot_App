@@ -44,6 +44,7 @@ jamais sur un identifiant fourni par le client. Les limites de débit sont compt
 | `emailIsAlreadyUsed`, `phoneIsAlreadyUsed` | App, avant connexion | Réponse constante (`true`), sans lecture de compte |
 | `sendResetPassword` | App, avant connexion | Réponse identique que le compte existe ou non ; limites par IP, par compte et globale |
 | `sendEmailVerification` | App, connecté | Adresse du compte Auth de l'appelant ; un envoi toutes les 6 h ; limite par compte |
+| `registerCoach` | App, avant connexion | Inscription d'un coach (e-mail, mot de passe, prénom, CGU) ; limite par IP ; crée le compte et ses fiches, sans rien conserver en cas d'échec |
 | `deleteAccount` | App, connecté | Son propre compte ; le compte d'un autre seulement pour un administrateur (contrôles ci-dessous, audit) ; jamais un administrateur |
 | `addNotification` | App, connecté | Expéditeur et destinataire = l'appelant ; limite par compte |
 | `createPlayer`, `deletePlayer` | App, connecté | Effectif de l'appelant, plafond appliqué en transaction sur le nombre réel de joueurs ; limite par compte |
@@ -186,6 +187,34 @@ La demande de suppression répond toujours 200 et n'envoie un lien qu'à une adr
 le jeton, valable 24 h, est consommé à la confirmation, qui supprime le compte, sa fiche, ses
 sous-collections et ses fichiers, et archive l'adresse dans `deleted_users`.
 
+## Abonnements (RevenueCat)
+
+- **Secret du webhook** : `firebase functions:secrets:set REVENUECAT_WEBHOOK_SECRET --project wina-c4c4a`
+  (valeur libre et longue). La reporter dans RevenueCat, Integrations > Webhooks, champ « Authorization
+  header value », sous la forme `Bearer <le secret>`.
+- **URL du webhook** : `https://europe-west9-wina-c4c4a.cloudfunctions.net/revenuecatWebhook`. À
+  confirmer après le déploiement avec `firebase functions:list --project wina-c4c4a`.
+- **Ordre d'activation du mur de paiement** :
+  1. déployer les fonctions ;
+  2. accorder l'accès aux comptes existants, d'abord à blanc puis pour de bon (identifiants applicatifs
+     par défaut, comme `set-admin`) :
+
+     ```bash
+     npm --prefix functions run grant-existing-access -- --dry-run
+     npm --prefix functions run grant-existing-access
+     ```
+
+     Le script pose `access` et `manualGrant: true` sur les fiches qui n'ont pas encore `access` et qui
+     ne sont pas des comptes liés ; il est idempotent. Sans lui, tous les comptes actuels seraient
+     bloqués à l'activation ;
+  3. déployer les règles (`firebase deploy --only firestore:rules --project wina-c4c4a`) ; le mur reste
+     inactif tant que `paywall_enforced` n'est pas posé ;
+  4. poser `paywall_enforced: true` dans `app_config/config`.
+
+  Retour arrière : repasser `paywall_enforced` à `false`.
+- **Coût** : quand le mur est actif, les règles lisent un document de plus par requête sur les données
+  d'équipe.
+
 ## Règles de sécurité
 
 **Firestore.** Refus par défaut. Sans connexion, seule la configuration `app_config` se lit. Chaque
@@ -254,7 +283,7 @@ npm --prefix cms run build && firebase deploy --only hosting:wina-admin --projec
   403 signale un service Cloud Run sans accès public.
 
   ```bash
-  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword sendEmailVerification deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
+  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword sendEmailVerification registerCoach deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
   for f in "${callables[@]}"; do
     printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{"data":{}}' "https://europe-west9-wina-c4c4a.cloudfunctions.net/$f")" "$f"
   done

@@ -30,6 +30,13 @@ export const sendResetPassword = onCall(
   limitedPublicCallableAdapter("callables/auth/send_reset_password_secured", { scope: "reset-password", perIp: LIMITS.resetPasswordIp }),
 );
 
+// Public (avant connexion) : inscription d'un coach depuis l'app. Limité par IP ; crée le compte Auth et ses
+// fiches avec l'Admin SDK (les règles Firestore interdisent la création côté client).
+export const registerCoach = onCall(
+  PUBLIC,
+  limitedPublicCallableAdapter("callables/auth/register_coach", { scope: "register-coach", perIp: LIMITS.registerIp }),
+);
+
 // Authentifié : suppression du propre compte de l'appelant (ou admin) uniquement.
 export const deleteAccount = onCall(
   PUBLIC,
@@ -53,6 +60,25 @@ export const createPlayer = onCall(
 export const deletePlayer = onCall(
   PUBLIC,
   limitedAuthedCallableAdapter("callables/players/delete_player", { scope: "delete-player", perUid: LIMITS.deletePlayerUid }),
+);
+
+/// Abonnements : équipes liées (un compte par équipe, rattaché au compte propriétaire) ///
+// Authentifié : le quota d'équipes vient de l'abonnement lu côté serveur, jamais du client.
+export const createLinkedTeam = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/create_linked_team", { scope: "create-linked-team", perUid: LIMITS.createLinkedTeamUid }),
+);
+// Authentifié : seul le propriétaire du compte lié visé (ownerUid de sa fiche) peut redéfinir son mot de passe.
+export const resetLinkedTeamPassword = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/reset_linked_team_password", { scope: "reset-linked-team-password", perUid: LIMITS.resetLinkedTeamPasswordUid }),
+);
+
+// Authentifié : simule un achat pour l'appelant. Refusé tant que TEST_PURCHASES_ENABLED n'est pas "true" sur la
+// fonction (projet de test uniquement, jamais en production).
+export const grantTestSubscription = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/grant_test_subscription", { scope: "grant-test-subscription", perUid: LIMITS.grantTestSubscriptionUid }),
 );
 
 /// Recherche Algolia ///

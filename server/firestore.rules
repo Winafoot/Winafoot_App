@@ -31,6 +31,27 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    // Mur de paiement. Interrupteur : app_config/config.paywall_enforced (écrit par un administrateur
+    // via la console, jamais par un client). Désactivé : aucune règle ci-dessous ne change. Activé, les
+    // données de l'équipe (joueurs, matchs, compositions ; pas les maillots, créés avant l'abonnement) exigent users/{uid}.access actif
+    // et non expiré, champ posé par le serveur seul (billing/store.ts). Le document utilisateur reste
+    // lisible et la suppression de ses données reste permise : le mur ne prive pas de sa fiche.
+    // `||` court-circuite : sans mur, la fiche utilisateur n'est pas lue (pas de lecture facturée en plus).
+    function paywallOn() {
+      let cfg = /databases/$(database)/documents/app_config/config;
+      return exists(cfg) && get(cfg).data.get('paywall_enforced', false) == true;
+    }
+
+    function userAccessOk(uid) {
+      let a = get(/databases/$(database)/documents/users/$(uid)).data.get('access', {});
+      return a.get('active', false) == true
+        && a.get('until', timestamp.value(0)) > request.time;
+    }
+
+    function hasAccess(uid) {
+      return !paywallOn() || userAccessOk(uid);
+    }
+
     // ---------------------------------------- validation du contenu écrit par le client
     // Sous-collections que le client écrit lui-même. Chaque liste de champs reprend le
     // `toJson()` du modèle de l'app (app/lib/models) : si un modèle gagne un champ, la liste
@@ -214,8 +235,13 @@ service cloud.firestore {
     match /users/{uid} {
       // Le back-office lit la fiche coach (liste + détail). Les écritures
       // restent réservées au propriétaire : les mutations administrateur
-      // passent par les callables Admin SDK.
-      allow read: if isOwner(uid) || isAdmin();
+      // passent par les callables Admin SDK. Le propriétaire d'un abonnement
+      // lit aussi la fiche de ses équipes liées (champ ownerUid, posé par
+      // createLinkedTeam seul) : l'écran « Mes équipes » les liste. Une requête
+      // `where('ownerUid', '==', uid)` est acceptée, la liste complète de la
+      // collection reste refusée.
+      allow read: if isOwner(uid) || isAdmin()
+        || (isSignedIn() && resource != null && resource.data.get('ownerUid', null) == request.auth.uid);
       // Champs que le CLIENT écrit sur sa fiche (inventaire des écritures de
       // l'app et des paquets du socle, app/packages). Tout le reste est posé
       // par createCoach (Admin SDK) ou par un trigger, et le serveur ou le
@@ -224,6 +250,8 @@ service cloud.firestore {
       // firstname, id, createdAt, teamFormat...
       //   coachName, teamName, category, division : « Finalisez votre profil »
       //     (CoachProfileRepository.saveTeamInfo, set merge) ;
+      //   teamFormat : posé UNE SEULE FOIS par le coach inscrit depuis l'app (même écran), jamais
+      //     modifié ni retiré ensuite (validTeamFormat) ; les comptes du back-office l'ont déjà ;
       //   email : recopié depuis Firebase Auth après vérification de la nouvelle adresse (EmailSync) ;
       //   cguAccepted, cguAcceptedDate : UserController.acceptCgu (horodatage client) ;
       //   online, lastOnline : setOnline (core_kosmos), à chaque changement de cycle
@@ -232,7 +260,7 @@ service cloud.firestore {
       //     routés aujourd'hui car canLoginWithPhone = false).
       function clientOwnedUserFields() {
         return [
-          'coachName', 'teamName', 'category', 'division',
+          'coachName', 'teamName', 'category', 'division', 'teamFormat',
           'email', 'cguAccepted', 'cguAcceptedDate',
           'online', 'lastOnline', 'phone', 'phoneNumber'
         ];
@@ -252,8 +280,16 @@ service cloud.firestore {
               && isStrOrNull(p.get('dialCode', null), 8));
       }
 
+      // Format du club (5, 8 ou 11) : écrit par le coach seulement s'il n'existe pas encore. Une fois
+      // posé il fixe le plafond d'effectif (maxPlayers) et ne bouge plus que par le back-office.
+      function validTeamFormat(d, changed) {
+        return !changed.hasAny(['teamFormat'])
+          || (!('teamFormat' in resource.data) && d.get('teamFormat', 0) in [5, 8, 11]);
+      }
+
       function validUserFields(d, changed) {
-        return strIfChanged(d, changed, 'coachName', 100)
+        return validTeamFormat(d, changed)
+          && strIfChanged(d, changed, 'coachName', 100)
           && strIfChanged(d, changed, 'teamName', 100)
           && strIfChanged(d, changed, 'category', 30)
           && strIfChanged(d, changed, 'division', 30)
@@ -270,8 +306,8 @@ service cloud.firestore {
       // (Admin SDK) pour un compte provisionné, createPlayer pour le premier joueur d'un compte
       // qui n'en aurait pas.
       allow create: if false;
-      // Liste blanche de champs (clientOwnedUserFields), donc `teamFormat` et `playerCount`
-      // restent immuables pour le client : ni ajout, ni modification, ni retrait. Le compteur
+      // Liste blanche de champs (clientOwnedUserFields). `teamFormat` ne peut qu'être AJOUTÉ une fois
+      // (validTeamFormat) ; `playerCount` reste immuable pour le client. Le compteur
       // d'effectif est tenu par les callables createPlayer / deletePlayer, et par eux seuls.
       // Un set() sans merge qui
       // réécrit la fiche sans les champs serveur est refusé aussi (ils apparaissent comme
@@ -431,24 +467,31 @@ service cloud.firestore {
       // transaction, nombre RÉEL de joueurs), pas ici : les règles ne savent pas compter les
       // documents d'une collection. Le client ne peut donc que lire et modifier ses joueurs.
       match /players/{playerId} {
-        allow read: if isOwner(uid);
+        allow read: if isOwner(uid) && hasAccess(uid);
         allow create, delete: if false;
         allow update: if isOwner(uid)
+          && hasAccess(uid)
           && onlyChanges(['firstName', 'lastName', 'strongFoot', 'position'])
           && validPlayer(request.resource.data);
       }
 
       match /matches/{matchId} {
-        allow read, delete: if isOwner(uid);
-        allow create, update: if isOwner(uid) && validMatch(request.resource.data);
+        allow read: if isOwner(uid) && hasAccess(uid);
+        allow delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && hasAccess(uid) && validMatch(request.resource.data);
       }
 
       match /compositions/{compositionId} {
-        allow read, delete: if isOwner(uid);
+        allow read: if isOwner(uid) && hasAccess(uid);
+        allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
+          && hasAccess(uid)
           && validCustomComposition(request.resource.data);
       }
 
+      // Hors mur de paiement : les maillots se créent à l'étape 2 de « Finalisez votre profil »
+      // (CoachProfileRepository.addJerseys), qui précède l'abonnement. Les soumettre au mur bloquerait tout
+      // nouveau coach avant qu'il puisse payer.
       match /jerseys/{jerseyId} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && validJersey(request.resource.data);

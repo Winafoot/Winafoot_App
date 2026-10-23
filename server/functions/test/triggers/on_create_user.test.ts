@@ -42,6 +42,14 @@ describe("onCreateUser", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
+  it("skips the welcome email for linked team accounts (technical address)", async () => {
+    const snap = await snapshotFor("team2", { email: "u15-a@equipes.wina.invalid", ownerUid: "owner1", teamIndex: 2 });
+
+    await onCreateUser(snap as any, { params: { userId: "team2" } });
+
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
   it("still sends the welcome email for accounts created any other way", async () => {
     const snap = await snapshotFor("coach2", { email: "self@club.test" });
 

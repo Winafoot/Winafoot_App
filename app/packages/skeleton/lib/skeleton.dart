@@ -13,6 +13,9 @@ export 'package:skeleton/provider/local_auth.dart';
 /// Model
 export 'package:skeleton/model/skeleton_config.dart';
 
+/// Utils
+export 'package:skeleton/utils/login_identifier.dart';
+
 /// Theme
 export 'package:skeleton/theme/auth/auth_theme.dart';
 export 'package:skeleton/theme/web/web_skeleton_theme.dart';

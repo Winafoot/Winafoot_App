@@ -10,7 +10,7 @@ import { mailIdentity } from "../../utils/mail_identity";
 
 /**
  * Fiche créée : e-mail de bienvenue, sauf pour les comptes créés depuis le back-office, qui
- * reçoivent le seul e-mail d'invitation. La fiche est déjà enregistrée : un échec d'envoi est
+ * reçoivent le seul e-mail d'invitation, et pour les comptes d'équipe liés. La fiche est déjà enregistrée : un échec d'envoi est
  * journalisé et ne fait pas échouer le trigger.
  */
 export default async (snap: firestore.QueryDocumentSnapshot<firestore.DocumentData>, context: LegacyEventContext) => {
@@ -21,7 +21,8 @@ export default async (snap: firestore.QueryDocumentSnapshot<firestore.DocumentDa
 
   // On lit le snapshot et non le modèle : UserModel est une classe à champs fixes qui ne
   // déclare pas `invitedByAdmin`.
-  if (snap.get("invitedByAdmin") === true) {
+  // Un compte d'équipe lié (ownerUid) a une adresse technique : aucun e-mail ne peut lui être envoyé.
+  if (snap.get("invitedByAdmin") === true || snap.get("ownerUid") != null) {
     return;
   }
 

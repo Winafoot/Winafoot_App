@@ -27,6 +27,17 @@ describe("deleteCoach", () => {
     expect((await firestore().collection("users").doc(uid).collection("players").get()).empty).toBe(true);
   });
 
+  it("deletes the linked team accounts of a deleted coach", async () => {
+    const owner = await seedCoachWithData("boss@club.test");
+    const team = await auth().createUser({ email: "u15-b@equipes.wina.invalid" });
+    await firestore().doc(`users/${team.uid}`).set({ ownerUid: owner, teamIndex: 2 });
+
+    await deleteCoach({ uid: owner }, CALLER);
+
+    await expect(auth().getUser(team.uid)).rejects.toThrowError();
+    expect((await firestore().doc(`users/${team.uid}`).get()).exists).toBe(false);
+  });
+
   it("archives the account before deleting it", async () => {
     const uid = await seedCoachWithData("archived@club.test");
 

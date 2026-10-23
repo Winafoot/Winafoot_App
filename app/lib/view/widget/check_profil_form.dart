@@ -110,11 +110,15 @@ class CheckProfilScaffold extends StatelessWidget {
     required this.title,
     required this.children,
     this.onBack,
+    this.width,
   });
 
   final String title;
   final List<Widget> children;
   final VoidCallback? onBack;
+
+  /// Largeur de la carte ; par défaut celle, étroite, des écrans de complétion de profil.
+  final double? width;
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +140,7 @@ class CheckProfilScaffold extends StatelessWidget {
                     child: SingleChildScrollView(
                       padding: EdgeInsets.symmetric(vertical: formatHeight(20)),
                       child: Container(
-                        width: formatWidth(430),
+                        width: width ?? formatWidth(430),
                         padding: EdgeInsets.symmetric(
                           horizontal: formatWidth(28),
                           vertical: formatHeight(28),
@@ -234,12 +238,20 @@ class CpTextField extends StatelessWidget {
     required this.hint,
     this.onChanged,
     this.error = false,
+    this.obscure = false,
+    this.keyboardType,
+    this.autofillHints,
   });
 
   final TextEditingController controller;
   final String hint;
   final ValueChanged<String>? onChanged;
   final bool error;
+
+  /// Masque la saisie (mot de passe).
+  final bool obscure;
+  final TextInputType? keyboardType;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -248,6 +260,11 @@ class CpTextField extends StatelessWidget {
       child: TextField(
         controller: controller,
         onChanged: onChanged,
+        obscureText: obscure,
+        keyboardType: keyboardType,
+        autofillHints: autofillHints,
+        autocorrect: !obscure,
+        enableSuggestions: !obscure,
         cursorColor: AppColor.primaryColor,
         style: AppThemeStyle.regularStyle(15, AppColor.primaryLabels),
         decoration: InputDecoration(

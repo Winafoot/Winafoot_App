@@ -1,5 +1,8 @@
+import 'package:wina/billing/access_info.dart';
 import 'package:wina/config/theme.dart';
+import 'package:wina/providers/billing_providers.dart';
 import 'package:wina/view/page/check_profil_step1_screen.dart';
+import 'package:wina/view/page/mes_equipes_screen.dart';
 import 'package:wina/view/page/settings/settings_node.dart';
 import 'package:wina/view/widget/custom_back_button.dart';
 import 'package:flutter/cupertino.dart';
@@ -272,6 +275,27 @@ class SettingsWebPage extends ConsumerWidget {
                             ),
                           ],
                         ),
+
+                        // Abonnement : seulement pour un compte propriétaire (un compte d'équipe liée
+                        // n'a ni abonnement ni équipes à gérer).
+                        if (ref.watch(accessInfoProvider).valueOrNull case final AccessInfo access
+                            when !access.isLinked)
+                          SettingsItem(
+                            title: 'app.subscription.title'.tr(),
+                            children: [
+                              SettingsNode(
+                                title: 'app.settings-extra.my-teams'.tr(),
+                                subtitle: 'app.settings-extra.my-teams-sub'.tr(),
+                                onTap:
+                                    () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => const MesEquipesScreen(),
+                                      ),
+                                    ),
+                                children: [],
+                              ),
+                            ],
+                          ),
 
                         // Autres
                         SettingsItem(

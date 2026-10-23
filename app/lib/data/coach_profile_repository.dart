@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:wina/models/coach_profile.dart';
+import 'package:wina/models/formation.dart' show PlayerCount;
 
 /// Persistance du profil coach renseigné aux écrans « Finalisez votre profil »
 /// (Check profil step 1 & 2), et bascule de l'indicateur `profilCompleted`.
@@ -13,13 +14,18 @@ abstract class CoachProfileRepository {
     return FirebaseFirestore.instance.collection('users').doc(uid);
   }
 
-  /// Étape 1 : nom du coach, nom d'équipe, catégorie et division.
+  /// Étape 1 : nom du coach, nom d'équipe, catégorie, division et format.
   /// Fusionné dans le document de l'utilisateur.
+  ///
+  /// [teamFormat] n'est écrit que pour un compte qui n'en a pas encore (coach
+  /// inscrit depuis l'app) : les règles Firestore refusent de le modifier ensuite.
+  /// Les comptes du back-office l'ont déjà, on passe alors `null`.
   static Future<void> saveTeamInfo({
     required String coachName,
     required String teamName,
     required TeamCategory category,
     required TeamDivision division,
+    PlayerCount? teamFormat,
   }) async {
     await _userDoc().set(
       <String, dynamic>{
@@ -27,6 +33,7 @@ abstract class CoachProfileRepository {
         'teamName': teamName,
         'category': category.name,
         'division': division.name,
+        if (teamFormat != null) 'teamFormat': teamFormat.value,
       },
       SetOptions(merge: true),
     );

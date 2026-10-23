@@ -13,6 +13,10 @@ import 'package:skeleton/skeleton.dart';
 /// `FirebaseFunctions.instance` viserait `us-central1`, où rien ne tourne.
 const String kCloudRegion = 'europe-west9';
 
+/// Domaine des adresses techniques des comptes d'équipe liés : l'identifiant saisi à la connexion devient
+/// `<identifiant>@equipes.wina.invalid` (même valeur que LINKED_EMAIL_DOMAIN côté serveur).
+const String kLinkedEmailDomain = 'equipes.wina.invalid';
+
 SkeletonAppConfig initSkeletonAppConfig() {
   return SkeletonAppConfig(
     cloudRegion: kCloudRegion,
@@ -21,11 +25,17 @@ SkeletonAppConfig initSkeletonAppConfig() {
     mainRouteInfo: const LoggedUserAppCoreRoute(),
     authentificationConfig: SkeletonAuthentificationConfig(
       userType: "client",
+      // Les comptes d'équipe liés se connectent par identifiant (sans « @ »).
+      identifierEmailDomain: kLinkedEmailDomain,
       // Connexion biométrique désactivée : l'app ne propose pas de l'activer, la connexion
       // se fait par e-mail et mot de passe.
       enableLocalAuth: false,
       registerFirst: false,
-      canCreateAccount: false,
+      // Inscription libre : le lien « Créer maintenant » de la connexion ouvre
+      // RegisterPage (page 1), puis la passerelle ouvre « Finalisez votre profil »
+      // (page 2). On n'utilise pas la page de création du socle.
+      canCreateAccount: true,
+      createAccountRoute: '/auth/register',
       showBackButton: false,
       // Tant que `profilCompleted` est faux, la passerelle skeleton appelle ce
       // callback : on ouvre l'écran « Finalisez votre profil » (étape 1). Le

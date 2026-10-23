@@ -27,7 +27,7 @@ export interface AdminAuditEntry {
    * d'un échec dangereux (le compte Auth a été supprimé mais ses données
    * Firestore ne l'ont pas été).
    */
-  failedStage?: "archive" | "auth_delete" | "firestore_delete";
+  failedStage?: "archive" | "teams" | "auth_delete" | "firestore_delete";
   /** Pour une suppression réussie : la purge Storage a-t-elle bien abouti. */
   storagePurged?: boolean;
 }

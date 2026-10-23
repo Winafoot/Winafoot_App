@@ -61,10 +61,15 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
+import 'package:flutter/material.dart' show MaterialPageRoute;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:skeleton/skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:wina/billing/access_info.dart';
+import 'package:wina/providers/billing_providers.dart';
+import 'package:wina/view/page/mes_equipes_screen.dart';
 import 'package:wina/view/widget/app_notif.dart';
 
 // =============================================================================
@@ -156,6 +161,38 @@ Future<void> _launchOrNotify(BuildContext context, Uri uri) async {
     title: "utils.error".tr(),
     subTitle: "utils.error-default".tr(),
     success: false,
+  );
+}
+
+/// Vrai pour un compte propriétaire (accès chargé et non lié à un propriétaire) : les comptes d'équipe
+/// liée n'ont ni abonnement ni équipes à gérer.
+bool _isOwner(WidgetRef ref) {
+  final AccessInfo? info = ref.watch(accessInfoProvider).valueOrNull;
+  return info != null && !info.isLinked;
+}
+
+/// Restaure les achats du store et prévient l'utilisateur du résultat.
+Future<void> _restorePurchases(BuildContext context, WidgetRef ref) async {
+  bool found = false;
+  try {
+    found = await ref.read(billingServiceProvider).restore();
+  } catch (_) {
+    if (!context.mounted) return;
+    showAppNotif(
+      context,
+      title: "utils.error".tr(),
+      subTitle: "utils.error-default".tr(),
+      success: false,
+    );
+    return;
+  }
+  if (!context.mounted) return;
+  showAppNotif(
+    context,
+    title:
+        found
+            ? "app.settings-extra.restore".tr()
+            : "app.subscription.restore-none".tr(),
   );
 }
 
@@ -346,6 +383,57 @@ KosmosSettingsConfig initKosmosSettingsConfig() {
               // ),
             ],
           ),
+
+          /// Section "Abonnement" : uniquement pour un compte propriétaire (pas un compte d'équipe liée).
+          if (_isOwner(ref))
+            CelluleSection(
+              title: (_, __) => "app.subscription.title".tr(),
+              cellules: <CelluleModel>[
+                /// Node "Mes équipes"
+                CelluleModel(
+                  tag: "my-teams",
+                  onTap: (context, __) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const MesEquipesScreen(),
+                      ),
+                    );
+                    return null;
+                  },
+                  tileBuilder: (_, __) => "app.settings-extra.my-teams".tr(),
+                  subTitleBuilder:
+                      (_, __) => "app.settings-extra.my-teams-sub".tr(),
+                ),
+
+                /// Node "Gérer mon abonnement" (page de gestion du store)
+                CelluleModel(
+                  tag: "manage-subscription",
+                  onTap: (context, __) async {
+                    final String url =
+                        defaultTargetPlatform == TargetPlatform.iOS
+                            ? "https://apps.apple.com/account/subscriptions"
+                            : "https://play.google.com/store/account/subscriptions";
+                    await _launchOrNotify(context, Uri.parse(url));
+                    return null;
+                  },
+                  tileBuilder:
+                      (_, __) => "app.settings-extra.manage-subscription".tr(),
+                  subTitleBuilder:
+                      (_, __) =>
+                          "app.settings-extra.manage-subscription-sub".tr(),
+                ),
+
+                /// Node "Restaurer mes achats"
+                CelluleModel(
+                  tag: "restore-purchases",
+                  onTap: (context, ref) async {
+                    await _restorePurchases(context, ref);
+                    return null;
+                  },
+                  tileBuilder: (_, __) => "app.settings-extra.restore".tr(),
+                ),
+              ],
+            ),
 
           /// Section "Paramètres"
           CelluleSection(
