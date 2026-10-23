@@ -308,22 +308,29 @@ void main() {
   group('enregistrement du profil', () {
     // Un `set()` sans merge sur users/{uid} réécrit tout le document : le champ
     // teamFormat disparaîtrait, et les règles Firestore refusent qu'un coach le
-    // supprime ou le modifie. Ni Firestore ni ses fakes ne sont disponibles
-    // ici : on garde donc l'invariant au niveau du source.
-    test('saveTeamInfo fusionne et n\'écrit jamais teamFormat', () {
+    // modifie ou le supprime. Il ne peut qu'être ajouté une fois (coach inscrit
+    // depuis l'app), jamais écrasé. Ni Firestore ni ses fakes ne sont
+    // disponibles ici : on garde donc l'invariant au niveau du source.
+    test('saveTeamInfo fusionne et n\'écrit teamFormat que s\'il est fourni', () {
       final String src =
           File('lib/data/coach_profile_repository.dart').readAsStringSync();
       final RegExpMatch? save = RegExp(
-        r'static Future<void> saveTeamInfo\([\s\S]*?\n  \}\n',
+        r'static Future<void> saveTeamInfo\([\s\S]*?\r?\n  \}\r?\n',
       ).firstMatch(src);
       expect(save, isNotNull);
       expect(save![0], contains('SetOptions(merge: true)'));
-      expect(save[0], isNot(contains('teamFormat')));
+      expect(save[0], contains("if (teamFormat != null) 'teamFormat'"));
     });
 
-    test('aucune écriture de teamFormat dans lib/ ni packages/', () {
+    test('teamFormat n\'est écrit que par les dépôts prévus', () {
       // Une écriture poserait la clé dans un littéral de Map (`'teamFormat':`),
-      // une lecture l'indexe (`['teamFormat']`).
+      // une lecture l'indexe (`['teamFormat']`). Autorisés : le profil du coach
+      // (ajout unique) et les équipes liées, créées côté serveur (autre compte).
+      const Set<String> allowed = <String>{
+        'lib/data/coach_profile_repository.dart',
+        'lib/data/linked_team_repository.dart',
+        'lib/view/page/creer_equipe_liee_screen.dart',
+      };
       final RegExp writes = RegExp('''['"]teamFormat['"]\\s*:''');
       final List<String> offenders = <String>[
         for (final Directory root in <Directory>[
@@ -333,6 +340,7 @@ void main() {
           for (final FileSystemEntity f in root.listSync(recursive: true))
             if (f is File &&
                 f.path.endsWith('.dart') &&
+                !allowed.contains(f.path.replaceAll('\\', '/')) &&
                 writes.hasMatch(f.readAsStringSync()))
               f.path,
       ];
