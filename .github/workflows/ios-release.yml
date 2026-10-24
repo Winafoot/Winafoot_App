@@ -98,6 +98,7 @@ jobs:
         run: |
           flutter build ipa --release \
             --build-number=$BUILD_NUMBER \
+            --dart-define=RC_IOS_KEY="${{ vars.RC_IOS_KEY }}" \
             --export-options-plist="$RUNNER_TEMP/export_options.plist"
 
       - uses: actions/upload-artifact@v4

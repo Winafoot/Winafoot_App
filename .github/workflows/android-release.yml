@@ -58,7 +58,11 @@ jobs:
           PROPS
 
       - name: Build AAB
-        run: flutter build appbundle --release --build-number=$BUILD_NUMBER
+        # Clé publique du SDK RevenueCat (variable du dépôt) : sans elle l'app ne peut pas charger les formules.
+        run: |
+          flutter build appbundle --release \
+            --build-number=$BUILD_NUMBER \
+            --dart-define=RC_ANDROID_KEY="${{ vars.RC_ANDROID_KEY }}"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -71,5 +75,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}
           packageName: fr.winafoot.app
           releaseFiles: app/build/app/outputs/bundle/release/*.aab
-          track: internal
+          tracks: internal
           status: draft
