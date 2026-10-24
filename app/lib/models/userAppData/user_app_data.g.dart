@@ -10,10 +10,8 @@ _$UserAppDataImpl _$$UserAppDataImplFromJson(Map<String, dynamic> json) =>
     _$UserAppDataImpl(
       test:
           (json['test'] as List<dynamic>?)?.map((e) => e as String).toList() ??
-              const [],
+          const [],
     );
 
 Map<String, dynamic> _$$UserAppDataImplToJson(_$UserAppDataImpl instance) =>
-    <String, dynamic>{
-      'test': instance.test,
-    };
+    <String, dynamic>{'test': instance.test};

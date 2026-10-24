@@ -192,10 +192,7 @@ class SettingsWebPage extends ConsumerWidget {
                                   contentBuilder: (context) {
                                     return _EditEmailForm(
                                       initialEmail:
-                                          ref
-                                              .watch(userProvider)
-                                              .user
-                                              ?.email ??
+                                          ref.watch(userProvider).user?.email ??
                                           '',
                                     );
                                   },
@@ -278,18 +275,20 @@ class SettingsWebPage extends ConsumerWidget {
 
                         // Abonnement : seulement pour un compte propriétaire (un compte d'équipe liée
                         // n'a ni abonnement ni équipes à gérer).
-                        if (ref.watch(accessInfoProvider).valueOrNull case final AccessInfo access
-                            when !access.isLinked)
+                        if (ref.watch(accessInfoProvider).valueOrNull
+                            case final AccessInfo access when !access.isLinked)
                           SettingsItem(
                             title: 'app.subscription.title'.tr(),
                             children: [
                               SettingsNode(
                                 title: 'app.settings-extra.my-teams'.tr(),
-                                subtitle: 'app.settings-extra.my-teams-sub'.tr(),
+                                subtitle:
+                                    'app.settings-extra.my-teams-sub'.tr(),
                                 onTap:
                                     () => Navigator.of(context).push(
                                       MaterialPageRoute<void>(
-                                        builder: (_) => const MesEquipesScreen(),
+                                        builder:
+                                            (_) => const MesEquipesScreen(),
                                       ),
                                     ),
                                 children: [],
@@ -502,7 +501,6 @@ class SettingsWebPage extends ConsumerWidget {
       ],
     );
   }
-
 }
 
 /// Formulaire de changement d'email (réglages).
@@ -565,11 +563,12 @@ class _EditEmailFormState extends State<_EditEmailForm> {
               sh(24),
               CpButton(
                 label: 'utils.save'.tr(),
-                onTap: () => _submitEmailChange(
-                  context,
-                  _emailController.text.trim(),
-                  _passwordController.text,
-                ),
+                onTap:
+                    () => _submitEmailChange(
+                      context,
+                      _emailController.text.trim(),
+                      _passwordController.text,
+                    ),
               ),
               sh(12),
               const CpRequiredNote(),

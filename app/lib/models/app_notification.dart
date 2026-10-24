@@ -65,8 +65,8 @@ class AppNotification {
       body: json['body'] as String?,
       sentAt: sentAt is Timestamp ? sentAt.toDate() : null,
       type: json['type'] as String?,
-      metadata: (json['metadata'] as Map<dynamic, dynamic>?)
-          ?.cast<String, dynamic>(),
+      metadata:
+          (json['metadata'] as Map<dynamic, dynamic>?)?.cast<String, dynamic>(),
       isRead: (json['isRead'] as bool?) ?? false,
     );
   }

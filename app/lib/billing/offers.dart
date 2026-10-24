@@ -57,5 +57,8 @@ Map<int, TeamsOffer> groupOffers(Iterable<PlanOffer> offers) {
 /// (comme les maquettes), pas 16,57 à cause de la représentation binaire.
 String formatMoney(double amount, String currencyCode) {
   final double rounded = ((amount * 100) + 1e-9).round() / 100;
-  return NumberFormat.simpleCurrency(locale: 'fr_FR', name: currencyCode).format(rounded);
+  return NumberFormat.simpleCurrency(
+    locale: 'fr_FR',
+    name: currencyCode,
+  ).format(rounded);
 }

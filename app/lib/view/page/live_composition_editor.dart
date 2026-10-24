@@ -1,3 +1,4 @@
+import 'package:wina/view/page/gerer_equipe_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:wina/config/theme.dart';
@@ -70,12 +71,11 @@ class _LiveCompoEditorState extends ConsumerState<_LiveCompoEditor> {
 
   Future<void> _run() async {
     final MatchComposition? before = ref.read(matchDraftProvider).composition;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder:
-            (_) => GererEquipeCompositionScreen(
-              allowedPlayerIds: widget.allowedPlayerIds,
-            ),
+    await openGererScreen(
+      context,
+      kGererCompositionRoute,
+      () => GererEquipeCompositionScreen(
+        allowedPlayerIds: widget.allowedPlayerIds,
       ),
     );
     if (!mounted) return;

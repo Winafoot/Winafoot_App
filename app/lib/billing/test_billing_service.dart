@@ -33,13 +33,32 @@ class TestBillingService implements BillingService {
   Future<List<PlanOffer>> loadOffers() async {
     final List<PlanOffer> out = <PlanOffer>[];
     _prices.forEach((int teams, (double, double) p) {
-      out.add(_offer('wina_${teams}team${teams > 1 ? 's' : ''}_monthly', teams, BillingPeriod.monthly, p.$1));
-      out.add(_offer('wina_${teams}team${teams > 1 ? 's' : ''}_annual', teams, BillingPeriod.yearly, p.$2));
+      out.add(
+        _offer(
+          'wina_${teams}team${teams > 1 ? 's' : ''}_monthly',
+          teams,
+          BillingPeriod.monthly,
+          p.$1,
+        ),
+      );
+      out.add(
+        _offer(
+          'wina_${teams}team${teams > 1 ? 's' : ''}_annual',
+          teams,
+          BillingPeriod.yearly,
+          p.$2,
+        ),
+      );
     });
     return out;
   }
 
-  PlanOffer _offer(String productId, int teams, BillingPeriod period, double price) => PlanOffer(
+  PlanOffer _offer(
+    String productId,
+    int teams,
+    BillingPeriod period,
+    double price,
+  ) => PlanOffer(
     productId: productId,
     teams: teams,
     period: period,
@@ -57,8 +76,11 @@ class TestBillingService implements BillingService {
           .call<dynamic>(<String, dynamic>{'productId': productId});
       return PurchaseResult.purchased;
     } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'failed-precondition' && e.message == 'test-purchases-disabled') {
-        throw const BillingException('Les achats de test sont désactivés sur ce serveur.');
+      if (e.code == 'failed-precondition' &&
+          e.message == 'test-purchases-disabled') {
+        throw const BillingException(
+          'Les achats de test sont désactivés sur ce serveur.',
+        );
       }
       throw BillingException(e.message ?? 'L\'achat de test a échoué.');
     }

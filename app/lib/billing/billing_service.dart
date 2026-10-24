@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/services.dart' show PlatformException;
 // Le SDK expose sa propre classe `PurchaseResult` : on la masque pour garder notre enum.
 import 'package:purchases_flutter/purchases_flutter.dart' hide PurchaseResult;
@@ -47,7 +48,8 @@ class RevenueCatBillingService implements BillingService {
 
   bool _configured = false;
 
-  String get _key => defaultTargetPlatform == TargetPlatform.iOS ? _iosKey : _androidKey;
+  String get _key =>
+      defaultTargetPlatform == TargetPlatform.iOS ? _iosKey : _androidKey;
 
   @override
   bool get isAvailable => _key.isNotEmpty;
@@ -67,7 +69,8 @@ class RevenueCatBillingService implements BillingService {
   }
 
   Package? _package(Offerings offerings, String productId) {
-    for (final Package p in offerings.current?.availablePackages ?? const <Package>[]) {
+    for (final Package p
+        in offerings.current?.availablePackages ?? const <Package>[]) {
       if (p.storeProduct.identifier == productId) return p;
     }
     return null;
@@ -78,18 +81,21 @@ class RevenueCatBillingService implements BillingService {
     await _ensureConfigured();
     final Offerings offerings = await Purchases.getOfferings();
     final List<PlanOffer> out = <PlanOffer>[];
-    for (final Package p in offerings.current?.availablePackages ?? const <Package>[]) {
+    for (final Package p
+        in offerings.current?.availablePackages ?? const <Package>[]) {
       final StoreProduct product = p.storeProduct;
       final PlanProduct? plan = PlanProduct.parse(product.identifier);
       if (plan == null) continue;
-      out.add(PlanOffer(
-        productId: product.identifier,
-        teams: plan.teams,
-        period: plan.period,
-        price: product.price,
-        currencyCode: product.currencyCode,
-        priceString: product.priceString,
-      ));
+      out.add(
+        PlanOffer(
+          productId: product.identifier,
+          teams: plan.teams,
+          period: plan.period,
+          price: product.price,
+          currencyCode: product.currencyCode,
+          priceString: product.priceString,
+        ),
+      );
     }
     return out;
   }
@@ -97,14 +103,21 @@ class RevenueCatBillingService implements BillingService {
   @override
   Future<PurchaseResult> purchase(String productId) async {
     await _ensureConfigured();
-    final Package? package = _package(await Purchases.getOfferings(), productId);
-    if (package == null) throw const BillingException('Cette formule n\'est pas disponible pour le moment.');
+    final Package? package = _package(
+      await Purchases.getOfferings(),
+      productId,
+    );
+    if (package == null)
+      throw const BillingException(
+        'Cette formule n\'est pas disponible pour le moment.',
+      );
     try {
       await Purchases.purchasePackage(package);
       return PurchaseResult.purchased;
     } on PlatformException catch (e) {
       final PurchasesErrorCode code = PurchasesErrorHelper.getErrorCode(e);
-      if (code == PurchasesErrorCode.purchaseCancelledError) return PurchaseResult.cancelled;
+      if (code == PurchasesErrorCode.purchaseCancelledError)
+        return PurchaseResult.cancelled;
       throw BillingException(e.message ?? 'L\'achat a échoué.');
     }
   }

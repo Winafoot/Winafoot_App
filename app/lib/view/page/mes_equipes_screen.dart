@@ -21,20 +21,27 @@ import 'package:wina/view/widget/label_pill.dart';
 import 'package:wina/view/widget/team_crest.dart';
 
 /// Réinitialise le mot de passe d'une équipe liée (injectable pour les tests).
-typedef ResetLinkedTeamPasswordFn = Future<void> Function({required String uid, required String password});
+typedef ResetLinkedTeamPasswordFn =
+    Future<void> Function({required String uid, required String password});
 
 /// Écran « Mes équipes » : équipes supplémentaires de l'abonnement, réinitialisation de leur mot de passe
 /// et ajout d'une équipe tant qu'il reste des places.
 class MesEquipesScreen extends ConsumerWidget {
-  const MesEquipesScreen({super.key, this.onResetPassword = LinkedTeamRepository.resetPassword});
+  const MesEquipesScreen({
+    super.key,
+    this.onResetPassword = LinkedTeamRepository.resetPassword,
+  });
 
   final ResetLinkedTeamPasswordFn onResetPassword;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final List<LinkedTeam> teams = ref.watch(linkedTeamsProvider).valueOrNull ?? const <LinkedTeam>[];
+    final List<LinkedTeam> teams =
+        ref.watch(linkedTeamsProvider).valueOrNull ?? const <LinkedTeam>[];
     final AccessInfo? info = ref.watch(accessInfoProvider).valueOrNull;
-    final bool canAdd = info != null && missingTeams(info, linkedCount: teams.length, now: DateTime.now()) > 0;
+    final bool canAdd =
+        info != null &&
+        missingTeams(info, linkedCount: teams.length, now: DateTime.now()) > 0;
     final CoachProfile? profile = ref.watch(coachProfileProvider).valueOrNull;
     final List<Player>? roster = ref.watch(playersStreamProvider).valueOrNull;
 
@@ -52,16 +59,25 @@ class MesEquipesScreen extends ConsumerWidget {
                   sh(16),
                   Row(
                     children: <Widget>[
-                      CustomBackButton(onTap: () => Navigator.of(context).maybePop()),
+                      CustomBackButton(
+                        onTap: () => Navigator.of(context).maybePop(),
+                      ),
                       sw(14),
-                      Icon(Iconsax.people, size: sp(26), color: AppColor.primaryColor),
+                      Icon(
+                        Iconsax.people,
+                        size: sp(26),
+                        color: AppColor.primaryColor,
+                      ),
                       sw(10),
                       Expanded(
                         child: Text(
                           'app.teams.my-title'.tr(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppThemeStyle.semiBStyle(28, AppColor.primaryLabels),
+                          style: AppThemeStyle.semiBStyle(
+                            28,
+                            AppColor.primaryLabels,
+                          ),
                         ),
                       ),
                       const WinaWordmark(size: 34),
@@ -73,34 +89,53 @@ class MesEquipesScreen extends ConsumerWidget {
                     child: SingleChildScrollView(
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: formatWidth(960)),
+                          constraints: BoxConstraints(
+                            maxWidth: formatWidth(960),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
                               sh(24),
                               _TeamsGrid(
                                 cards: <Widget>[
-                                  _MainTeamCard(profile: profile, playerCount: roster?.length),
+                                  _MainTeamCard(
+                                    profile: profile,
+                                    playerCount: roster?.length,
+                                  ),
                                   for (final LinkedTeam team in teams)
-                                    _LinkedTeamCard(team: team, onReset: () => _askNewPassword(context, team)),
+                                    _LinkedTeamCard(
+                                      team: team,
+                                      onReset:
+                                          () => _askNewPassword(context, team),
+                                    ),
                                 ],
                               ),
                               if (teams.isEmpty)
                                 Padding(
-                                  padding: EdgeInsets.symmetric(vertical: formatHeight(30)),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: formatHeight(30),
+                                  ),
                                   child: Text(
                                     'app.teams.my-empty'.tr(),
                                     textAlign: TextAlign.center,
-                                    style: AppThemeStyle.regularStyle(16, AppColor.secondaryLabels),
+                                    style: AppThemeStyle.regularStyle(
+                                      16,
+                                      AppColor.secondaryLabels,
+                                    ),
                                   ),
                                 ),
                               if (canAdd) ...<Widget>[
                                 sh(12),
                                 CpButton(
                                   label: 'app.teams.add'.tr(),
-                                  onTap: () => Navigator.of(context).push(
-                                    MaterialPageRoute<void>(builder: (_) => const CreerEquipeLieeScreen()),
-                                  ),
+                                  onTap:
+                                      () => Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder:
+                                              (_) =>
+                                                  const CreerEquipeLieeScreen(),
+                                        ),
+                                      ),
                                 ),
                               ],
                               sh(24),
@@ -123,10 +158,13 @@ class MesEquipesScreen extends ConsumerWidget {
     final bool done =
         await showDialog<bool>(
           context: context,
-          builder: (BuildContext _) => _ResetPasswordDialog(team: team, onReset: onResetPassword),
+          builder:
+              (BuildContext _) =>
+                  _ResetPasswordDialog(team: team, onReset: onResetPassword),
         ) ??
         false;
-    if (done && context.mounted) showAppNotif(context, title: 'app.teams.reset-done'.tr());
+    if (done && context.mounted)
+      showAppNotif(context, title: 'app.teams.reset-done'.tr());
   }
 }
 
@@ -145,11 +183,17 @@ class _TeamsGrid extends StatelessWidget {
       builder: (BuildContext context, BoxConstraints constraints) {
         final double gap = formatWidth(_gap);
         final bool twoColumns = constraints.maxWidth >= _twoColumnsMinWidth;
-        final double cardWidth = twoColumns ? (constraints.maxWidth - gap) / 2 : constraints.maxWidth;
+        final double cardWidth =
+            twoColumns
+                ? (constraints.maxWidth - gap) / 2
+                : constraints.maxWidth;
         return Wrap(
           spacing: gap,
           runSpacing: gap,
-          children: <Widget>[for (final Widget card in cards) SizedBox(width: cardWidth, child: card)],
+          children: <Widget>[
+            for (final Widget card in cards)
+              SizedBox(width: cardWidth, child: card),
+          ],
         );
       },
     );
@@ -178,7 +222,10 @@ class _TeamCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(formatWidth(24)),
-      decoration: BoxDecoration(color: AppColor.surface, borderRadius: BorderRadius.circular(r(20))),
+      decoration: BoxDecoration(
+        color: AppColor.surface,
+        borderRadius: BorderRadius.circular(r(20)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
@@ -195,7 +242,9 @@ class _TeamCard extends StatelessWidget {
                 ),
               ),
               sw(10),
-              LabelPill('app.teams.team-index'.tr(args: <String>['$teamIndex'])),
+              LabelPill(
+                'app.teams.team-index'.tr(args: <String>['$teamIndex']),
+              ),
             ],
           ),
           if (pills.isNotEmpty) ...<Widget>[
@@ -210,13 +259,24 @@ class _TeamCard extends StatelessWidget {
             sh(14),
             Row(
               children: <Widget>[
-                Icon(Iconsax.people, size: sp(18), color: AppColor.secondaryLabels),
+                Icon(
+                  Iconsax.people,
+                  size: sp(18),
+                  color: AppColor.secondaryLabels,
+                ),
                 sw(8),
                 Text(
                   playerCount == 1
-                      ? 'app.teams.players-one'.tr(args: <String>['$playerCount'])
-                      : 'app.teams.players-many'.tr(args: <String>['$playerCount']),
-                  style: AppThemeStyle.regularStyle(15, AppColor.secondaryLabels),
+                      ? 'app.teams.players-one'.tr(
+                        args: <String>['$playerCount'],
+                      )
+                      : 'app.teams.players-many'.tr(
+                        args: <String>['$playerCount'],
+                      ),
+                  style: AppThemeStyle.regularStyle(
+                    15,
+                    AppColor.secondaryLabels,
+                  ),
                 ),
               ],
             ),
@@ -232,7 +292,11 @@ class _TeamCard extends StatelessWidget {
 }
 
 /// Pastilles d'une équipe : catégorie, division et format (ex. « 11v11 »).
-List<String> _pillsFor(TeamCategory? category, TeamDivision? division, PlayerCount? format) => <String>[
+List<String> _pillsFor(
+  TeamCategory? category,
+  TeamDivision? division,
+  PlayerCount? format,
+) => <String>[
   if (category != null) category.label,
   if (division != null) division.label,
   if (format != null) '${format.value}v${format.value}',
@@ -251,16 +315,25 @@ class _MainTeamCard extends ConsumerWidget {
     return _TeamCard(
       name: name.isEmpty ? 'app.mon-equipe.nom-equipe-defaut'.tr() : name,
       teamIndex: 1,
-      pills: _pillsFor(profile?.category, profile?.division, profile?.teamFormat),
+      pills: _pillsFor(
+        profile?.category,
+        profile?.division,
+        profile?.teamFormat,
+      ),
       playerCount: playerCount,
       footer: Align(
         alignment: Alignment.centerLeft,
         child: TextButton(
           onPressed: () {
             ref.read(homeTabProvider.notifier).state = 0;
-            Navigator.of(context).popUntil((Route<dynamic> route) => route.isFirst);
+            Navigator.of(
+              context,
+            ).popUntil((Route<dynamic> route) => route.isFirst);
           },
-          child: Text('app.teams.view-team'.tr(), style: AppThemeStyle.semiBStyle(15, AppColor.primaryColor)),
+          child: Text(
+            'app.teams.view-team'.tr(),
+            style: AppThemeStyle.semiBStyle(15, AppColor.primaryColor),
+          ),
         ),
       ),
     );
@@ -294,7 +367,10 @@ class _LinkedTeamCard extends StatelessWidget {
           sw(12),
           TextButton(
             onPressed: onReset,
-            child: Text('app.teams.reset-password'.tr(), style: AppThemeStyle.semiBStyle(15, AppColor.primaryColor)),
+            child: Text(
+              'app.teams.reset-password'.tr(),
+              style: AppThemeStyle.semiBStyle(15, AppColor.primaryColor),
+            ),
           ),
         ],
       ),
@@ -326,7 +402,9 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
 
   Future<void> _save() async {
     if (_busy) return;
-    final List<String> missing = RegisterValidation.passwordViolations(_password.text);
+    final List<String> missing = RegisterValidation.passwordViolations(
+      _password.text,
+    );
     if (missing.isNotEmpty) {
       setState(() => _error = 'Il manque : ${missing.join(', ')}.');
       return;
@@ -374,7 +452,10 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
             if (_error != null)
               Padding(
                 padding: EdgeInsets.only(top: formatHeight(6)),
-                child: Text(_error!, style: AppThemeStyle.regularStyle(12, DefaultColor.error)),
+                child: Text(
+                  _error!,
+                  style: AppThemeStyle.regularStyle(12, DefaultColor.error),
+                ),
               ),
           ],
         ),

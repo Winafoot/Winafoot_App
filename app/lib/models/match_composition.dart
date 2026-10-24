@@ -74,8 +74,7 @@ class MatchComposition {
             in ((json['numbers'] as Map<dynamic, dynamic>?) ??
                     const <dynamic, dynamic>{})
                 .entries)
-          if (e.key is String)
-            e.key as String: (e.value as num?)?.toInt() ?? 0,
+          if (e.key is String) e.key as String: (e.value as num?)?.toInt() ?? 0,
       },
       captainId: json['captainId'] as String?,
       substituteIds:
