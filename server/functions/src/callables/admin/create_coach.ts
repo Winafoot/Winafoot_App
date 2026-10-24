@@ -37,7 +37,7 @@ const TEAM_CATEGORIES: readonly string[] = [
   "u6", "u7", "u8", "u9", "u10", "u11", "u12", "u13", "u14", "u15", "u16", "u17", "u18", "u19",
   "seniors", "veterans",
 ];
-const TEAM_DIVISIONS: readonly string[] = ["r1", "r2", "r3", "d1", "d2", "d3", "d4", "d5"];
+const TEAM_DIVISIONS: readonly string[] = ["r1", "r2", "r3", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8"];
 
 export default async (data: CreateCoachData, caller: AdminCaller): Promise<CreateCoachResult> => {
   const email: string = (data.email ?? "").trim().toLowerCase();

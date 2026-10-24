@@ -40,9 +40,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     super.initState();
     _cguTap =
         TapGestureRecognizer()
-          ..onTap = () => AutoRouter.of(context).pushNamed(
-            'legal-information/cgvu',
-          );
+          ..onTap =
+              () => AutoRouter.of(context).pushNamed('legal-information/cgvu');
   }
 
   @override
@@ -111,10 +110,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     if (!mounted) return;
     await ref.read(userProvider).init(context);
     if (!mounted) return;
-    AutoRouter.of(context).pushAndPopUntil(
-      const LoggedUserAppCoreRoute(),
-      predicate: (_) => false,
-    );
+    AutoRouter.of(
+      context,
+    ).pushAndPopUntil(const LoggedUserAppCoreRoute(), predicate: (_) => false);
   }
 
   /// Message affiché pour chaque cause d'échec de l'inscription.

@@ -57,8 +57,9 @@ class ModifierJoueurScreen extends StatelessWidget {
         initialFoot: player.strongFoot,
         initialPosition: player.position,
         submitLabel: 'app.modifier-joueur.valider'.tr(),
-        onSubmit: (String f, String l, StrongFoot ft, PlayerPosition p) =>
-            _save(context, f, l, ft, p),
+        onSubmit:
+            (String f, String l, StrongFoot ft, PlayerPosition p) =>
+                _save(context, f, l, ft, p),
       ),
     );
   }

@@ -248,7 +248,9 @@ Future<void> _openMatch(
     return;
   }
   Navigator.of(context).push(
-    MaterialPageRoute<void>(builder: (_) => BilanCollectifScreen(match: match!)),
+    MaterialPageRoute<void>(
+      builder: (_) => BilanCollectifScreen(match: match!),
+    ),
   );
 }
 

@@ -56,11 +56,8 @@ class CustomComposition {
   /// Vue [Formation] de la composition, pour réutiliser l'aperçu terrain
   /// ([FormationPitch]) et l'écran de placement, qui raisonnent sur des
   /// [Formation].
-  Formation toFormation() => Formation(
-    label: formationLabel,
-    playerCount: playerCount,
-    slots: slots,
-  );
+  Formation toFormation() =>
+      Formation(label: formationLabel, playerCount: playerCount, slots: slots);
 
   /// Champs persistés (id et horodatages sont gérés par le repository).
   Map<String, dynamic> toJson() => <String, dynamic>{

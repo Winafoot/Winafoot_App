@@ -92,12 +92,14 @@ AppModel initModel() {
       // journalisé et n'empêche pas le démarrage : les requêtes partent alors sans jeton.
       try {
         await FirebaseAppCheck.instance.activate(
-          providerAndroid: kReleaseMode
-              ? const AndroidPlayIntegrityProvider()
-              : const AndroidDebugProvider(),
-          providerApple: kReleaseMode
-              ? const AppleAppAttestProvider()
-              : const AppleDebugProvider(),
+          providerAndroid:
+              kReleaseMode
+                  ? const AndroidPlayIntegrityProvider()
+                  : const AndroidDebugProvider(),
+          providerApple:
+              kReleaseMode
+                  ? const AppleAppAttestProvider()
+                  : const AppleDebugProvider(),
         );
       } catch (e, st) {
         developer.log(

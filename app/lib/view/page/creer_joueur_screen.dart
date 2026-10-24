@@ -72,8 +72,9 @@ class CreerJoueurScreen extends StatelessWidget {
       title: 'app.creer-joueur.titre'.tr(),
       form: PlayerForm(
         submitLabel: 'app.creer-joueur.valider'.tr(),
-        onSubmit: (String f, String l, StrongFoot ft, PlayerPosition p) =>
-            _create(context, f, l, ft, p),
+        onSubmit:
+            (String f, String l, StrongFoot ft, PlayerPosition p) =>
+                _create(context, f, l, ft, p),
       ),
     );
   }

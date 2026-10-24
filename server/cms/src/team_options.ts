@@ -35,6 +35,9 @@ export const TEAM_DIVISIONS: Record<string, string> = {
   d3: "Départemental 3",
   d4: "Départemental 4",
   d5: "Départemental 5",
+  d6: "Départemental 6",
+  d7: "Départemental 7",
+  d8: "Départemental 8",
 };
 
 // Format du club = users/{uid}.teamFormat : nombre de joueurs sur le terrain.
