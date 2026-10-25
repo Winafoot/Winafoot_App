@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
@@ -1404,12 +1405,17 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(cR(20)),
       ),
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: cW(320),
-        vertical: cH(110),
-      ),
+      // Téléphone (~360 dp de haut) : des marges de 110 maquette ne laisseraient
+      // que ~170 dp au contenu.
+      insetPadding:
+          isPhoneLayout
+              ? const EdgeInsets.symmetric(horizontal: 80, vertical: 12)
+              : EdgeInsets.symmetric(horizontal: cW(320), vertical: cH(110)),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(cW(28), cH(16), cW(28), cH(22)),
+        padding:
+            isPhoneLayout
+                ? const EdgeInsets.fromLTRB(20, 8, 20, 12)
+                : EdgeInsets.fromLTRB(cW(28), cH(16), cW(28), cH(22)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1473,25 +1479,28 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
                 ),
               )
             else
-              ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: cH(170)),
-                child: SingleChildScrollView(
-                  child: Wrap(
-                    spacing: cW(12),
-                    runSpacing: cH(12),
-                    children: <Widget>[
-                      for (final Player p in widget.bench)
-                        PlayerPickTile(
-                          player: p,
-                          selected: _selectedId == p.id,
-                          jerseyAsset: subJerseyAsset(widget.jerseyAsset),
-                          onTap: () => setState(() => _selectedId = p.id),
-                        ),
-                    ],
+              // Flexible : la liste cède de la hauteur au lieu de déborder.
+              Flexible(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: cH(170)),
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: cW(12),
+                      runSpacing: cH(12),
+                      children: <Widget>[
+                        for (final Player p in widget.bench)
+                          PlayerPickTile(
+                            player: p,
+                            selected: _selectedId == p.id,
+                            jerseyAsset: subJerseyAsset(widget.jerseyAsset),
+                            onTap: () => setState(() => _selectedId = p.id),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            cSh(20),
+            cSh(isPhoneLayout ? 10 : 20),
             _ConfirmReplaceButton(
               enabled: _selectedId != null,
               onTap: () {
@@ -1604,7 +1613,12 @@ class _HistoryFeed extends StatelessWidget {
                     ),
                   )
                   : ListView.separated(
-                    itemCount: live.events.length,
+                    // Les 20 plus récentes : `events` va du plus récent au plus
+                    // ancien, l'index affiché est donc aussi celui de `removeEvent`.
+                    itemCount: math.min(
+                      live.events.length,
+                      kMatchHistoryDisplayLimit,
+                    ),
                     separatorBuilder: (_, _) => cSh(8),
                     itemBuilder:
                         (BuildContext context, int i) => _EventTile(

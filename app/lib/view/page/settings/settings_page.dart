@@ -1,5 +1,10 @@
+import 'dart:async' show unawaited;
+
+import 'package:kosmos_auth/kosmos_auth.dart' show KosmosAuth;
 import 'package:wina/billing/access_info.dart';
+import 'package:wina/config/skeleton_config.dart' show kCloudRegion;
 import 'package:wina/config/theme.dart';
+import 'package:wina/view/widget/confirm_dialog.dart';
 import 'package:wina/providers/billing_providers.dart';
 import 'package:wina/view/page/check_profil_step1_screen.dart';
 import 'package:wina/view/page/mes_equipes_screen.dart';
@@ -103,6 +108,7 @@ class SettingsWebPage extends ConsumerWidget {
         GetIt.I.isRegistered<AppMetadataConfig>()
             ? GetIt.I<AppMetadataConfig>()
             : null;
+    final List<SettingsNode> socialNodes = _socialNodes();
 
     return Scaffold(
       backgroundColor: AppColor.background,
@@ -379,42 +385,14 @@ class SettingsWebPage extends ConsumerWidget {
                           ],
                         ),
 
-                        // Réseaux sociaux
-                        SettingsItem(
-                          title: 'package.settings.section-title.social'.tr(),
-                          children: [
-                            SettingsNode(
-                              title:
-                                  'package.settings.node.social.facebook'.tr(),
-                              icon: SvgPicture.asset('assets/svg/fb.svg'),
-                              onTap: () async {
-                                final String? url =
-                                    GetIt.I.isRegistered<AppMetadataConfig>()
-                                        ? GetIt.I<AppMetadataConfig>()
-                                            .facebookUrl
-                                        : null;
-                                if (url != null) {
-                                  await launchUrl(Uri.parse(url));
-                                }
-                              },
-                            ),
-                            SettingsNode(
-                              title:
-                                  'package.settings.node.social.instagram'.tr(),
-                              icon: SvgPicture.asset('assets/svg/insta.svg'),
-                              onTap: () async {
-                                final String? url =
-                                    GetIt.I.isRegistered<AppMetadataConfig>()
-                                        ? GetIt.I<AppMetadataConfig>()
-                                            .instagramUrl
-                                        : null;
-                                if (url != null) {
-                                  await launchUrl(Uri.parse(url));
-                                }
-                              },
-                            ),
-                          ],
-                        ),
+                        // Réseaux sociaux : un réseau sans adresse dans
+                        // `app_config/metadata` est masqué, la section aussi
+                        // quand aucun n'est configuré.
+                        if (socialNodes.isNotEmpty)
+                          SettingsItem(
+                            title: 'package.settings.section-title.social'.tr(),
+                            children: socialNodes,
+                          ),
                       ],
                     ),
                   ),
@@ -463,6 +441,28 @@ class SettingsWebPage extends ConsumerWidget {
               ),
             ),
             sh(14),
+            // Déconnexion et suppression du compte visibles d'emblée, en petits
+            // boutons discrets (le menu « ⋯ » reste disponible).
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 8,
+              children: <Widget>[
+                _AccountActionButton(
+                  icon: Iconsax.logout,
+                  label: 'package.skeleton.profile.logout'.tr(),
+                  color: AppColor.primaryColor,
+                  onTap: () => UserController.logoutUser(context, ref),
+                ),
+                _AccountActionButton(
+                  icon: Iconsax.trash,
+                  label: 'account.delete.action'.tr(),
+                  color: AppColor.destructive,
+                  onTap: () => _confirmAndDeleteAccount(context, ref),
+                ),
+              ],
+            ),
+            sh(8),
           ],
         ),
         Align(
@@ -482,6 +482,11 @@ class SettingsWebPage extends ConsumerWidget {
                           child: Text('package.skeleton.profile.logout'.tr()),
                           onPressed: () => Navigator.of(context).pop('logout'),
                         ),
+                        CupertinoActionSheetAction(
+                          isDestructiveAction: true,
+                          child: Text('account.delete.action'.tr()),
+                          onPressed: () => Navigator.of(context).pop('delete'),
+                        ),
                       ],
                       cancelButton: CupertinoActionSheetAction(
                         child: Text('utils.cancel'.tr()),
@@ -495,12 +500,178 @@ class SettingsWebPage extends ConsumerWidget {
                 // au lieu d'un signOut brut qui contournait ce nettoyage.
                 await UserController.logoutUser(context, ref);
               }
+              if (action == 'delete' && context.mounted) {
+                await _confirmAndDeleteAccount(context, ref);
+              }
             },
           ),
         ),
       ],
     );
   }
+}
+
+/// Petit bouton en pastille de la carte de profil (déconnexion, suppression du compte) :
+/// contour fin, texte de 12 px, volontairement discret.
+class _AccountActionButton extends StatelessWidget {
+  const _AccountActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: color.withValues(alpha: .55)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Text(label, style: AppThemeStyle.semiBStyle(12, color)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Réseaux sociaux de l'app, dans l'ordre d'affichage : Instagram, TikTok, Facebook, LinkedIn.
+///
+/// Les adresses viennent de `app_config/metadata` (champs `instagramUrl`, `tiktokUrl`, `facebookUrl`,
+/// `linkedinUrl`). Un réseau dont l'adresse est absente ou vide est omis : pas d'entrée sans destination.
+List<SettingsNode> _socialNodes() {
+  final AppMetadataConfig? config =
+      GetIt.I.isRegistered<AppMetadataConfig>()
+          ? GetIt.I<AppMetadataConfig>()
+          : null;
+
+  SettingsNode? node(String key, String? url, Widget icon) {
+    final String? target = url?.trim();
+    if (target == null || target.isEmpty) return null;
+    return SettingsNode(
+      title: 'package.settings.node.social.$key'.tr(),
+      icon: icon,
+      onTap: () async {
+        try {
+          await launchUrl(
+            Uri.parse(target),
+            mode: LaunchMode.externalApplication,
+          );
+        } catch (_) {
+          // Adresse invalide ou aucune application pour l'ouvrir : on reste sur la page.
+        }
+      },
+    );
+  }
+
+  return <SettingsNode?>[
+    node(
+      'instagram',
+      config?.instagramUrl,
+      SvgPicture.asset('assets/svg/insta.svg'),
+    ),
+    node(
+      'tiktok',
+      config?.tiktokUrl,
+      SvgPicture.asset('assets/svg/tiktok.svg'),
+    ),
+    node(
+      'facebook',
+      config?.facebookUrl,
+      SvgPicture.asset('assets/svg/fb.svg'),
+    ),
+    node(
+      'linkedin',
+      config?.linkedinUrl,
+      Image.asset('assets/images/img_linkedin.png', fit: BoxFit.cover),
+    ),
+  ].whereType<SettingsNode>().toList();
+}
+
+/// Suppression du compte depuis l'app, pour tous les types de connexion (e-mail,
+/// Google...) : Google Play et l'App Store exigent qu'elle soit possible sans quitter l'app.
+///
+/// Le serveur (callable `deleteAccount`) agit sur le compte de l'appelant : profil, effectif, matchs,
+/// compositions et compte d'authentification. Aucune ressaisie du mot de passe n'est donc demandée,
+/// ce qui sert aussi les comptes Google, qui n'en ont pas.
+Future<void> _confirmAndDeleteAccount(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    barrierColor: AppColor.scrim,
+    builder:
+        (BuildContext ctx) => AppConfirmDialog(
+          title: 'account.delete.title'.tr(),
+          message: 'account.delete.message'.tr(),
+          primaryLabel: 'account.delete.keep'.tr(),
+          onPrimary: () => Navigator.of(ctx).pop(false),
+          secondaryLabel: 'account.delete.confirm'.tr(),
+          secondaryAccent: AppColor.destructive,
+          onSecondary: () => Navigator.of(ctx).pop(true),
+        ),
+  );
+  if (confirmed != true || !context.mounted) return;
+
+  final User? user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  // Chargement bloquant : la suppression passe par le réseau et ne doit pas être relancée.
+  unawaited(
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: AppColor.scrim,
+      builder:
+          (_) => const PopScope(
+            canPop: false,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+    ),
+  );
+
+  final result = await KosmosAuth.deleteAccount(user.uid, region: kCloudRegion);
+  if (!context.mounted) return;
+  Navigator.of(context, rootNavigator: true).pop();
+
+  final bool deleted = result.fold((_) => false, (ok) => ok);
+  if (!deleted) {
+    PopupAlert.toast(
+      context,
+      FToast().init(context),
+      title: 'utils.error'.tr(),
+      subtitle: 'account.delete.error'.tr(),
+      type: AlertType.error,
+    );
+    return;
+  }
+
+  // Le compte n'existe plus côté serveur : on nettoie la session locale sans redirection automatique,
+  // puis on ouvre l'écran de connexion avec le message « Votre compte a été supprimé ».
+  await UserController.logoutUser(context, ref, false, true);
+  if (!context.mounted) return;
+  final router = AutoRouter.of(context);
+  router.popUntilRoot();
+  router.replaceNamed('/auth/login?logout=true&deleteAccount=true');
 }
 
 /// Formulaire de changement d'email (réglages).

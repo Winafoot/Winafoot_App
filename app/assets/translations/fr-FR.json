@@ -343,6 +343,7 @@
         "social": {
           "facebook": "Notre page Facebook",
           "instagram": "Notre Instagram",
+          "tiktok": "Notre TikTok",
           "twitter": "Twitter",
           "linkedin": "Linkedin",
           "snapchat": "Snapchat"
@@ -605,10 +606,12 @@
     },
     "gerer-equipe-placement": {
       "titre": "Placez vos joueurs",
-      "modifier-numeros": "Modifier\nnuméros",
-      "modifier-composition": "Modifier\ncomposition",
+      "modifier-numeros": "Modifier numéros",
+      "modifier-composition": "Modifier composition",
       "joueurs-a-placer": "Joueurs à placer",
       "consigne": "Pour placer un joueur, glissez le numéro de ce dernier sur le terrain à l’emplacement que vous souhaitez.",
+      "consigne-telephone": "Touchez un joueur puis un emplacement, ou glissez-le.",
+      "tous-places": "Tous les joueurs sont placés.",
       "mon-equipe": "Mon équipe",
       "gardiens": "Gardiens",
       "defenseurs": "Défenseurs",
@@ -794,6 +797,8 @@
       "aucun-resultat": "Aucun résultat",
       "aucun-resultat-detail": "Aucun match ne correspond à votre recherche.",
       "statistiques-globales": "Statistiques globales",
+      "onglet-resume": "Résumé",
+      "onglet-terrain": "Terrain",
       "bilan-collectif": "Bilan collectif",
       "bilan-individuel": "Bilan individuel",
       "selectionner-joueur": "Pour le bilan individuel, sélectionnez un joueur sur le terrain.",

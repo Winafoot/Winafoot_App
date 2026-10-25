@@ -18,6 +18,7 @@ import 'package:wina/view/widget/formation_pitch.dart';
 import 'package:wina/view/widget/gerer_equipe_scaffold.dart';
 import 'package:wina/view/widget/label_pill.dart';
 import 'package:wina/view/widget/match_wizard.dart';
+import 'package:wina/view/widget/phone_category_chip.dart';
 import 'package:wina/view/widget/player_pick_tile.dart';
 
 const String _kEmptyJersey = 'assets/images/shirt-empty.png';
@@ -27,7 +28,7 @@ const String _kEmptyJersey = 'assets/images/shirt-empty.png';
 /// Gauche : joueurs à placer (glissables). Centre : terrain avec emplacements
 /// (déposer un joueur, ou toucher un emplacement pour choisir / retirer).
 /// « Valider » rattache la composition au match et revient au hub.
-class GererEquipePlacementScreen extends ConsumerWidget {
+class GererEquipePlacementScreen extends ConsumerStatefulWidget {
   const GererEquipePlacementScreen({super.key, this.allowedPlayerIds});
 
   /// Restreint les joueurs proposés au placement. Utilisé par « Modifier
@@ -36,23 +37,36 @@ class GererEquipePlacementScreen extends ConsumerWidget {
   final Set<String>? allowedPlayerIds;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GererEquipePlacementScreen> createState() =>
+      _GererEquipePlacementScreenState();
+}
+
+class _GererEquipePlacementScreenState
+    extends ConsumerState<GererEquipePlacementScreen> {
+  /// Téléphone : joueur retenu par un appui (à poser ensuite d'un appui sur un
+  /// emplacement), alternative au glisser-déposer.
+  String? _selectedId;
+
+  /// Téléphone : catégorie affichée dans le panneau de droite.
+  int _category = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final Set<String>? allowedPlayerIds = widget.allowedPlayerIds;
     final CompositionDraft draft = ref.watch(compositionDraftProvider);
     final CompositionDraftNotifier notifier = ref.read(
       compositionDraftProvider.notifier,
     );
     final Formation? formation = draft.formation;
 
-    final List<Player> players = (ref
-                .watch(playersStreamProvider)
-                .valueOrNull ??
-            const <Player>[])
-        .where(
-          (Player p) =>
-              p.id != null &&
-              (allowedPlayerIds == null || allowedPlayerIds!.contains(p.id)),
-        )
-        .toList(growable: false);
+    final List<Player> players =
+        (ref.watch(playersStreamProvider).valueOrNull ?? const <Player>[])
+            .where(
+              (Player p) =>
+                  p.id != null &&
+                  (allowedPlayerIds == null || allowedPlayerIds.contains(p.id)),
+            )
+            .toList(growable: false);
     final Map<String, Player> byId = <String, Player>{
       for (final Player p in players) p.id!: p,
     };
@@ -85,6 +99,20 @@ class GererEquipePlacementScreen extends ConsumerWidget {
               },
             ),
       );
+    }
+
+    // Téléphone : un joueur retenu est posé directement sur l'emplacement
+    // touché ; sans joueur retenu, on ouvre la fenêtre de choix.
+    void tapEmpty(int slot) {
+      final String? id = _selectedId;
+      if (isPhoneLayout &&
+          id != null &&
+          unplaced.any((Player p) => p.id == id)) {
+        notifier.assign(slot, id);
+        setState(() => _selectedId = null);
+        return;
+      }
+      pickForSlot(slot);
     }
 
     void validate() {
@@ -138,6 +166,30 @@ class GererEquipePlacementScreen extends ConsumerWidget {
       ),
     ];
 
+    // Téléphone : terrain à gauche ; à droite, les catégories en une ligne de
+    // pastilles et les joueurs de la catégorie choisie en dessous.
+    final List<_Section> phoneSections = <_Section>[
+      _Section(
+        'app.gerer-equipe-placement.gardiens'.tr(),
+        atPos(PlayerPosition.gardien),
+      ),
+      _Section(
+        'app.gerer-equipe-placement.defenseurs'.tr(),
+        atPos(PlayerPosition.defenseur),
+      ),
+      _Section(
+        'app.gerer-equipe-placement.milieux'.tr(),
+        atPos(PlayerPosition.milieu),
+      ),
+      _Section(
+        'app.gerer-equipe-placement.attaquants'.tr(),
+        atPos(PlayerPosition.attaquant),
+      ),
+      _Section('app.gerer-equipe-placement.remplacants'.tr(), subs),
+    ].where((_Section s) => s.players.isNotEmpty).toList(growable: false);
+    final String? selectedId =
+        unplaced.any((Player p) => p.id == _selectedId) ? _selectedId : null;
+
     return GererEquipeScaffold(
       title: 'app.gerer-equipe-placement.titre'.tr(),
       leading: Row(
@@ -171,57 +223,99 @@ class GererEquipePlacementScreen extends ConsumerWidget {
         enabled: draft.allPlaced,
         onTap: validate,
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          isPhoneLayout ? 16 : cW(40),
-          cH(8),
-          isPhoneLayout ? 16 : cW(40),
-          isPhoneLayout ? 8 : cH(12),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _col(
-              flex: 1,
-              width: 305,
-              child: _RosterColumn(
-                header: _LeftRosterHeader(),
-                sections: leftSections,
-                numbers: draft.numbers,
-                captainId: draft.captainId,
-                substituteIds: draft.substituteIds,
-              ),
-            ),
-            _gap(),
-            _pitchCol(
-              child: _CompositionCard(
-                formationLabel: formation.label,
-                child: _PlacementPitch(
-                  formation: formation,
-                  assignments: draft.assignments,
-                  numbers: draft.numbers,
-                  byId: byId,
-                  onAssign: notifier.assign,
-                  onRemove: notifier.unassign,
-                  onTapEmpty: pickForSlot,
+      child:
+          isPhoneLayout
+              ? Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    _pitchCol(
+                      child: _CompositionCard(
+                        formationLabel: formation.label,
+                        child: _PlacementPitch(
+                          formation: formation,
+                          assignments: draft.assignments,
+                          numbers: draft.numbers,
+                          byId: byId,
+                          onAssign: notifier.assign,
+                          onRemove: notifier.unassign,
+                          onTapEmpty: tapEmpty,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _PhoneRoster(
+                        sections: phoneSections,
+                        category: _category,
+                        selectedId: selectedId,
+                        numbers: draft.numbers,
+                        captainId: draft.captainId,
+                        substituteIds: draft.substituteIds,
+                        onCategory: (int i) => setState(() => _category = i),
+                        onSelect:
+                            (Player p) => setState(
+                              () =>
+                                  _selectedId =
+                                      selectedId == p.id ? null : p.id,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+              : Padding(
+                padding: EdgeInsets.fromLTRB(
+                  isPhoneLayout ? 16 : cW(40),
+                  cH(8),
+                  isPhoneLayout ? 16 : cW(40),
+                  isPhoneLayout ? 8 : cH(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    _col(
+                      flex: 1,
+                      width: 305,
+                      child: _RosterColumn(
+                        header: _LeftRosterHeader(),
+                        sections: leftSections,
+                        numbers: draft.numbers,
+                        captainId: draft.captainId,
+                        substituteIds: draft.substituteIds,
+                      ),
+                    ),
+                    _gap(),
+                    _pitchCol(
+                      child: _CompositionCard(
+                        formationLabel: formation.label,
+                        child: _PlacementPitch(
+                          formation: formation,
+                          assignments: draft.assignments,
+                          numbers: draft.numbers,
+                          byId: byId,
+                          onAssign: notifier.assign,
+                          onRemove: notifier.unassign,
+                          onTapEmpty: tapEmpty,
+                        ),
+                      ),
+                    ),
+                    _gap(),
+                    _col(
+                      flex: 1,
+                      width: 317,
+                      child: _RosterColumn(
+                        header: SizedBox(height: isPhoneLayout ? 54 : cH(66)),
+                        sections: rightSections,
+                        numbers: draft.numbers,
+                        captainId: draft.captainId,
+                        substituteIds: draft.substituteIds,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            _gap(),
-            _col(
-              flex: 1,
-              width: 317,
-              child: _RosterColumn(
-                header: SizedBox(height: isPhoneLayout ? 54 : cH(66)),
-                sections: rightSections,
-                numbers: draft.numbers,
-                captainId: draft.captainId,
-                substituteIds: draft.substituteIds,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -241,7 +335,7 @@ Widget _pitchCol({required Widget child}) {
   return LayoutBuilder(
     builder: (BuildContext context, BoxConstraints c) {
       const double pad = 8; // padding de la carte
-      const double head = 30; // pastille du schéma + espace
+      const double head = 0; // la pastille du schéma recouvre le terrain
       final double pitchH = c.maxHeight - pad * 2 - head;
       final double w = pitchH * 1668 / 2388 + pad * 2;
       return SizedBox(width: w, child: child);
@@ -265,6 +359,185 @@ class _Section {
 
   final String label;
   final List<Player> players;
+}
+
+/// Téléphone : panneau de droite. Une ligne de pastilles (une par catégorie
+/// non vide, avec son effectif), puis les joueurs de la catégorie choisie en
+/// dessous. Un appui retient un joueur (à poser d'un appui sur un
+/// emplacement) ; un appui long le rend glissable vers le terrain.
+class _PhoneRoster extends StatelessWidget {
+  const _PhoneRoster({
+    required this.sections,
+    required this.category,
+    required this.selectedId,
+    required this.numbers,
+    required this.captainId,
+    required this.substituteIds,
+    required this.onCategory,
+    required this.onSelect,
+  });
+
+  final List<_Section> sections;
+  final int category;
+  final String? selectedId;
+  final Map<String, int> numbers;
+  final String? captainId;
+  final Set<String> substituteIds;
+  final ValueChanged<int> onCategory;
+  final ValueChanged<Player> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    if (sections.isEmpty) {
+      return Center(
+        child: Text(
+          'app.gerer-equipe-placement.tous-places'.tr(),
+          textAlign: TextAlign.center,
+          style: AppThemeStyle.mediumStyle(cFs(16), AppColor.secondaryLabels),
+        ),
+      );
+    }
+    final int current = category.clamp(0, sections.length - 1);
+    final List<Player> players = sections[current].players;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Text(
+          'app.gerer-equipe-placement.consigne-telephone'.tr(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppThemeStyle.regularStyle(cFs(14), AppColor.secondaryLabels),
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: sections.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder:
+                (BuildContext context, int i) => PhoneCategoryChip(
+                  label: sections[i].label,
+                  count: sections[i].players.length,
+                  selected: i == current,
+                  onTap: () => onCategory(i),
+                ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView.separated(
+            itemCount: players.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 6),
+            itemBuilder:
+                (BuildContext context, int i) => _PhoneRosterRow(
+                  player: players[i],
+                  number: numbers[players[i].id],
+                  isCaptain:
+                      players[i].id != null && players[i].id == captainId,
+                  isSub:
+                      players[i].id != null &&
+                      substituteIds.contains(players[i].id),
+                  selected: players[i].id == selectedId,
+                  onTap: () => onSelect(players[i]),
+                ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Ligne joueur du téléphone : maillot numéroté, nom, pied fort. Hauteur
+/// tactile de 52 ; surlignée quand le joueur est retenu.
+class _PhoneRosterRow extends ConsumerWidget {
+  const _PhoneRosterRow({
+    required this.player,
+    required this.number,
+    required this.isCaptain,
+    required this.isSub,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Player player;
+  final int? number;
+  final bool isCaptain;
+  final bool isSub;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final String jerseyAsset = jerseyAssetFor(
+      isSub: isSub,
+      own: ref.watch(matchDraftProvider).ownJersey?.color,
+    );
+    final Widget row = Material(
+      color: AppColor.rosterRowSurface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? AppColor.primaryColor : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: Row(
+            children: <Widget>[
+              _NumberJersey(
+                number: number,
+                isCaptain: isCaptain,
+                isSub: isSub,
+                size: 36,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      player.fullName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppThemeStyle.semiBStyle(
+                        cFs(18),
+                        AppColor.rosterName,
+                      ),
+                    ),
+                    Text(
+                      '${'app.gerer-equipe-placement.pied-fort'.tr()} : ${player.strongFoot.label}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppThemeStyle.regularStyle(
+                        cFs(14),
+                        AppColor.secondaryLabels,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return LongPressDraggable<Player>(
+      data: player,
+      delay: const Duration(milliseconds: 150),
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      feedback: Image.asset(jerseyAsset, width: 48, height: 48),
+      childWhenDragging: Opacity(opacity: 0.4, child: row),
+      child: row,
+    );
+  }
 }
 
 /// Colonne de roster : un en-tête libre puis les groupes non vides (barre
@@ -365,7 +638,32 @@ class _ModifierButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double badge = cIc(24);
+    if (isPhoneLayout) {
+      // Téléphone : pilule d'une ligne, hauteur tactile de 36.
+      return Material(
+        color: AppColor.surface,
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AppColor.divider),
+            ),
+            child: Text(
+              label,
+              maxLines: 1,
+              style: AppThemeStyle.semiBStyle(cFs(16), AppColor.primaryLabels),
+            ),
+          ),
+        ),
+      );
+    }
+    final double badge = cIc(28);
     return Material(
       color: AppColor.surface,
       borderRadius: BorderRadius.circular(cR(999)),
@@ -377,15 +675,17 @@ class _ModifierButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(cR(999)),
             border: Border.all(color: AppColor.divider),
           ),
-          padding: EdgeInsets.symmetric(horizontal: cW(20), vertical: cH(12)),
+          padding: EdgeInsets.symmetric(horizontal: cW(24), vertical: cH(14)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
                 label,
+                maxLines: 1,
+                softWrap: false,
                 textAlign: TextAlign.center,
                 style: AppThemeStyle.semiBStyle(
-                  cFs(15),
+                  cFs(17),
                   AppColor.primaryLabels,
                 ),
               ),
@@ -541,11 +841,15 @@ class _NumberJersey extends ConsumerWidget {
     required this.number,
     this.isCaptain = false,
     this.isSub = false,
+    this.size,
   });
 
   final int? number;
   final bool isCaptain;
   final bool isSub;
+
+  /// Côté du maillot en dp réels ; par défaut, l'échelle de la maquette.
+  final double? size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -553,7 +857,7 @@ class _NumberJersey extends ConsumerWidget {
       isSub: isSub,
       own: ref.watch(matchDraftProvider).ownJersey?.color,
     );
-    final double d = cIc(30);
+    final double d = size ?? cIc(30);
     return SizedBox(
       width: d,
       height: d * 1.2,
@@ -574,7 +878,7 @@ class _NumberJersey extends ConsumerWidget {
                     child: Text(
                       '$number',
                       style: AppThemeStyle.semiBStyle(
-                        cFs(13),
+                        size != null ? cFs(d * 0.4 / 0.8) : cFs(13),
                         numberColorForJerseyAsset(jerseyAsset),
                       ),
                     ),
@@ -616,6 +920,24 @@ class _CompositionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isPhoneLayout) {
+      // Téléphone : toute la hauteur au terrain ; le schéma (« 4-4-2 ») s'y
+      // superpose en bas à gauche, hors des emplacements.
+      return Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppColor.surface,
+          borderRadius: BorderRadius.circular(cR(16)),
+          border: Border.all(color: AppColor.divider),
+        ),
+        child: Stack(
+          children: <Widget>[
+            Positioned.fill(child: child),
+            Positioned(left: 6, bottom: 6, child: LabelPill(formationLabel)),
+          ],
+        ),
+      );
+    }
     return Container(
       padding: EdgeInsets.all(isPhoneLayout ? 8 : cW(14)),
       decoration: BoxDecoration(
@@ -687,7 +1009,9 @@ class _PlacementPitch extends StatelessWidget {
             builder: (BuildContext context, BoxConstraints constraints) {
               final double w = constraints.maxWidth;
               final double h = constraints.maxHeight;
-              final double m = w * 0.155;
+              // Téléphone : terrain étroit, maillots agrandis pour rester
+              // lisibles et faciles à toucher.
+              final double m = w * (isPhoneLayout ? 0.19 : 0.155);
               final List<Widget> markers = <Widget>[];
               for (int i = 0; i < formation.slots.length; i++) {
                 final FormationSlot slot = formation.slots[i];
@@ -803,7 +1127,10 @@ class _Slot extends ConsumerWidget {
             _short(p),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppThemeStyle.semiBStyle(cFs(11), AppColor.textLight),
+            style: AppThemeStyle.semiBStyle(
+              isPhoneLayout ? cFs(14) : cFs(11),
+              AppColor.textLight,
+            ),
           ),
         ],
       ],

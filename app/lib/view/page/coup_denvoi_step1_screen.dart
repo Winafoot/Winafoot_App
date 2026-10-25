@@ -84,7 +84,7 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
               Expanded(child: _ownColumn(coach)),
               Padding(
                 padding: EdgeInsets.only(
-                  top: isPhoneLayout ? 70 : cH(96),
+                  top: isPhoneLayout ? 34 : cH(96),
                   left: isPhoneLayout ? 12 : cW(24),
                   right: isPhoneLayout ? 12 : cW(24),
                 ),
@@ -103,8 +103,8 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
       children: <Widget>[
         TeamLabelBadge('app.coup-denvoi-step1.mon-equipe'.tr()),
         cSh(14),
-        TeamCrest(size: isPhoneLayout ? 70 : 92),
-        cSh(14),
+        // Téléphone : sans écusson, pour tenir dans la hauteur sans défiler.
+        if (!isPhoneLayout) ...<Widget>[TeamCrest(size: 92), cSh(14)],
         // Nom figé (grisé, non cliquable) : seul celui de l'adversaire se saisit.
         Container(
           width: isPhoneLayout ? 230 : cW(300),
@@ -150,8 +150,7 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
       children: <Widget>[
         TeamLabelBadge('app.coup-denvoi-step1.equipe-adverse'.tr()),
         cSh(14),
-        TeamCrest(size: isPhoneLayout ? 70 : 92),
-        cSh(14),
+        if (!isPhoneLayout) ...<Widget>[TeamCrest(size: 92), cSh(14)],
         SizedBox(
           // Même largeur que les pilules Catégorie/Division juste en dessous :
           // sans borne, `IntrinsicWidth` laissait le nom déborder de l'écran.

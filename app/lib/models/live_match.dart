@@ -7,6 +7,13 @@ import 'package:wina/models/match_period.dart';
 import 'package:wina/models/player.dart';
 import 'package:wina/models/stat_catalog.dart';
 
+/// Nombre d'actions affichées dans l'« Historique » du direct (les plus récentes).
+///
+/// Limite d'AFFICHAGE seulement : [LiveMatch.events] garde le journal complet, car
+/// `LiveMatchNotifier.removeEvent` recalcule les statistiques et le score en rejouant ce
+/// journal. Le tronquer à 20 ferait perdre les actions plus anciennes à la première annulation.
+const int kMatchHistoryDisplayLimit = 20;
+
 /// Un événement enregistré pendant le match (incrément/décrément d'une stat),
 /// affiché dans l'« Historique ».
 @immutable

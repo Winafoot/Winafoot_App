@@ -46,46 +46,62 @@ class GererEquipeScaffold extends StatelessWidget {
             const AppBackground(),
             Column(
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isPhoneLayout ? 16 : cW(40),
+                if (isPhoneLayout)
+                  _PhoneBar(
+                    title: title,
+                    onBack: onBack,
+                    leading: leading,
+                    trailing: headerTrailing,
+                    action: action,
+                  )
+                else
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isPhoneLayout ? 16 : cW(40),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        cSh(isPhoneLayout ? 8 : 18),
+                        _Header(onBack: onBack, trailing: headerTrailing),
+                        cSh(isPhoneLayout ? 6 : 14),
+                        Container(height: 1, color: AppColor.divider),
+                        cSh(isPhoneLayout ? 6 : 20),
+                        if (action == null)
+                          Center(child: _title())
+                        else if (leading == null)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              Expanded(child: _title()),
+                              action!,
+                            ],
+                          )
+                        else
+                          // Ligne et non Stack : avec des boutons « Modifier » plus
+                          // larges, le titre centré en Stack passait dessous. Ici
+                          // il prend la place restante et se réduit au besoin.
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              leading!,
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isPhoneLayout ? 8 : cW(16),
+                                  ),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: _title(),
+                                  ),
+                                ),
+                              ),
+                              action!,
+                            ],
+                          ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      cSh(isPhoneLayout ? 8 : 18),
-                      _Header(onBack: onBack, trailing: headerTrailing),
-                      cSh(isPhoneLayout ? 6 : 14),
-                      Container(height: 1, color: AppColor.divider),
-                      cSh(isPhoneLayout ? 6 : 20),
-                      if (action == null)
-                        Center(child: _title())
-                      else if (leading == null)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Expanded(child: _title()),
-                            action!,
-                          ],
-                        )
-                      else
-                        Stack(
-                          alignment: Alignment.center,
-                          children: <Widget>[
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: leading!,
-                            ),
-                            _title(),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: action!,
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
                 cSh(isPhoneLayout ? 4 : 8),
                 // PAS de `SingleChildScrollView` ici, contrairement au jumeau
                 // `MatchWizardScaffold` : une contrainte de
@@ -111,6 +127,102 @@ class GererEquipeScaffold extends StatelessWidget {
       AppColor.primaryLabels,
     ),
   );
+}
+
+/// Téléphone (paysage, ~360 dp de haut) : une seule barre au lieu de l'entête
+/// à deux étages. Retour, « Gérer mon équipe » en légende au-dessus du titre de
+/// l'étape, puis les actions. Le logo est retiré pour rendre la hauteur au
+/// contenu ; la zone tactile du retour est de 44.
+class _PhoneBar extends StatelessWidget {
+  const _PhoneBar({
+    required this.title,
+    this.onBack,
+    this.leading,
+    this.trailing,
+    this.action,
+  });
+
+  final String title;
+  final VoidCallback? onBack;
+  final Widget? leading;
+  final Widget? trailing;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 16, 4),
+          child: Row(
+            children: <Widget>[
+              Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  onTap: onBack ?? () => Navigator.of(context).maybePop(),
+                  customBorder: const CircleBorder(),
+                  child: const SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Icon(
+                      Iconsax.arrow_circle_left,
+                      size: 26,
+                      color: AppColor.primaryLabels,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'app.gerer-equipe-scaffold.titre'.tr(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppThemeStyle.regularStyle(
+                        cFs(14),
+                        AppColor.secondaryLabels,
+                      ),
+                    ),
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppThemeStyle.semiBStyle(
+                        cFs(24),
+                        AppColor.primaryLabels,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (leading != null) ...<Widget>[
+                const SizedBox(width: 8),
+                leading!,
+              ],
+              if (trailing != null) ...<Widget>[
+                const SizedBox(width: 8),
+                trailing!,
+              ],
+              if (action != null) ...<Widget>[
+                const SizedBox(width: 8),
+                action!,
+              ],
+            ],
+          ),
+        ),
+        Container(
+          height: 1,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          color: AppColor.divider,
+        ),
+      ],
+    );
+  }
 }
 
 class _Header extends StatelessWidget {

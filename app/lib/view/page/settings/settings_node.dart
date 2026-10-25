@@ -249,9 +249,16 @@ class _SettingsViewState extends State<SettingsView> {
       borderRadius: BorderRadius.circular(r(30)),
       child: Container(
         width: double.infinity,
-        height: formatHeight(60),
+        // Minimum et non hauteur fixe : sur téléphone l'échelle écrase 54 sous
+        // la hauteur d'un titre + sous-titre, qui débordait de quelques px.
+        constraints: BoxConstraints(minHeight: formatHeight(54)),
         padding: EdgeInsets.symmetric(horizontal: formatWidth(12)),
         decoration: BoxDecoration(
+          // Teinte légère en plus de la bordure verte : la cellule choisie se lit d'un coup d'œil.
+          color:
+              isSelected
+                  ? AppColor.primaryColor.withValues(alpha: .07)
+                  : Colors.transparent,
           borderRadius: BorderRadius.circular(r(30)),
           border: Border.all(
             color: isSelected ? AppColor.primaryColor : AppColor.cellBorder,
@@ -295,19 +302,40 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
+  /// Répartit les cartes de groupe dans [cols] colonnes : chacune va dans la colonne la plus
+  /// courte, la hauteur d'une carte étant estimée à son titre plus ses cellules. L'ordre est
+  /// conservé à l'intérieur d'une colonne.
+  List<List<int>> _balancedColumns(int cols) {
+    final List<List<int>> columns = List<List<int>>.generate(
+      cols,
+      (_) => <int>[],
+    );
+    final List<double> heights = List<double>.filled(cols, 0);
+    for (int i = 0; i < widget.items.length; i++) {
+      int target = 0;
+      for (int c = 1; c < cols; c++) {
+        if (heights[c] < heights[target]) target = c;
+      }
+      columns[target].add(i);
+      heights[target] += 1.2 + widget.items[i].children.length;
+    }
+    return columns;
+  }
+
   Widget _groupCard(int i) {
     return Container(
       padding: EdgeInsets.all(formatWidth(21.5)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(r(16)),
+        border: Border.all(color: AppColor.cellBorder.withValues(alpha: .35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             widget.items[i].title,
-            style: AppThemeStyle.mediumStyle(14, AppColor.primaryLabels),
+            style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
           ),
           SizedBox(height: formatHeight(12)),
           for (
@@ -402,31 +430,31 @@ class _SettingsViewState extends State<SettingsView> {
                         ),
                         SizedBox(height: gap),
                       ],
-                      // Bento : cartes d'une même ligne de même hauteur, et la
-                      // dernière carte d'une ligne incomplète prend toute la
-                      // largeur — aucun trou dans la grille.
-                      for (
-                        int start = 0;
-                        start < widget.items.length;
-                        start += cols
-                      ) ...[
-                        if (start > 0) SizedBox(height: gap),
-                        IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              for (
-                                int i = start;
-                                i < start + cols && i < widget.items.length;
-                                i++
-                              ) ...[
-                                if (i > start) SizedBox(width: gap),
-                                Expanded(child: _groupCard(i)),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
+                      // Bento : colonnes indépendantes, chaque carte allant dans la
+                      // plus courte (hauteur estimée au nombre de cellules). Des
+                      // lignes de hauteur égale laissaient un grand vide sous une
+                      // carte courte voisine d'une carte longue.
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final (int c, List<int> column)
+                              in _balancedColumns(cols).indexed) ...[
+                            if (c > 0) SizedBox(width: gap),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  for (final (int k, int i)
+                                      in column.indexed) ...[
+                                    if (k > 0) SizedBox(height: gap),
+                                    _groupCard(i),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),

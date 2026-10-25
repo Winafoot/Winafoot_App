@@ -20,6 +20,7 @@ import 'package:wina/view/widget/empty_state_placeholder.dart';
 import 'package:wina/view/widget/formation_pitch.dart';
 import 'package:wina/view/widget/notification_bell.dart';
 import 'package:wina/view/widget/page_header.dart';
+import 'package:wina/view/widget/phone_category_chip.dart';
 import 'package:wina/view/widget/settings_button.dart';
 import 'package:wina/view/widget/team_crest.dart';
 
@@ -50,6 +51,13 @@ String _formatDate(DateTime? d) {
   if (d == null) return '';
   return '${d.day.toString().padLeft(2, '0')} ${_kMonths[d.month - 1]} ${d.year}';
 }
+
+/// Cellule « nom » d'une ligne de roster : largeur fixe sur tablette, souple sur
+/// téléphone (la colonne est bien plus étroite que la maquette).
+Widget _rosterNameCell({required Widget child}) =>
+    isPhoneLayout
+        ? Expanded(child: child)
+        : SizedBox(width: cW(183), child: child);
 
 /// Onglet « Statistiques Matchs » (design 1:3394) : historique des matchs
 /// joués (avec recherche) + détail du match sélectionné (score, bilans,
@@ -103,21 +111,65 @@ class _StatistiquesMatchsScreenState
     super.dispose();
   }
 
+  // Index des joueurs et liste filtrée mémorisés : `build` repart à chaque
+  // sélection de joueur, de match ou de frappe, et ne doit pas les recalculer
+  // tant que leurs sources (liste, requête, résultats Algolia) n'ont pas changé.
+  List<Player>? _playersSrc;
+  Map<String, Player> _byId = const <String, Player>{};
+
+  Map<String, Player> _indexPlayers(List<Player> players) {
+    if (identical(players, _playersSrc)) return _byId;
+    _playersSrc = players;
+    return _byId = <String, Player>{
+      for (final Player p in players)
+        if (p.id != null) p.id!: p,
+    };
+  }
+
+  List<GameMatch>? _filterSrc;
+  String _filterQuery = '';
+  Set<String>? _filterRemote;
+  List<GameMatch> _filtered = const <GameMatch>[];
+
+  List<GameMatch> _visibleMatches(List<GameMatch> matches, String q) {
+    if (q.isEmpty) return matches;
+    if (identical(matches, _filterSrc) &&
+        q == _filterQuery &&
+        identical(_remoteIds, _filterRemote)) {
+      return _filtered;
+    }
+    _filterSrc = matches;
+    _filterQuery = q;
+    _filterRemote = _remoteIds;
+    return _filtered = unionVisible<GameMatch>(
+      items: matches,
+      matchesLocally:
+          (GameMatch m) =>
+              m.opponent.name.toLowerCase().contains(q) ||
+              _formatDate(m.finishedAt).toLowerCase().contains(q),
+      idOf: (GameMatch m) => m.id,
+      remoteIds: _remoteIds,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final AsyncValue<List<GameMatch>> matchesAsync = ref.watch(
       finishedMatchesProvider,
     );
-    final CoachProfile? coach = ref.watch(coachProfileProvider).valueOrNull;
-    final List<Player> players =
-        ref.watch(playersStreamProvider).valueOrNull ?? const <Player>[];
-    final Map<String, Player> byId = <String, Player>{
-      for (final Player p in players)
-        if (p.id != null) p.id!: p,
-    };
+    // Seul le nom d'équipe compte ici : `select` évite de reconstruire l'écran
+    // à chaque autre changement du profil du coach.
+    final String? coachTeamName = ref.watch(
+      coachProfileProvider.select(
+        (AsyncValue<CoachProfile> a) => a.valueOrNull?.teamName?.trim(),
+      ),
+    );
+    final Map<String, Player> byId = _indexPlayers(
+      ref.watch(playersStreamProvider).valueOrNull ?? const <Player>[],
+    );
     final String teamName =
-        (coach?.teamName?.trim().isNotEmpty ?? false)
-            ? coach!.teamName!.trim()
+        (coachTeamName?.isNotEmpty ?? false)
+            ? coachTeamName!
             : 'app.statistiques-matchs.mon-equipe'.tr();
 
     return Column(
@@ -160,20 +212,7 @@ class _StatistiquesMatchsScreenState
                 orElse: () => matches.first,
               );
               final String q = _query.trim().toLowerCase();
-              final List<GameMatch> visible =
-                  q.isEmpty
-                      ? matches
-                      : unionVisible<GameMatch>(
-                        items: matches,
-                        matchesLocally:
-                            (GameMatch m) =>
-                                m.opponent.name.toLowerCase().contains(q) ||
-                                _formatDate(
-                                  m.finishedAt,
-                                ).toLowerCase().contains(q),
-                        idOf: (GameMatch m) => m.id,
-                        remoteIds: _remoteIds,
-                      );
+              final List<GameMatch> visible = _visibleMatches(matches, q);
               final MatchComposition? comp =
                   selected.compositionsUsed.isEmpty
                       ? null
@@ -195,6 +234,71 @@ class _StatistiquesMatchsScreenState
                   selectedPlayer = byId[_selectedPlayerId!];
                   selectedNumber = comp.numbers[_selectedPlayerId];
                 }
+              }
+              if (isPhoneLayout) {
+                final String jersey =
+                    selected.ownJersey?.color.asset ?? _kJerseyAsset;
+                // Téléphone : historique compact à gauche, détail en onglets à
+                // droite (Résumé / Joueurs / Terrain).
+                return Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    cH(kBottomNavClearance),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      SizedBox(
+                        width: 250,
+                        child: _MatchList(
+                          matches: visible,
+                          pending: _pending,
+                          selectedId: selected.id,
+                          teamName: teamName,
+                          onSelect:
+                              (String id) => setState(() {
+                                _selectedId = id;
+                                _selectedPlayerId = null;
+                                _fromPitch = false;
+                              }),
+                          onQuery: _union.input,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _PhoneDetail(
+                          composition: comp,
+                          byId: byId,
+                          jerseyAsset: jersey,
+                          selectedPlayerId: _selectedPlayerId,
+                          onPlayerTap:
+                              (String pid) => setState(() {
+                                _selectedPlayerId =
+                                    _selectedPlayerId == pid ? null : pid;
+                                _fromPitch = _selectedPlayerId != null;
+                              }),
+                          detail:
+                              (_DetailView view) => _Detail(
+                                match: selected,
+                                composition: comp,
+                                byId: byId,
+                                view: view,
+                                selectedPlayer: selectedPlayer,
+                                selectedNumber: selectedNumber,
+                                selectedFromPitch: _fromPitch,
+                                onPickPlayer:
+                                    (String pid) => setState(() {
+                                      _selectedPlayerId = pid;
+                                      _fromPitch = false;
+                                    }),
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
               return Padding(
                 padding: EdgeInsets.fromLTRB(
@@ -288,6 +392,46 @@ class _LoadingSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isPhoneLayout) {
+      // Même découpage que le téléphone : liste de 250 + onglets et contenu.
+      return Padding(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, cH(kBottomNavClearance)),
+        child: AppSkeleton(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(
+                width: 250,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    const SkeletonBox(height: 40, radius: 999),
+                    const SizedBox(height: 8),
+                    for (int i = 0; i < 3; i++) ...<Widget>[
+                      if (i > 0) const SizedBox(height: 8),
+                      const SkeletonBox(height: 64),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: const <Widget>[
+                    SkeletonBox(height: 36, width: 220, radius: 999),
+                    SizedBox(height: 8),
+                    SkeletonBox(height: 70),
+                    SizedBox(height: 8),
+                    SkeletonBox(height: 84),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: EdgeInsets.fromLTRB(
         cW(40),
@@ -400,10 +544,13 @@ class _MatchList extends StatelessWidget {
   /// Champ de recherche, épinglé en haut de la liste pendant le défilement.
   Widget _searchField() {
     return SizedBox(
-      height: cH(31),
+      height: isPhoneLayout ? 40 : cH(31),
       child: TextField(
         onChanged: onQuery,
-        style: AppThemeStyle.regularStyle(cFs(12), AppColor.inkNavy),
+        style: AppThemeStyle.regularStyle(
+          isPhoneLayout ? cFs(18) : cFs(12),
+          AppColor.inkNavy,
+        ),
         cursorColor: AppColor.primaryColor,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
@@ -411,14 +558,17 @@ class _MatchList extends StatelessWidget {
           filled: false,
           hintText: 'app.statistiques-matchs.rechercher'.tr(),
           hintStyle: AppThemeStyle.regularStyle(
-            cFs(12),
+            isPhoneLayout ? cFs(18) : cFs(12),
             AppColor.inkNavy.withValues(alpha: .4),
           ),
           contentPadding: EdgeInsets.symmetric(horizontal: cW(8)),
           prefixIcon: Padding(
             // 20 px : la loupe s'aligne sur l'écusson des cartes de match
             // juste en dessous, dans la même colonne (voir _MatchCard).
-            padding: EdgeInsets.only(left: cW(20), right: cW(7)),
+            padding: EdgeInsets.only(
+              left: isPhoneLayout ? 14 : cW(20),
+              right: cW(7),
+            ),
             child: Icon(
               Iconsax.search_normal_copy,
               size: cIc(16),
@@ -476,7 +626,8 @@ class _MatchList extends StatelessWidget {
         else
           SliverList.separated(
             itemCount: matches.length,
-            separatorBuilder: (_, _) => cSh(7),
+            separatorBuilder:
+                (_, _) => isPhoneLayout ? const SizedBox(height: 10) : cSh(7),
             itemBuilder: (BuildContext context, int i) {
               final GameMatch m = matches[i];
               return _MatchCard(
@@ -500,7 +651,7 @@ class _PinnedSearchHeader extends SliverPersistentHeaderDelegate {
 
   final Widget child;
 
-  double get _height => cH(31 + 15);
+  double get _height => isPhoneLayout ? 48 : cH(31 + 15);
 
   @override
   double get minExtent => _height;
@@ -537,6 +688,70 @@ class _MatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String date = _formatDate(match.finishedAt);
+    if (isPhoneLayout) {
+      // Téléphone : une ligne lisible (adversaire, date, score) plutôt que le
+      // face-à-face à trois lignes de la maquette tablette.
+      return RepaintBoundary(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            height: 72,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: AppColor.surface,
+              borderRadius: BorderRadius.circular(12),
+              border:
+                  selected
+                      ? Border.all(color: AppColor.primaryColor, width: 2)
+                      : null,
+            ),
+            child: Row(
+              children: <Widget>[
+                TeamCrest(size: 28, color: match.opponent.jerseyColor?.color),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        match.opponent.name.isEmpty
+                            ? 'app.statistiques-matchs.equipe-adverse'.tr()
+                            : match.opponent.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppThemeStyle.semiBStyle(
+                          cFs(19),
+                          AppColor.primaryLabels,
+                        ),
+                      ),
+                      if (date.isNotEmpty)
+                        Text(
+                          date,
+                          maxLines: 1,
+                          style: AppThemeStyle.regularStyle(
+                            cFs(15),
+                            AppColor.secondaryLabels,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${match.scoreUs}-${match.scoreThem}',
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(24),
+                    AppColor.primaryLabels,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -629,11 +844,15 @@ class _Detail extends StatelessWidget {
     required this.selectedNumber,
     required this.selectedFromPitch,
     required this.onPickPlayer,
+    this.view = _DetailView.full,
   });
 
   final GameMatch match;
   final MatchComposition? composition;
   final Map<String, Player> byId;
+
+  /// Partie affichée (tout, sur tablette ; un onglet, sur téléphone).
+  final _DetailView view;
 
   /// Joueur mis en évidence (`null` = aucun) et son numéro.
   final Player? selectedPlayer;
@@ -712,6 +931,72 @@ class _Detail extends StatelessWidget {
     final bool halvesAvailable =
         match.statsFor(MatchPeriod.firstHalf).status !=
         PeriodStatus.unavailable;
+    final Widget collectif = BilanCard(
+      title: 'app.statistiques-matchs.bilan-collectif'.tr(),
+      halvesAvailable: halvesAvailable,
+      onPeriod:
+          (MatchPeriod period) => _push(
+            context,
+            BilanCollectifScreen(match: match, period: period),
+          ),
+    );
+    final Widget individuel = BilanCard(
+      title: 'app.statistiques-matchs.bilan-individuel'.tr(),
+      halvesAvailable: halvesAvailable,
+      helper:
+          selectedPlayer == null
+              ? 'app.statistiques-matchs.selectionner-joueur'.tr()
+              : 'app.statistiques-matchs.joueur-selectionne'.tr(),
+      helperColor:
+          selectedPlayer == null
+              ? AppColor.primaryLabels
+              : AppColor.secondaryLabels,
+      trailing:
+          selectedPlayer == null
+              ? null
+              : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  _JerseyNumber(
+                    number: selectedNumber,
+                    size: 21,
+                    fontSize: 9,
+                    asset: _kJerseyBlackAsset,
+                  ),
+                  cSw(8),
+                  Text(
+                    selectedPlayer!.fullName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppThemeStyle.mediumStyle(
+                      cFs(12),
+                      AppColor.primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+      onPeriod: (MatchPeriod period) => _openIndividuel(context, period),
+    );
+    switch (view) {
+      case _DetailView.score:
+        return _PhoneScoreCard(match: match);
+      case _DetailView.bilans:
+        return ListView(
+          padding: const EdgeInsets.only(bottom: 8),
+          children: <Widget>[
+            collectif,
+            const SizedBox(height: 12),
+            individuel,
+          ],
+        );
+      case _DetailView.individual:
+        return ListView(
+          padding: const EdgeInsets.only(bottom: 8),
+          children: <Widget>[individuel],
+        );
+      case _DetailView.full:
+        break;
+    }
     return SingleChildScrollView(
       padding: EdgeInsets.only(bottom: cH(8)),
       child: Column(
@@ -724,53 +1009,9 @@ class _Detail extends StatelessWidget {
           cSh(3),
           _ScoreCard(match: match),
           cSh(8),
-          BilanCard(
-            title: 'app.statistiques-matchs.bilan-collectif'.tr(),
-            halvesAvailable: halvesAvailable,
-            onPeriod:
-                (MatchPeriod period) => _push(
-                  context,
-                  BilanCollectifScreen(match: match, period: period),
-                ),
-          ),
+          collectif,
           cSh(7),
-          BilanCard(
-            title: 'app.statistiques-matchs.bilan-individuel'.tr(),
-            halvesAvailable: halvesAvailable,
-            helper:
-                selectedPlayer == null
-                    ? 'app.statistiques-matchs.selectionner-joueur'.tr()
-                    : 'app.statistiques-matchs.joueur-selectionne'.tr(),
-            helperColor:
-                selectedPlayer == null
-                    ? AppColor.primaryLabels
-                    : AppColor.secondaryLabels,
-            trailing:
-                selectedPlayer == null
-                    ? null
-                    : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        _JerseyNumber(
-                          number: selectedNumber,
-                          size: 21,
-                          fontSize: 9,
-                          asset: _kJerseyBlackAsset,
-                        ),
-                        cSw(8),
-                        Text(
-                          selectedPlayer!.fullName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppThemeStyle.mediumStyle(
-                            cFs(12),
-                            AppColor.primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-            onPeriod: (MatchPeriod period) => _openIndividuel(context, period),
-          ),
+          individuel,
           if (comp != null) ...<Widget>[
             cSh(13),
             Text(
@@ -791,6 +1032,324 @@ class _Detail extends StatelessWidget {
   }
 }
 
+/// Parties du détail d'un match. Tablette : tout d'un bloc ([full]). Téléphone :
+/// [_PhoneMatchPage] les assemble ([score], [bilans], [individual]).
+enum _DetailView { full, score, bilans, individual }
+
+/// Joueur retenu et son numéro dans [comp] : titulaire, puis remplaçant.
+({Player? player, int? number}) _resolveSelected(
+  MatchComposition? comp,
+  String? id,
+  Map<String, Player> byId,
+) {
+  if (comp == null || id == null) return (player: null, number: null);
+  for (int i = 0; i < comp.assignments.length; i++) {
+    if (comp.assignments[i] != id) continue;
+    return (player: byId[id], number: comp.numbers[id] ?? i + 1);
+  }
+  if (comp.substituteIds.contains(id)) {
+    return (player: byId[id], number: comp.numbers[id]);
+  }
+  return (player: null, number: null);
+}
+
+/// Téléphone : page d'un match, ouverte depuis la liste. Deux onglets seulement,
+/// pour ne montrer qu'une chose à la fois : « Résumé » (score, puis les deux
+/// bilans) et « Terrain » (composition et bilan du joueur touché). Elle lit
+/// elle-même le match et les joueurs : elle suit les mises à jour sans état
+/// recopié de la liste.
+class _PhoneMatchPage extends ConsumerStatefulWidget {
+  const _PhoneMatchPage({required this.matchId});
+
+  final String matchId;
+
+  @override
+  ConsumerState<_PhoneMatchPage> createState() => _PhoneMatchPageState();
+}
+
+class _PhoneMatchPageState extends ConsumerState<_PhoneMatchPage> {
+  int _tab = 0;
+  String? _selectedPlayerId;
+  bool _fromPitch = false;
+
+  List<Player>? _playersSrc;
+  Map<String, Player> _byId = const <String, Player>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final List<GameMatch> matches =
+        ref.watch(finishedMatchesProvider).valueOrNull ?? const <GameMatch>[];
+    GameMatch? match;
+    for (final GameMatch candidate in matches) {
+      if (candidate.id == widget.matchId) {
+        match = candidate;
+        break;
+      }
+    }
+    final List<Player> players =
+        ref.watch(playersStreamProvider).valueOrNull ?? const <Player>[];
+    if (!identical(players, _playersSrc)) {
+      _playersSrc = players;
+      _byId = <String, Player>{
+        for (final Player p in players)
+          if (p.id != null) p.id!: p,
+      };
+    }
+
+    final GameMatch? m = match;
+    final MatchComposition? comp =
+        m == null || m.compositionsUsed.isEmpty
+            ? null
+            : m.compositionsUsed.first;
+    final ({Player? player, int? number}) sel = _resolveSelected(
+      comp,
+      _selectedPlayerId,
+      _byId,
+    );
+    final String date = m == null ? '' : _formatDate(m.finishedAt);
+    final String title =
+        m == null
+            ? ''
+            : (m.opponent.name.isEmpty
+                ? 'app.statistiques-matchs.equipe-adverse'.tr()
+                : m.opponent.name);
+
+    Widget detail(_DetailView view) => _Detail(
+      match: m!,
+      composition: comp,
+      byId: _byId,
+      view: view,
+      selectedPlayer: sel.player,
+      selectedNumber: sel.number,
+      selectedFromPitch: _fromPitch,
+      onPickPlayer:
+          (String pid) => setState(() {
+            _selectedPlayerId = pid;
+            _fromPitch = false;
+          }),
+    );
+
+    return Scaffold(
+      backgroundColor: AppColor.background,
+      body: SafeArea(
+        child: Stack(
+          children: <Widget>[
+            const AppBackground(),
+            Column(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 16, 4),
+                  child: Row(
+                    children: <Widget>[
+                      Material(
+                        color: Colors.transparent,
+                        shape: const CircleBorder(),
+                        child: InkWell(
+                          onTap: () => Navigator.of(context).maybePop(),
+                          customBorder: const CircleBorder(),
+                          child: const SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: Icon(
+                              Iconsax.arrow_circle_left,
+                              size: 26,
+                              color: AppColor.primaryLabels,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            if (date.isNotEmpty)
+                              Text(
+                                date,
+                                maxLines: 1,
+                                style: AppThemeStyle.regularStyle(
+                                  cFs(15),
+                                  AppColor.secondaryLabels,
+                                ),
+                              ),
+                            Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppThemeStyle.semiBStyle(
+                                cFs(24),
+                                AppColor.primaryLabels,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  color: AppColor.divider,
+                ),
+                if (m == null)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'app.statistiques-matchs.erreur-chargement'.tr(),
+                        style: AppThemeStyle.mediumStyle(
+                          cFs(17),
+                          AppColor.secondaryLabels,
+                        ),
+                      ),
+                    ),
+                  )
+                else ...<Widget>[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Row(
+                      children: <Widget>[
+                        PhoneCategoryChip(
+                          label: 'app.statistiques-matchs.onglet-resume'.tr(),
+                          selected: _tab == 0,
+                          onTap: () => setState(() => _tab = 0),
+                        ),
+                        const SizedBox(width: 10),
+                        PhoneCategoryChip(
+                          label: 'app.statistiques-matchs.onglet-terrain'.tr(),
+                          selected: _tab == 1,
+                          onTap: () => setState(() => _tab = 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                      child:
+                          _tab == 0
+                              ? Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: <Widget>[
+                                  Expanded(child: detail(_DetailView.score)),
+                                  const SizedBox(width: 16),
+                                  Expanded(child: detail(_DetailView.bilans)),
+                                ],
+                              )
+                              : LayoutBuilder(
+                                builder: (BuildContext _, BoxConstraints c) {
+                                  // Le terrain prend toute la hauteur ; le
+                                  // bilan du joueur garde le reste.
+                                  final double pitchW = (c.maxHeight *
+                                          1668 /
+                                          2388)
+                                      .clamp(0.0, c.maxWidth * 0.55);
+                                  return Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: <Widget>[
+                                      SizedBox(
+                                        width: pitchW,
+                                        child: _PitchCard(
+                                          composition: comp,
+                                          byId: _byId,
+                                          jerseyAsset:
+                                              m.ownJersey?.color.asset ??
+                                              _kJerseyAsset,
+                                          selectedPlayerId: _selectedPlayerId,
+                                          onPlayerTap:
+                                              (String pid) => setState(() {
+                                                _selectedPlayerId =
+                                                    _selectedPlayerId == pid
+                                                        ? null
+                                                        : pid;
+                                                _fromPitch =
+                                                    _selectedPlayerId != null;
+                                              }),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: detail(_DetailView.individual),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Téléphone : score en grand, résultat et durée, sur une seule carte.
+class _PhoneScoreCard extends StatelessWidget {
+  const _PhoneScoreCard({required this.match});
+
+  final GameMatch match;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColor.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            'app.statistiques-matchs.score-final'.tr(),
+            style: AppThemeStyle.regularStyle(
+              cFs(17),
+              AppColor.secondaryLabels,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${match.scoreUs}-${match.scoreThem}',
+            style: AppThemeStyle.semiBStyle(cFs(54), AppColor.primaryLabels),
+          ),
+          if (match.resultLabel != null) ...<Widget>[
+            const SizedBox(height: 6),
+            _GreenChip(label: match.resultLabel!),
+          ],
+          const SizedBox(height: 12),
+          Container(height: 1, color: AppColor.divider),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'app.statistiques-matchs.temps-total'.tr(),
+                style: AppThemeStyle.regularStyle(
+                  cFs(17),
+                  AppColor.secondaryLabels,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                match.durationLabel,
+                style: AppThemeStyle.semiBStyle(
+                  cFs(22),
+                  AppColor.primaryLabels,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Carte « Score final / Temps total » (deux lignes).
 class _ScoreCard extends StatelessWidget {
   const _ScoreCard({required this.match});
@@ -800,7 +1359,10 @@ class _ScoreCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(cW(19), cH(8), cW(17), cH(8)),
+      padding:
+          isPhoneLayout
+              ? const EdgeInsets.fromLTRB(16, 14, 16, 14)
+              : EdgeInsets.fromLTRB(cW(19), cH(8), cW(17), cH(8)),
       decoration: BoxDecoration(
         color: AppColor.surface,
         borderRadius: BorderRadius.circular(cR(12)),
@@ -812,7 +1374,7 @@ class _ScoreCard extends StatelessWidget {
               Text(
                 'app.statistiques-matchs.score-final'.tr(),
                 style: AppThemeStyle.mediumStyle(
-                  cFs(15),
+                  isPhoneLayout ? cFs(19) : cFs(15),
                   AppColor.primaryLabels,
                 ),
               ),
@@ -826,7 +1388,7 @@ class _ScoreCard extends StatelessWidget {
                 child: Text(
                   '${match.scoreUs}-${match.scoreThem}',
                   style: AppThemeStyle.mediumStyle(
-                    cFs(22),
+                    isPhoneLayout ? cFs(30) : cFs(22),
                     AppColor.primaryLabels,
                   ),
                 ),
@@ -839,7 +1401,7 @@ class _ScoreCard extends StatelessWidget {
               Text(
                 'app.statistiques-matchs.temps-total'.tr(),
                 style: AppThemeStyle.mediumStyle(
-                  cFs(15),
+                  isPhoneLayout ? cFs(19) : cFs(15),
                   AppColor.primaryLabels,
                 ),
               ),
@@ -847,7 +1409,7 @@ class _ScoreCard extends StatelessWidget {
               Text(
                 match.durationLabel,
                 style: AppThemeStyle.semiBStyle(
-                  cFs(17),
+                  isPhoneLayout ? cFs(21) : cFs(17),
                   AppColor.primaryLabels,
                 ),
               ),
@@ -890,7 +1452,10 @@ class BilanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(cW(16), cH(11), cW(16), cH(12)),
+      padding:
+          isPhoneLayout
+              ? const EdgeInsets.fromLTRB(16, 14, 16, 16)
+              : EdgeInsets.fromLTRB(cW(16), cH(11), cW(16), cH(12)),
       decoration: BoxDecoration(
         color: AppColor.surface,
         borderRadius: BorderRadius.circular(cR(12)),
@@ -904,7 +1469,7 @@ class BilanCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: AppThemeStyle.mediumStyle(
-                    cFs(15),
+                    isPhoneLayout ? cFs(19) : cFs(15),
                     AppColor.primaryLabels,
                   ),
                 ),
@@ -915,33 +1480,66 @@ class BilanCard extends StatelessWidget {
           if (helper != null)
             Text(
               helper!,
-              style: AppThemeStyle.regularStyle(cFs(12), helperColor),
+              style: AppThemeStyle.regularStyle(
+                isPhoneLayout ? cFs(15) : cFs(12),
+                helperColor,
+              ),
             ),
-          cSh(helper == null ? 6 : 9),
-          Row(
-            children: <Widget>[
-              _PeriodLink(
-                label: 'app.statistiques-matchs.mi-temps-1'.tr(),
-                enabled: halvesAvailable,
-                onTap: () => onPeriod(MatchPeriod.firstHalf),
-              ),
-              const _PeriodDivider(),
-              _PeriodLink(
-                label: 'app.statistiques-matchs.mi-temps-2'.tr(),
-                enabled: halvesAvailable,
-                onTap: () => onPeriod(MatchPeriod.secondHalf),
-              ),
-              const _PeriodDivider(),
-              _PeriodLink(
-                label: 'app.statistiques-matchs.final'.tr(),
-                onTap: () => onPeriod(MatchPeriod.total),
-              ),
-            ],
-          ),
+          SizedBox(height: isPhoneLayout ? 10 : cH(helper == null ? 6 : 9)),
+          // Téléphone : trois boutons de même largeur (Mi-temps 1, Mi-temps 2,
+          // Final), faciles à toucher ; tablette : ligne de liens inchangée.
+          if (isPhoneLayout)
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: _PeriodButton(
+                    label: 'app.statistiques-matchs.mi-temps-1'.tr(),
+                    enabled: halvesAvailable,
+                    onTap: () => onPeriod(MatchPeriod.firstHalf),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _PeriodButton(
+                    label: 'app.statistiques-matchs.mi-temps-2'.tr(),
+                    enabled: halvesAvailable,
+                    onTap: () => onPeriod(MatchPeriod.secondHalf),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _PeriodButton(
+                    label: 'app.statistiques-matchs.final'.tr(),
+                    onTap: () => onPeriod(MatchPeriod.total),
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(children: _periodLinks()),
         ],
       ),
     );
   }
+
+  List<Widget> _periodLinks() => <Widget>[
+    _PeriodLink(
+      label: 'app.statistiques-matchs.mi-temps-1'.tr(),
+      enabled: halvesAvailable,
+      onTap: () => onPeriod(MatchPeriod.firstHalf),
+    ),
+    const _PeriodDivider(),
+    _PeriodLink(
+      label: 'app.statistiques-matchs.mi-temps-2'.tr(),
+      enabled: halvesAvailable,
+      onTap: () => onPeriod(MatchPeriod.secondHalf),
+    ),
+    const _PeriodDivider(),
+    _PeriodLink(
+      label: 'app.statistiques-matchs.final'.tr(),
+      onTap: () => onPeriod(MatchPeriod.total),
+    ),
+  ];
 }
 
 class _PeriodLink extends StatelessWidget {
@@ -961,16 +1559,76 @@ class _PeriodLink extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color color =
         enabled ? AppColor.primaryLabels : AppColor.secondaryLabels;
+    final Widget content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(
+          label,
+          style: AppThemeStyle.semiBStyle(
+            isPhoneLayout ? cFs(22) : cFs(14),
+            color,
+          ),
+        ),
+        SizedBox(width: isPhoneLayout ? 8 : cW(7)),
+        Icon(
+          Iconsax.arrow_circle_right,
+          size: isPhoneLayout ? 24 : cIc(13),
+          color: color,
+        ),
+      ],
+    );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: enabled ? onTap : null,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Text(label, style: AppThemeStyle.semiBStyle(cFs(14), color)),
-          cSw(7),
-          Icon(Iconsax.arrow_circle_right, size: cIc(13), color: color),
-        ],
+      // Téléphone : zone tactile d'au moins 48 px de haut (recommandation Material),
+      // bien plus que le texte seul.
+      child:
+          isPhoneLayout
+              ? ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Center(widthFactor: 1, child: content),
+              )
+              : content,
+    );
+  }
+}
+
+/// Téléphone : bouton de période (44 dp de haut), grisé quand la période n'est
+/// pas disponible.
+class _PeriodButton extends StatelessWidget {
+  const _PeriodButton({
+    required this.label,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: enabled ? AppColor.chipBackground : AppColor.divider,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          height: 44,
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: AppThemeStyle.semiBStyle(
+                cFs(17),
+                enabled ? AppColor.primaryLabels : AppColor.secondaryLabels,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -982,10 +1640,10 @@ class _PeriodDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: cW(19)),
+      padding: EdgeInsets.symmetric(horizontal: isPhoneLayout ? 10 : cW(19)),
       child: Container(
         width: 0.5,
-        height: cH(25),
+        height: isPhoneLayout ? 36 : cH(25),
         color: AppColor.inkNavy.withValues(alpha: .2),
       ),
     );
@@ -1085,7 +1743,7 @@ class _RosterHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: cH(35),
+      height: isPhoneLayout ? 40 : cH(35),
       padding: EdgeInsets.symmetric(horizontal: cW(16)),
       decoration: BoxDecoration(
         color: AppColor.surface,
@@ -1093,26 +1751,31 @@ class _RosterHeader extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          SizedBox(
-            width: cW(183),
+          _rosterNameCell(
             child: Text(
               label,
-              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(
+                (isPhoneLayout ? cFs(18) : cFs(15)),
+                AppColor.primaryLabels,
+              ),
             ),
           ),
           SizedBox(
-            width: cW(121),
+            width: isPhoneLayout ? 100 : cW(121),
             child: Text(
               'app.statistiques-matchs.pied-fort'.tr(),
               style: AppThemeStyle.regularStyle(
-                cFs(13),
+                (isPhoneLayout ? cFs(16) : cFs(13)),
                 AppColor.primaryLabels,
               ),
             ),
           ),
           Text(
             'app.statistiques-matchs.numero'.tr(),
-            style: AppThemeStyle.regularStyle(cFs(13), AppColor.primaryLabels),
+            style: AppThemeStyle.regularStyle(
+              (isPhoneLayout ? cFs(16) : cFs(13)),
+              AppColor.primaryLabels,
+            ),
           ),
         ],
       ),
@@ -1140,7 +1803,10 @@ class _RosterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(4)),
+      padding: EdgeInsets.symmetric(
+        horizontal: isPhoneLayout ? 12 : cW(16),
+        vertical: isPhoneLayout ? 6 : cH(4),
+      ),
       // Sans fond, le nom vert devient illisible sur la photo de pelouse du
       // bas de page (AppBackground).
       decoration: BoxDecoration(
@@ -1150,20 +1816,25 @@ class _RosterRow extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          SizedBox(
-            width: cW(183),
+          _rosterNameCell(
             child: Text(
               player.fullName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.rosterName),
+              style: AppThemeStyle.mediumStyle(
+                (isPhoneLayout ? cFs(18) : cFs(15)),
+                AppColor.rosterName,
+              ),
             ),
           ),
           SizedBox(
-            width: cW(121),
+            width: isPhoneLayout ? 100 : cW(121),
             child: Text(
               player.strongFoot.label,
-              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(
+                (isPhoneLayout ? cFs(18) : cFs(15)),
+                AppColor.primaryLabels,
+              ),
             ),
           ),
           _JerseyNumber(number: number, asset: jerseyAsset),
@@ -1194,21 +1865,25 @@ class _JerseyNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double d = cIc(size);
+    final double d = isPhoneLayout ? size * 1.3 : cIc(size);
     return SizedBox(
       width: d,
       height: d,
       child: Stack(
         alignment: Alignment.center,
         children: <Widget>[
-          Image.asset(asset, fit: BoxFit.contain),
+          Image.asset(
+            asset,
+            fit: BoxFit.contain,
+            cacheWidth: (d * MediaQuery.devicePixelRatioOf(context)).round(),
+          ),
           if (number != null)
             Padding(
               padding: EdgeInsets.only(top: d * 0.08),
               child: Text(
                 '$number',
                 style: AppThemeStyle.semiBStyle(
-                  fontSize,
+                  isPhoneLayout ? cFs(d * 0.5) : fontSize,
                   numberColorForJerseyAsset(asset),
                 ),
               ),
@@ -1285,11 +1960,18 @@ class _PitchCard extends StatelessWidget {
           builder: (BuildContext context, BoxConstraints constraints) {
             final double w = constraints.maxWidth;
             final double h = constraints.maxHeight;
-            final double m = w * 0.145;
+            // Téléphone : terrain étroit, maillots agrandis.
+            final double m = w * (isPhoneLayout ? 0.19 : 0.145);
             return Stack(
               children: <Widget>[
                 Positioned.fill(
-                  child: Image.asset(kPitchPortraitAsset, fit: BoxFit.cover),
+                  child: Image.asset(
+                    kPitchPortraitAsset,
+                    fit: BoxFit.cover,
+                    // Décodé à la taille affichée, pas en pleine résolution.
+                    cacheWidth:
+                        (w * MediaQuery.devicePixelRatioOf(context)).round(),
+                  ),
                 ),
                 if (comp != null) ...<Widget>[
                   for (int i = 0; i < comp.slots.length; i++)
@@ -1403,7 +2085,7 @@ class PlayerMarker extends StatelessWidget {
             style: AppThemeStyle.mediumStyle(
               cFs(10),
               AppColor.textLight,
-            ).copyWith(fontSize: m * 0.21),
+            ).copyWith(fontSize: isPhoneLayout ? m * 0.26 : m * 0.21),
           ),
         ],
       ),
