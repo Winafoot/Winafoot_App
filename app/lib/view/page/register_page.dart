@@ -5,13 +5,14 @@ import 'package:wina/config/theme.dart';
 import 'package:wina/routes/app_router.gr.dart';
 import 'package:wina/services/coach_registration.dart';
 import 'package:wina/services/register_validation.dart';
+import 'package:wina/view/page/verify_email_page.dart';
 import 'package:wina/view/widget/app_notif.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
 
 /// Inscription d'un coach, page 1 : e-mail, mot de passe, prénom et CGU.
 ///
-/// Un clic crée le compte (`registerCoach`), connecte le coach et envoie l'e-mail
-/// de vérification. La page 2 (club, catégorie, division, format) est l'écran
+/// Un clic crée le compte (`registerCoach`), connecte le coach et envoie le code
+/// de vérification de l'e-mail, qu'il saisit à l'écran suivant. La page 2 (club, catégorie, division, format) est l'écran
 /// « Finalisez votre profil », que la passerelle skeleton ouvre tant que
 /// `profilCompleted` est faux : un coach qui quitte entre les deux y revient.
 class RegisterPage extends ConsumerStatefulWidget {
@@ -107,6 +108,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       return;
     }
 
+    if (!mounted) return;
+    // Le code de vérification est parti avec l'inscription : le coach le saisit
+    // ici, ou passe (« Plus tard ») sans bloquer l'entrée dans l'app.
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder:
+            (_) => VerifyEmailPage(email: _email.text.trim().toLowerCase()),
+      ),
+    );
     if (!mounted) return;
     await ref.read(userProvider).init(context);
     if (!mounted) return;

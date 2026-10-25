@@ -22,5 +22,5 @@ export function generateTemplateAdminInviteEmail(displayName: string, inviteLink
     <br>
     ${emailSupportParagraph(contactEmail)}
   `;
-  return wrapEmailLayout(logoUrl, content);
+  return wrapEmailLayout(logoUrl, content, appName);
 }

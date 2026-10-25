@@ -9,9 +9,12 @@ import { consumeAll } from "../../utils/rate_limit";
 import { mailIdentity } from "../../utils/mail_identity";
 import { sendEmail } from "../../utils/send_email";
 import { describeError } from "../../utils/describe_error";
+import { discardCode, issueCode, OTP_TTL_MS } from "../../utils/otp_code";
 
 /**
  * sendResetPassword : callable public, appelé avant connexion par « Mot de passe oublié ».
+ *
+ * Envoie un code à 6 chiffres, que l'app échange contre un nouveau mot de passe (confirmPasswordReset).
  *
  * - La réponse est toujours `true`, que l'adresse ait un compte ou non, et même si l'envoi échoue :
  *   le client ne lit pas le résultat (login_page.dart).
@@ -27,7 +30,7 @@ export default async (data: { email?: unknown }): Promise<boolean> => {
   }
 
   try {
-    await sendResetLink(data.email);
+    await sendResetCode(data.email);
   } catch (e) {
     // Aucune différence visible entre « pas de compte » et « panne » côté client.
     logger.warn(`[Warn] sendResetPassword: aucun e-mail envoyé : ${describeError(e)}`);
@@ -36,8 +39,8 @@ export default async (data: { email?: unknown }): Promise<boolean> => {
   return true;
 };
 
-async function sendResetLink(email: string): Promise<void> {
-  const account = await auth().getUserByEmail(email);
+async function sendResetCode(email: string): Promise<void> {
+  const account = await auth().getUserByEmail(email.trim());
   if (account.email == null) return;
 
   // Par compte (pas par adresse saisie) : une adresse inconnue n'a pas de compte et ne crée aucun
@@ -55,21 +58,27 @@ async function sendResetLink(email: string): Promise<void> {
     throw new Error("app_config/metadata introuvable.");
   }
 
-  const confirmLink = await auth().generatePasswordResetLink(account.email);
+  const code: string = await issueCode("reset-password", account.uid);
   const profile = await UserProvider.instance.getUser(account.uid);
 
   const { appName, contactEmail } = mailIdentity(config);
-  const displayName: string = profile?.firstname ?? profile?.pseudo ?? appName;
-  const emailContent = generateTemplateResetPasswordEmail(displayName, confirmLink, contactEmail);
+  const displayName: string = profile?.firstname ?? profile?.pseudo ?? "";
+  const emailContent = generateTemplateResetPasswordEmail(displayName, code, contactEmail, "", appName);
 
   // Version texte brut : seule chose que verront les clients mail sans HTML,
-  // le lien de réinitialisation doit donc y figurer en clair.
+  // le code doit donc y figurer en clair.
   const emailText: string =
-    "Vous avez demandé la réinitialisation de votre mot de passe. Ouvrez ce lien pour en définir un nouveau :\n\n" +
-    `${confirmLink}\n\n` +
-    "Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : votre mot de passe reste inchangé." +
-    (contactEmail != null ? `\n\nBesoin d’aide ? Écrivez-nous à ${contactEmail}.` : "");
+    `Vous avez demandé la réinitialisation de votre mot de passe. Saisissez ce code dans l’application pour en définir un nouveau : ${code}\n\n` +
+    `Ce code est valable ${OTP_TTL_MS / 60_000} minutes.\n\n` +
+    "Si vous n’êtes pas à l’origine de cette demande, ignorez ce message : votre mot de passe reste inchangé." +
+    (contactEmail != null ? `\n\nBesoin d’aide ? Écrivez-nous à ${contactEmail}.` : "");
 
   const recipient: UserModel = Object.assign(new UserModel(), { email: account.email, firstname: profile?.firstname ?? "" });
-  await sendEmail(config, recipient, emailContent, "Réinitialisation de votre mot de passe", emailText);
+  try {
+    await sendEmail(config, recipient, emailContent, "Votre code de réinitialisation", emailText);
+  } catch (e) {
+    // Un code jamais reçu ne doit pas rester valable.
+    await discardCode("reset-password", account.uid);
+    throw e;
+  }
 }

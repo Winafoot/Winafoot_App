@@ -29,6 +29,28 @@ describe("sendResetPassword (secured)", () => {
     expect(sendEmail).toHaveBeenCalledTimes(1);
   });
 
+  it("puts a six-digit code, and no link, in the mail", async () => {
+    const uid = await seedCoach("coach@club.test");
+
+    await sendResetPassword({ email: "coach@club.test" });
+
+    const [, , html, , text] = vi.mocked(sendEmail).mock.calls[0];
+    const code = /(d{6})/.exec(text as string)?.[1];
+    expect(code).toBeDefined();
+    expect(html).toContain(code);
+    expect(html).not.toContain("oobCode");
+    expect((await firestore().collection("email_codes").doc(`reset-password_${uid}`).get()).exists).toBe(true);
+  });
+
+  it("drops the code when the mail provider fails", async () => {
+    const uid = await seedCoach("coach@club.test");
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
+
+    await sendResetPassword({ email: "coach@club.test" });
+
+    expect((await firestore().collection("email_codes").doc(`reset-password_${uid}`).get()).exists).toBe(false);
+  });
+
   it("answers true and sends nothing for an unknown address", async () => {
     const result = await sendResetPassword({ email: "ghost@club.test" });
 

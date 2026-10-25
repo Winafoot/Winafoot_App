@@ -30,6 +30,18 @@ export const sendResetPassword = onCall(
   limitedPublicCallableAdapter("callables/auth/send_reset_password_secured", { scope: "reset-password", perIp: LIMITS.resetPasswordIp }),
 );
 
+// Authentifié : échange le code à 6 chiffres reçu par sendEmailVerification contre la vérification de l'adresse.
+export const verifyEmailCode = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/auth/verify_email_code_secured", { scope: "verify-code", perUid: LIMITS.verifyCodeUid }),
+);
+// Public (avant connexion) : échange le code reçu par sendResetPassword contre un nouveau mot de passe.
+// Même réponse pour un compte inconnu et pour un mauvais code ; limité par IP ici, et par code (5 essais).
+export const confirmPasswordReset = onCall(
+  PUBLIC,
+  limitedPublicCallableAdapter("callables/auth/confirm_password_reset_secured", { scope: "confirm-reset", perIp: LIMITS.confirmResetIp }),
+);
+
 // Public (avant connexion) : inscription d'un coach depuis l'app. Limité par IP ; crée le compte Auth et ses
 // fiches avec l'Admin SDK (les règles Firestore interdisent la création côté client).
 export const registerCoach = onCall(

@@ -91,6 +91,12 @@ class SkeletonAuthentificationConfig {
   final Widget Function(BuildContext, WidgetRef, VoidCallback)?
       resetPasswordButtonCustom;
 
+  /// Appelé une fois le code de réinitialisation envoyé par e-mail : l'app ouvre
+  /// l'écran où le saisir (code + nouveau mot de passe). Sans lui, la page de
+  /// connexion affiche seulement « Vérifiez votre boîte mail ».
+  final Future<void> Function(BuildContext context, String email)?
+      onResetPasswordCodeSent;
+
   final Widget Function(BuildContext, WidgetRef)? verifyEmailButtonBuilder;
   final Widget Function(BuildContext, WidgetRef, VoidCallback)?
       verifyEmailButtonCustom;
@@ -264,6 +270,7 @@ class SkeletonAuthentificationConfig {
       this.otpValidationButtonCustom,
       this.phoneLoginButtonCustom,
       this.resetPasswordButtonCustom,
+      this.onResetPasswordCodeSent,
       this.verifyEmailButtonCustom,
       this.changeEmailButtonCustom,
       this.changePasswordButtonCustom,

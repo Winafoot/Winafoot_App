@@ -2,6 +2,12 @@
   "indexes": [],
   "fieldOverrides": [
     {
+      "collectionGroup": "email_codes",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
       "collectionGroup": "rate_limits",
       "fieldPath": "expiresAt",
       "ttl": true,

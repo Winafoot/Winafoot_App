@@ -42,8 +42,10 @@ jamais sur un identifiant fourni par le client. Les limites de débit sont compt
 | Fonction | Appelant | Protection |
 |---|---|---|
 | `emailIsAlreadyUsed`, `phoneIsAlreadyUsed` | App, avant connexion | Réponse constante (`true`), sans lecture de compte |
-| `sendResetPassword` | App, avant connexion | Réponse identique que le compte existe ou non ; limites par IP, par compte et globale |
-| `sendEmailVerification` | App, connecté | Adresse du compte Auth de l'appelant ; un envoi toutes les 6 h ; limite par compte |
+| `sendResetPassword` | App, avant connexion | Envoie un code à 6 chiffres ; réponse identique que le compte existe ou non ; limites par IP, par compte et globale |
+| `confirmPasswordReset` | App, avant connexion | Code + nouveau mot de passe (politique du projet) ; même erreur pour un compte inconnu et un mauvais code ; limite par IP, 5 essais par code |
+| `sendEmailVerification` | App, connecté | Envoie un code à 6 chiffres à l'adresse du compte Auth de l'appelant ; un envoi toutes les 30 s ; limite par compte |
+| `verifyEmailCode` | App, connecté | Échange le code contre `emailVerified` ; 5 essais par code ; limite par compte |
 | `registerCoach` | App, avant connexion | Inscription d'un coach (e-mail, mot de passe, prénom, CGU) ; limite par IP ; crée le compte et ses fiches, sans rien conserver en cas d'échec |
 | `deleteAccount` | App, connecté | Son propre compte ; le compte d'un autre seulement pour un administrateur (contrôles ci-dessous, audit) ; jamais un administrateur |
 | `addNotification` | App, connecté | Expéditeur et destinataire = l'appelant ; limite par compte |
@@ -66,7 +68,10 @@ fonction, secrets déclarés.
 
 ### E-mails
 
-Envoyés par Resend (`src/utils/send_email.ts`). L'expéditeur, le nom de l'app et l'adresse de
+Envoyés par Resend (`src/utils/send_email.ts`). La confirmation d'adresse et la réinitialisation du mot de passe
+passent par un code à 6 chiffres valable 10 minutes (`src/utils/otp_code.ts`) : haché dans `email_codes/{usage}_{uid}`
+(collection fermée aux clients, TTL sur `expiresAt`), 5 essais puis le code est détruit, un nouvel envoi remplace le précédent.
+Gabarits HTML aux couleurs de l'app : `src/template/`. L'expéditeur, le nom de l'app et l'adresse de
 contact viennent de `app_config/metadata` : `mail.from` (obligatoire, sur un domaine vérifié dans
 Resend), `mail.fromName`, `mail.replyTo`, `appName`, `contactEmail`. Sans `mail.from`, rien ne
 part. Sans `contactEmail`, les e-mails n'affichent pas de lien de contact, et les signalements et le
@@ -283,7 +288,7 @@ npm --prefix cms run build && firebase deploy --only hosting:wina-admin --projec
   403 signale un service Cloud Run sans accès public.
 
   ```bash
-  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword sendEmailVerification registerCoach deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
+  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword confirmPasswordReset sendEmailVerification verifyEmailCode registerCoach deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
   for f in "${callables[@]}"; do
     printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{"data":{}}' "https://europe-west9-wina-c4c4a.cloudfunctions.net/$f")" "$f"
   done

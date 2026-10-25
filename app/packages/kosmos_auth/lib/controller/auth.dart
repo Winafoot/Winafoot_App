@@ -219,6 +219,90 @@ abstract class KosmosAuth {
     }
   }
 
+  /// Termine une réinitialisation de mot de passe : échange le code à 6 chiffres
+  /// reçu par e-mail (voir [resetPassword]) contre un nouveau mot de passe.
+  ///
+  /// /!\ Attention, la cloud function "confirmPasswordReset" doit forcément être
+  /// upload sur Firebase.
+  ///
+  /// Renvoie `Right(true)` si le mot de passe a été changé, sinon `Left` avec un
+  /// message affichable (code invalide ou expiré, mot de passe refusé...).
+  static Future<Either<String, bool>> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+    String region = 'us-central1',
+  }) async {
+    try {
+      final connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult.contains(ConnectivityResult.none)) {
+        return Left("package.kosmos-auth.error-internet".tr());
+      }
+
+      final res = await FirebaseFunctions.instanceFor(region: region)
+          .httpsCallable("confirmPasswordReset")
+          .call({"email": email, "code": code, "newPassword": newPassword});
+      return Right(res.data == true);
+    } on FirebaseFunctionsException catch (e) {
+      printExcept("[FirebaseFunctionsException] ${e.code} ${e.message}");
+      return Left(_codeErrorMessage(e));
+    } catch (e) {
+      printExcept(e);
+      return Left("package.kosmos-auth.error-default".tr());
+    }
+  }
+
+  /// Vérifie l'adresse e-mail du compte connecté avec le code à 6 chiffres reçu
+  /// par [sendEmailVerification].
+  ///
+  /// /!\ Attention, la cloud function "verifyEmailCode" doit forcément être
+  /// upload sur Firebase.
+  ///
+  /// Renvoie `Right(true)` quand l'adresse est vérifiée, sinon `Left` avec un
+  /// message affichable. Le jeton est rafraîchi pour que `emailVerified` soit à
+  /// jour côté client.
+  static Future<Either<String, bool>> verifyEmailCode(String code,
+      {String region = 'us-central1'}) async {
+    try {
+      final connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult.contains(ConnectivityResult.none)) {
+        return Left("package.kosmos-auth.error-internet".tr());
+      }
+
+      final res = await FirebaseFunctions.instanceFor(region: region)
+          .httpsCallable("verifyEmailCode")
+          .call({"code": code});
+      if (res.data != true) {
+        return Left("package.kosmos-auth.error-default".tr());
+      }
+      final user = FirebaseAuth.instance.currentUser;
+      await user?.reload();
+      await user?.getIdToken(true);
+      return const Right(true);
+    } on FirebaseFunctionsException catch (e) {
+      printExcept("[FirebaseFunctionsException] ${e.code} ${e.message}");
+      return Left(_codeErrorMessage(e));
+    } catch (e) {
+      printExcept(e);
+      return Left("package.kosmos-auth.error-default".tr());
+    }
+  }
+
+  /// Message affichable d'un refus de "verifyEmailCode" / "confirmPasswordReset".
+  static String _codeErrorMessage(FirebaseFunctionsException e) {
+    switch (e.code) {
+      case 'invalid-argument':
+        final message = e.message?.trim();
+        return message != null && message.isNotEmpty
+            ? message
+            : "package.kosmos-auth.error-default".tr();
+      case 'resource-exhausted':
+        return "package.kosmos-auth.too-many-requests".tr();
+      default:
+        return "package.kosmos-auth.error-default".tr();
+    }
+  }
+
   /// One-Time Data Sharing: Apple provides the user's email address only during the first authentication. After that, subsequent sign-ins will not include the email field in the credential response.
   /// so we must store this email in databse with
   static Future<bool> storeEmailInDatabse(

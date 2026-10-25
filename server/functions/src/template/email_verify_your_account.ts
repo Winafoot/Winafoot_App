@@ -2,17 +2,21 @@
  * Module du socle commun des projets.
  */
 import { escapeHtml } from "../utils/html";
-import { wrapEmailLayout, emailSupportParagraph, EMAIL_H1_STYLE, EMAIL_P_STYLE, EMAIL_LINK_STYLE } from "./_email_layout";
+import { OTP_TTL_MS } from "../utils/otp_code";
+import { wrapEmailLayout, emailSupportParagraph, emailCodeBlock, EMAIL_H1_STYLE, EMAIL_P_STYLE, EMAIL_SUPPORT_P_STYLE } from "./_email_layout";
 
-export function generateTemplateVerifyYourEmail(appName: string, verifLink: string, contactEmail?: string, logoUrl: string = ""): string {
+export function generateTemplateVerifyYourEmail(appName: string, code: string, contactEmail?: string, logoUrl: string = ""): string {
+  const minutes: number = OTP_TTL_MS / 60_000;
   const content = `
-    <h1 class="h3" style="${EMAIL_H1_STYLE}">V&#233;rifier votre compte</h1>
+    <h1 class="h3" style="${EMAIL_H1_STYLE}">Confirmez votre adresse e-mail</h1>
     <br>
-    <p class="text-gray-700" style="${EMAIL_P_STYLE}" align="left">Afin de continuer sur l&#8217;application ${escapeHtml(appName)}, merci de confirmer votre adresse e-mail avec le lien ci-dessous&#160;:</p>
+    <p class="text-gray-700" style="${EMAIL_P_STYLE}" align="left">Pour continuer sur ${escapeHtml(appName)}, saisissez ce code dans l&#8217;application&#160;:</p>
     <br>
-    <a href="${verifLink}" style="${EMAIL_LINK_STYLE}">Confirmer votre adresse e-mail</a>
-    <br><br>
+    ${emailCodeBlock(code)}
+    <br>
+    <p style="${EMAIL_SUPPORT_P_STYLE}" align="left">Ce code est valable ${minutes}&#160;minutes. Si vous n&#8217;&#234;tes pas &#224; l&#8217;origine de cette demande, ignorez ce message.</p>
+    <br>
     ${emailSupportParagraph(contactEmail)}
   `;
-  return wrapEmailLayout(logoUrl, content);
+  return wrapEmailLayout(logoUrl, content, appName);
 }

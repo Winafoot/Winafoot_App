@@ -45,13 +45,16 @@ export const LIMITS = {
   resetPasswordIp: { limit: 10, windowMs: 15 * MINUTE },
   resetPasswordAccount: { limit: 3, windowMs: HOUR },
   resetPasswordAccountDay: { limit: 6, windowMs: DAY },
+  // Saisie du code reçu : le plafond d'essais par code (5) est la vraie protection, ceci borne les rafales.
+  confirmResetIp: { limit: 20, windowMs: 15 * MINUTE },
 
   // Inscription d'un coach depuis l'app : par IP seulement (aucun compte n'existe encore). Large devant
   // un usage humain (un club peut inscrire plusieurs coachs depuis le même réseau), bas devant un script.
   registerIp: { limit: 10, windowMs: HOUR },
 
   // Callables authentifiés : par uid (adaptateur).
-  verificationUid: { limit: 3, windowMs: HOUR },
+  verificationUid: { limit: 6, windowMs: HOUR },
+  verifyCodeUid: { limit: 20, windowMs: HOUR },
   deleteAccountUid: { limit: 3, windowMs: HOUR },
   addNotificationUid: { limit: 60, windowMs: HOUR },
   // Effectif : large devant un usage humain (un effectif de 20 se saisit en une fois), bas devant un script.

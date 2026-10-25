@@ -51,6 +51,8 @@ describe("exposed surface", () => {
     "emailIsAlreadyUsed", // « Mot de passe oublié » s'arrête s'il disparaît
     "phoneIsAlreadyUsed",
     "sendResetPassword",
+    "verifyEmailCode",
+    "confirmPasswordReset",
     "sendEmailVerification",
     "registerCoach",
     "deleteAccount",
@@ -75,8 +77,8 @@ describe("exposed surface", () => {
 
   // Le changement d'adresse passe par l'écran Paramètres de l'app (verifyBeforeUpdateEmail, côté client) :
   // les callables du socle sendChangeEmail et changeEmail n'avaient aucun appelant atteignable.
-  it("exposes exactly twenty-one callables", () => {
-    expect(Object.keys(callables)).toHaveLength(21);
+  it("exposes exactly twenty-three callables", () => {
+    expect(Object.keys(callables)).toHaveLength(23);
     expect(callables).not.toHaveProperty("sendChangeEmail");
     expect(callables).not.toHaveProperty("changeEmail");
   });
@@ -87,7 +89,7 @@ describe("exposed surface", () => {
 // inaperçu.
 describe("wiring of the hardened callables", () => {
   // L'adaptateur authentifié refuse l'appel AVANT de charger le module du handler.
-  it.each(["sendEmailVerification", "deleteAccount", "addNotification", "createPlayer", "deletePlayer", "getSearchKey", "createLinkedTeam", "resetLinkedTeamPassword", "grantTestSubscription"])(
+  it.each(["sendEmailVerification", "verifyEmailCode", "deleteAccount", "addNotification", "createPlayer", "deletePlayer", "getSearchKey", "createLinkedTeam", "resetLinkedTeamPassword", "grantTestSubscription"])(
     "%s rejects an anonymous caller",
     async (name) => {
       const callable = (callables as Record<string, any>)[name];
@@ -123,6 +125,7 @@ describe("wiring of the hardened callables", () => {
     ["emailIsAlreadyUsed", "email_is_already_used_secured"],
     ["phoneIsAlreadyUsed", "phone_is_already_used_secured"],
     ["sendResetPassword", "send_reset_password_secured"],
+    ["confirmPasswordReset", "confirm_password_reset_secured"],
   ])("%s points at its secured handler", (name, module) => {
     expect(source).toMatch(new RegExp(`export const ${name} = onCall\\([^;]*"callables/auth/${module}"[,)]`));
   });
@@ -152,7 +155,7 @@ describe("wiring of the hardened callables", () => {
 // se transforme alors en facture (le coupe-circuit budgétaire met ensuite toute l'app en
 // maintenance).
 describe("instance cap of the public functions", () => {
-  it.each(["emailIsAlreadyUsed", "phoneIsAlreadyUsed", "sendResetPassword", "sendEmailVerification", "registerCoach", "deleteAccount", "addNotification", "getSearchKey", "createLinkedTeam", "resetLinkedTeamPassword", "grantTestSubscription"])(
+  it.each(["emailIsAlreadyUsed", "phoneIsAlreadyUsed", "sendResetPassword", "confirmPasswordReset", "sendEmailVerification", "verifyEmailCode", "registerCoach", "deleteAccount", "addNotification", "getSearchKey", "createLinkedTeam", "resetLinkedTeamPassword", "grantTestSubscription"])(
     "callable %s is capped",
     (name) => {
       expect((callables as Record<string, any>)[name].__endpoint.maxInstances).toBe(PUBLIC_MAX_INSTANCES);
@@ -189,8 +192,10 @@ describe("rate limiting wiring", () => {
 
   it.each([
     ["sendResetPassword", "limitedPublicCallableAdapter"],
+    ["confirmPasswordReset", "limitedPublicCallableAdapter"],
     ["registerCoach", "limitedPublicCallableAdapter"],
     ["sendEmailVerification", "limitedAuthedCallableAdapter"],
+    ["verifyEmailCode", "limitedAuthedCallableAdapter"],
     ["deleteAccount", "limitedAuthedCallableAdapter"],
     ["addNotification", "limitedAuthedCallableAdapter"],
     ["getSearchKey", "limitedAuthedCallableAdapter"],
@@ -203,8 +208,10 @@ describe("rate limiting wiring", () => {
   // Le nom de l'adaptateur ne suffit pas : sans l'option, il ne limite rien.
   it.each([
     ["sendResetPassword", "perIp"],
+    ["confirmPasswordReset", "perIp"],
     ["registerCoach", "perIp"],
     ["sendEmailVerification", "perUid"],
+    ["verifyEmailCode", "perUid"],
     ["deleteAccount", "perUid"],
     ["addNotification", "perUid"],
     ["getSearchKey", "perUid"],
