@@ -87,7 +87,7 @@ describe("sendEmailVerification (secured)", () => {
 
   it("answers false rather than leaking an error object when the mail provider fails", async () => {
     const uid = await seedCoachWithSecurity("a@club.test");
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     const result = await sendEmailVerification({ uid }, caller(uid));
 
@@ -97,7 +97,7 @@ describe("sendEmailVerification (secured)", () => {
   // L'horodatage anti-rejeu n'est posé qu'après un envoi réussi : un échec ne bloque pas le compte 6 h.
   it("does not stamp lastVerifEmailAt when the mail provider fails, so the user can retry", async () => {
     const uid = await seedCoachWithSecurity("a@club.test");
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     expect(await sendEmailVerification({}, caller(uid))).toBe(false);
     expect(await lastVerifEmailAt(uid)).toBeUndefined();

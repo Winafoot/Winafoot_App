@@ -5,7 +5,7 @@ process.env.GCLOUD_PROJECT = "demo-wina";
 process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8080";
 process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? "127.0.0.1:9099";
 // utils/send_email.ts reads this through EnvProvider; tests mock the send itself.
-process.env.MAILER_API_KEY = process.env.MAILER_API_KEY ?? "test-mailer-key";
+process.env.RESEND_API_KEY = process.env.RESEND_API_KEY ?? "test-resend-key";
 // https_requests/billing/revenuecat_webhook.ts : le webhook lit ce secret par readSecret.
 process.env.REVENUECAT_WEBHOOK_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET ?? "test-webhook-secret";
 

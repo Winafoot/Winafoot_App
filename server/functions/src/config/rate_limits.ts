@@ -76,6 +76,6 @@ export const LIMITS = {
   supportGlobal: { limit: 20, windowMs: HOUR },
 
   // Tous les mails déclenchés par un appel public (réinitialisation, suppression de compte) : le
-  // quota MailerSend est partagé avec les invitations des coachs, qui ne passent pas par ce plafond.
+  // quota Resend est partagé avec les invitations des coachs, qui ne passent pas par ce plafond.
   publicMailGlobal: { limit: 300, windowMs: DAY },
 } as const;

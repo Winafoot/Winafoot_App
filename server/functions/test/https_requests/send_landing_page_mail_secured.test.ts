@@ -99,12 +99,12 @@ describe("onSendLandingPageMail (secured)", () => {
   });
 
   it("answers 500 when the mail cannot be sent, without leaking the error", async () => {
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     const res = await call(FORM);
 
     expect(res.statusCode).toBe(500);
-    expect(JSON.stringify(res.body)).not.toContain("MailerSend");
+    expect(JSON.stringify(res.body)).not.toContain("Resend");
   });
 
   it("refuses GET with 405", async () => {
@@ -128,7 +128,7 @@ describe("onSendLandingPageMail — rate limiting", () => {
     expect((await call(FORM, "POST", "198.51.100.2")).statusCode).toBe(200);
   });
 
-  // Plafond global quotidien : une armée d'IP ne doit pas vider le quota MailerSend.
+  // Plafond global quotidien : une armée d'IP ne doit pas vider le quota Resend.
   it("refuses every IP once the global daily cap is reached", async () => {
     const { limit, windowMs } = LIMITS.supportGlobal;
     await firestore()
@@ -170,7 +170,7 @@ describe("onSendLandingPageMail — global cap and invalid forms", () => {
 });
 
 // Le jeton est vérifié APRÈS la méthode, le CORS, la limite par IP et la validation du formulaire,
-// et AVANT tout le reste : un jeton refusé ne doit ni entamer le plafond global (quota MailerSend
+// et AVANT tout le reste : un jeton refusé ne doit ni entamer le plafond global (quota Resend
 // partagé) ni envoyer quoi que ce soit.
 describe("onSendLandingPageMail — reCAPTCHA", () => {
   const IP = "198.51.100.9";

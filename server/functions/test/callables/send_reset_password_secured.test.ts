@@ -38,7 +38,7 @@ describe("sendResetPassword (secured)", () => {
 
   it("answers true even when the mail provider fails, never leaking the error", async () => {
     await seedCoach("coach@club.test");
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     const result = await sendResetPassword({ email: "coach@club.test" });
 
@@ -86,7 +86,7 @@ describe("sendResetPassword (secured)", () => {
 });
 
 // Sans limite par compte, une adresse de coach connue suffit à inonder sa boîte et à
-// épuiser le quota MailerSend. La limite par IP est posée par l'adaptateur (v2_limited).
+// épuiser le quota Resend. La limite par IP est posée par l'adaptateur (v2_limited).
 describe("sendResetPassword (secured) — per-account limit", () => {
   it(`mails an account at most ${LIMITS.resetPasswordAccount.limit} times per window, always answering true`, async () => {
     await seedCoach("coach@club.test");

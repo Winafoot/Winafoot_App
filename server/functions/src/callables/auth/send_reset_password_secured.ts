@@ -42,7 +42,7 @@ async function sendResetLink(email: string): Promise<void> {
 
   // Par compte (pas par adresse saisie) : une adresse inconnue n'a pas de compte et ne crée aucun
   // compteur, et les variantes de casse d'une adresse désignent le même uid. Puis le plafond
-  // global des mails publics, qui protège le quota MailerSend des invitations de coachs.
+  // global des mails publics, qui protège le quota Resend des invitations de coachs.
   const allowed = await consumeAll([
     ["reset-account", account.uid, LIMITS.resetPasswordAccount],
     ["reset-account-day", account.uid, LIMITS.resetPasswordAccountDay],

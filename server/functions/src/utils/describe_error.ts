@@ -3,8 +3,8 @@
  *
  * Une erreur réseau (gaxios, utilisé par les SDK) embarque la requête, en-tête Authorization
  * compris, et une erreur Firebase peut porter des données de la requête : journaliser l'objet
- * tel quel les écrirait dans Cloud Logging. Le SDK MailerSend rejette avec la réponse de l'API
- * (`{ statusCode, body: { message } }`) et non avec une Error : son motif est lu dans
+ * tel quel les écrirait dans Cloud Logging. Le SDK Resend ne lève pas, il renvoie l'erreur de l'API
+ * (`{ statusCode, name, message }`) que sendEmail relance ; un motif imbriqué est lu dans
  * `body.message`.
  */
 export function describeError(error: unknown): string {

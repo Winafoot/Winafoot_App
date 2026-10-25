@@ -6,17 +6,17 @@ import { defineSecret, SecretParam } from "firebase-functions/params";
  * test/secrets.test.ts vérifie que chaque fonction exportée déclare exactement les secrets que lit
  * son code.
  *
- *   MAILER_API_KEY       envoi des e-mails (MailerSend)
+ *   RESEND_API_KEY       envoi des e-mails (Resend)
  *   ALGOLIA_WRITE_KEY    synchronisation des index Algolia (triggers de recherche)
  *   ALGOLIA_SEARCH_KEY   clé parente des clés de recherche temporaires (getSearchKey)
  *   REVENUECAT_WEBHOOK_SECRET  jeton d'autorisation du webhook RevenueCat (revenuecatWebhook)
  */
-export const MAILER_API_KEY = defineSecret("MAILER_API_KEY");
+export const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 export const ALGOLIA_WRITE_KEY = defineSecret("ALGOLIA_WRITE_KEY");
 export const ALGOLIA_SEARCH_KEY = defineSecret("ALGOLIA_SEARCH_KEY");
 export const REVENUECAT_WEBHOOK_SECRET = defineSecret("REVENUECAT_WEBHOOK_SECRET");
 
-export const MAILER_SECRET_PARAMS: SecretParam[] = [MAILER_API_KEY];
+export const MAILER_SECRET_PARAMS: SecretParam[] = [RESEND_API_KEY];
 
 export const ALGOLIA_WRITE_SECRET_PARAMS: SecretParam[] = [ALGOLIA_WRITE_KEY];
 

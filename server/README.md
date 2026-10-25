@@ -66,9 +66,9 @@ fonction, secrets déclarés.
 
 ### E-mails
 
-Envoyés par MailerSend (`src/utils/send_email.ts`). L'expéditeur, le nom de l'app et l'adresse de
+Envoyés par Resend (`src/utils/send_email.ts`). L'expéditeur, le nom de l'app et l'adresse de
 contact viennent de `app_config/metadata` : `mail.from` (obligatoire, sur un domaine vérifié dans
-MailerSend), `mail.fromName`, `mail.replyTo`, `appName`, `contactEmail`. Sans `mail.from`, rien ne
+Resend), `mail.fromName`, `mail.replyTo`, `appName`, `contactEmail`. Sans `mail.from`, rien ne
 part. Sans `contactEmail`, les e-mails n'affichent pas de lien de contact, et les signalements et le
 formulaire de support ne sont pas envoyés. Un échec d'envoi est journalisé avec son motif ; il ne fait
 échouer ni la création d'une fiche, ni un signalement, ni la création d'un administrateur.
@@ -92,24 +92,24 @@ fonction dans ses options (`secrets`). Cloud Run les monte au démarrage de l'in
 
 | Secret | Usage | Fonctions |
 |---|---|---|
-| `MAILER_API_KEY` | Envoi des e-mails (MailerSend) | `sendResetPassword`, `sendEmailVerification`, `resendInvite`, `createAdmin`, `updateAdmin`, `onCreateUser`, `onCreateReport`, `onSendLandingPageMail`, `onSendLandingPageMailDeleteAccount` |
+| `RESEND_API_KEY` | Envoi des e-mails (Resend) | `sendResetPassword`, `sendEmailVerification`, `resendInvite`, `createAdmin`, `updateAdmin`, `onCreateUser`, `onCreateReport`, `onSendLandingPageMail`, `onSendLandingPageMailDeleteAccount` |
 | `ALGOLIA_WRITE_KEY` | Écriture dans les index Algolia | `onWriteCompositionSearch`, `onWriteMatchSearch` |
 | `ALGOLIA_SEARCH_KEY` | Clé parente des clés de recherche temporaires | `getSearchKey` |
 
 Créer ou changer un secret, puis redéployer les fonctions qui l'utilisent :
 
 ```bash
-firebase functions:secrets:set MAILER_API_KEY --project wina-c4c4a     # la valeur est demandée, non affichée
+firebase functions:secrets:set RESEND_API_KEY --project wina-c4c4a     # la valeur est demandée, non affichée
 ```
 
 Contrôler la longueur de chaque version, sans afficher la valeur : passée dans un tuyau
 (`--data-file -`), la commande ci-dessus peut créer une version vide.
 
 ```bash
-gcloud secrets versions list MAILER_API_KEY --project wina-c4c4a
-gcloud secrets versions access latest --secret=MAILER_API_KEY --project wina-c4c4a | wc -c
+gcloud secrets versions list RESEND_API_KEY --project wina-c4c4a
+gcloud secrets versions access latest --secret=RESEND_API_KEY --project wina-c4c4a | wc -c
 # Version vide : en ajouter une, saisie au clavier puis Ctrl-D
-gcloud secrets versions add MAILER_API_KEY --data-file=- --project wina-c4c4a
+gcloud secrets versions add RESEND_API_KEY --data-file=- --project wina-c4c4a
 ```
 
 Le compte d'exécution des fonctions doit pouvoir lire chaque secret (section « Comptes d'exécution ») ;
