@@ -45,6 +45,7 @@ jamais sur un identifiant fourni par le client. Les limites de débit sont compt
 | `sendResetPassword` | App, avant connexion | Envoie un code à 6 chiffres ; réponse identique que le compte existe ou non ; limites par IP, par compte et globale |
 | `confirmPasswordReset` | App, avant connexion | Code + nouveau mot de passe (politique du projet) ; même erreur pour un compte inconnu et un mauvais code ; limite par IP, 5 essais par code |
 | `sendEmailVerification` | App, connecté | Envoie un code à 6 chiffres à l'adresse du compte Auth de l'appelant ; un envoi toutes les 30 s ; limite par compte |
+| `completeSocialSignup` | App, connecté | Première connexion Google / Apple : crée la fiche coach (les règles interdisent au client de le faire) ; compte Google ou Apple exigé, CGU acceptées, idempotent ; limite par compte |
 | `verifyEmailCode` | App, connecté | Échange le code contre `emailVerified` ; 5 essais par code ; limite par compte |
 | `registerCoach` | App, avant connexion | Inscription d'un coach (e-mail, mot de passe, prénom, CGU) ; limite par IP ; crée le compte et ses fiches, sans rien conserver en cas d'échec |
 | `deleteAccount` | App, connecté | Son propre compte ; le compte d'un autre seulement pour un administrateur (contrôles ci-dessous, audit) ; jamais un administrateur |
@@ -288,7 +289,7 @@ npm --prefix cms run build && firebase deploy --only hosting:wina-admin --projec
   403 signale un service Cloud Run sans accès public.
 
   ```bash
-  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword confirmPasswordReset sendEmailVerification verifyEmailCode registerCoach deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
+  callables=(emailIsAlreadyUsed phoneIsAlreadyUsed sendResetPassword confirmPasswordReset sendEmailVerification verifyEmailCode registerCoach completeSocialSignup deleteAccount addNotification createPlayer deletePlayer getSearchKey createCoach resendInvite setCoachDisabled deleteCoach listAdmins createAdmin updateAdmin deleteAdmin)
   for f in "${callables[@]}"; do
     printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-Type: application/json' -d '{"data":{}}' "https://europe-west9-wina-c4c4a.cloudfunctions.net/$f")" "$f"
   done

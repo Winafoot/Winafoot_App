@@ -27,6 +27,11 @@ abstract class TiersAuthController {
         return false;
       }
 
+      final customSignIn = config?.authentificationConfig.tiersSignIn;
+      if (customSignIn != null) {
+        return await customSignIn(context, ref, authTiers);
+      }
+
       if (authTiers == AuthTiers.facebook) {
         if (config?.authentificationConfig.signInWithFacebook != null) {
           return await config!

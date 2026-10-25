@@ -91,6 +91,16 @@ class SkeletonAuthentificationConfig {
   final Widget Function(BuildContext, WidgetRef, VoidCallback)?
       resetPasswordButtonCustom;
 
+  /// Remplace le parcours Google / Apple / Facebook du socle (qui crée la fiche
+  /// utilisateur côté client) : l'app gère la connexion, la création de la fiche
+  /// et renvoie `true` si le coach est connecté.
+  final Future<bool> Function(
+    BuildContext context,
+    WidgetRef ref,
+    AuthTiers authTiers,
+  )?
+      tiersSignIn;
+
   /// Appelé une fois le code de réinitialisation envoyé par e-mail : l'app ouvre
   /// l'écran où le saisir (code + nouveau mot de passe). Sans lui, la page de
   /// connexion affiche seulement « Vérifiez votre boîte mail ».
@@ -271,6 +281,7 @@ class SkeletonAuthentificationConfig {
       this.phoneLoginButtonCustom,
       this.resetPasswordButtonCustom,
       this.onResetPasswordCodeSent,
+      this.tiersSignIn,
       this.verifyEmailButtonCustom,
       this.changeEmailButtonCustom,
       this.changePasswordButtonCustom,

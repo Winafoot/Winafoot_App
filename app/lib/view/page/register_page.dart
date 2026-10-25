@@ -8,6 +8,7 @@ import 'package:wina/services/register_validation.dart';
 import 'package:wina/view/page/verify_email_page.dart';
 import 'package:wina/view/widget/app_notif.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
+import 'package:wina/view/widget/social_sign_in_ui.dart';
 
 /// Inscription d'un coach, page 1 : e-mail, mot de passe, prénom et CGU.
 ///
@@ -117,6 +118,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             (_) => VerifyEmailPage(email: _email.text.trim().toLowerCase()),
       ),
     );
+    await _enterApp();
+  }
+
+  /// Charge le coach connecté puis ouvre l'app (« Finalisez votre profil » s'ouvre
+  /// tant que son profil n'est pas complété).
+  Future<void> _enterApp() async {
     if (!mounted) return;
     await ref.read(userProvider).init(context);
     if (!mounted) return;
@@ -233,6 +240,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ),
         sh(14),
         const CpRequiredNote(),
+        sh(22),
+        SocialSignInButtons(onSignedIn: _enterApp),
       ],
     );
   }

@@ -51,6 +51,8 @@ export const LIMITS = {
   // Inscription d'un coach depuis l'app : par IP seulement (aucun compte n'existe encore). Large devant
   // un usage humain (un club peut inscrire plusieurs coachs depuis le même réseau), bas devant un script.
   registerIp: { limit: 10, windowMs: HOUR },
+  // Première connexion Google / Apple : une fiche par compte, quelques essais suffisent.
+  socialSignupUid: { limit: 10, windowMs: HOUR },
 
   // Callables authentifiés : par uid (adaptateur).
   verificationUid: { limit: 6, windowMs: HOUR },

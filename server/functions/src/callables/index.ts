@@ -49,6 +49,13 @@ export const registerCoach = onCall(
   limitedPublicCallableAdapter("callables/auth/register_coach", { scope: "register-coach", perIp: LIMITS.registerIp }),
 );
 
+// Authentifié : première connexion Google / Apple. Crée la fiche coach du compte de l'appelant (les règles
+// Firestore interdisent au client de la créer) ; idempotent, et refuse un compte sans fournisseur Google / Apple.
+export const completeSocialSignup = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/auth/complete_social_signup_secured", { scope: "social-signup", perUid: LIMITS.socialSignupUid }),
+);
+
 // Authentifié : suppression du propre compte de l'appelant (ou admin) uniquement.
 export const deleteAccount = onCall(
   PUBLIC,
