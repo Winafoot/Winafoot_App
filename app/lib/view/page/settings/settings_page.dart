@@ -8,6 +8,7 @@ import 'package:wina/view/widget/confirm_dialog.dart';
 import 'package:wina/providers/billing_providers.dart';
 import 'package:wina/view/page/check_profil_step1_screen.dart';
 import 'package:wina/view/page/mes_equipes_screen.dart';
+import 'package:wina/view/page/mon_adjoint_screen.dart';
 import 'package:wina/view/page/settings/settings_node.dart';
 import 'package:wina/view/widget/custom_back_button.dart';
 import 'package:flutter/cupertino.dart';
@@ -295,6 +296,17 @@ class SettingsWebPage extends ConsumerWidget {
                                       MaterialPageRoute<void>(
                                         builder:
                                             (_) => const MesEquipesScreen(),
+                                      ),
+                                    ),
+                                children: [],
+                              ),
+                              SettingsNode(
+                                title: 'app.assistant.title'.tr(),
+                                subtitle: 'app.assistant.settings-sub'.tr(),
+                                onTap:
+                                    () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => const MonAdjointScreen(),
                                       ),
                                     ),
                                 children: [],

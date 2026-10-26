@@ -15,6 +15,7 @@ import 'package:wina/providers/player_providers.dart';
 import 'package:wina/providers/search_providers.dart';
 import 'package:wina/view/page/bilan_collectif_screen.dart';
 import 'package:wina/view/page/bilan_individuel_screen.dart';
+import 'package:wina/view/widget/app_background.dart';
 import 'package:wina/view/widget/app_loader.dart';
 import 'package:wina/view/widget/empty_state_placeholder.dart';
 import 'package:wina/view/widget/formation_pitch.dart';
@@ -236,10 +237,8 @@ class _StatistiquesMatchsScreenState
                 }
               }
               if (isPhoneLayout) {
-                final String jersey =
-                    selected.ownJersey?.color.asset ?? _kJerseyAsset;
-                // Téléphone : historique compact à gauche, détail en onglets à
-                // droite (Résumé / Joueurs / Terrain).
+                // Téléphone : la liste occupe l'écran ; toucher un match ouvre
+                // sa page (Résumé / Terrain).
                 return Padding(
                   padding: EdgeInsets.fromLTRB(
                     16,
@@ -247,56 +246,24 @@ class _StatistiquesMatchsScreenState
                     16,
                     cH(kBottomNavClearance),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      SizedBox(
-                        width: 250,
-                        child: _MatchList(
-                          matches: visible,
-                          pending: _pending,
-                          selectedId: selected.id,
-                          teamName: teamName,
-                          onSelect:
-                              (String id) => setState(() {
-                                _selectedId = id;
-                                _selectedPlayerId = null;
-                                _fromPitch = false;
-                              }),
-                          onQuery: _union.input,
+                  child: _MatchList(
+                    matches: visible,
+                    pending: _pending,
+                    selectedId: selected.id,
+                    teamName: teamName,
+                    onSelect: (String id) {
+                      setState(() {
+                        _selectedId = id;
+                        _selectedPlayerId = null;
+                        _fromPitch = false;
+                      });
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => _PhoneMatchPage(matchId: id),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _PhoneDetail(
-                          composition: comp,
-                          byId: byId,
-                          jerseyAsset: jersey,
-                          selectedPlayerId: _selectedPlayerId,
-                          onPlayerTap:
-                              (String pid) => setState(() {
-                                _selectedPlayerId =
-                                    _selectedPlayerId == pid ? null : pid;
-                                _fromPitch = _selectedPlayerId != null;
-                              }),
-                          detail:
-                              (_DetailView view) => _Detail(
-                                match: selected,
-                                composition: comp,
-                                byId: byId,
-                                view: view,
-                                selectedPlayer: selectedPlayer,
-                                selectedNumber: selectedNumber,
-                                selectedFromPitch: _fromPitch,
-                                onPickPlayer:
-                                    (String pid) => setState(() {
-                                      _selectedPlayerId = pid;
-                                      _fromPitch = false;
-                                    }),
-                              ),
-                        ),
-                      ),
-                    ],
+                      );
+                    },
+                    onQuery: _union.input,
                   ),
                 );
               }

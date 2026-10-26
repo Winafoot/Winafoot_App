@@ -15,6 +15,9 @@ class MatchDraftNotifier extends StateNotifier<GameMatch> {
   /// Réinitialise l'assistant (nouvel appui sur « Coup d'envoi »).
   void reset() => state = const GameMatch();
 
+  /// Reprise d'un match laissé ouvert : remet le brouillon tel qu'il était au coup d'envoi.
+  void restore(GameMatch match) => state = match;
+
   void setId(String id) => state = state.copyWith(id: id);
 
   // ── Étape 1 — adversaire ────────────────────────────────────────────────

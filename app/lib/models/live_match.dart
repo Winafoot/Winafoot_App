@@ -19,6 +19,7 @@ const int kMatchHistoryDisplayLimit = 20;
 @immutable
 class MatchEvent {
   const MatchEvent({
+    this.id = '',
     required this.atSeconds,
     required this.playerId,
     required this.playerName,
@@ -28,6 +29,9 @@ class MatchEvent {
     required this.half,
   });
 
+  /// Identifiant stable de l'événement : l'adjoint désigne ainsi l'événement à retirer (l'index change
+  /// dès qu'un nouvel événement arrive). Vide pour un événement d'avant l'adjoint.
+  final String id;
   final int atSeconds;
   final String playerId;
   final String playerName;
@@ -61,6 +65,7 @@ class LiveMatch {
     this.events = const <MatchEvent>[],
     this.selectedPlayerId,
     this.halfTimeStatKeys,
+    this.swapSides = false,
   });
 
   final String formationLabel;
@@ -92,6 +97,10 @@ class LiveMatch {
   /// instantané, une stat activée à la mi-temps passerait pour suivie en 1re
   /// mi-temps. `null` tant que la mi-temps n'a pas commencé.
   final List<String>? halfTimeStatKeys;
+
+  /// Terrain inversé à la main (« Changer de côté ») : partagé entre le coach et l'adjoint, qui voient
+  /// ainsi le même sens de jeu. Se cumule avec le changement de côté de la 2e mi-temps.
+  final bool swapSides;
 
   bool get isLive => status == MatchStatus.live;
   bool get isPaused => status == MatchStatus.paused;
@@ -198,6 +207,7 @@ class LiveMatch {
     List<MatchEvent>? events,
     String? selectedPlayerId,
     List<String>? halfTimeStatKeys,
+    bool? swapSides,
   }) {
     return LiveMatch(
       formationLabel: formationLabel ?? this.formationLabel,
@@ -215,6 +225,7 @@ class LiveMatch {
       events: events ?? this.events,
       selectedPlayerId: selectedPlayerId ?? this.selectedPlayerId,
       halfTimeStatKeys: halfTimeStatKeys ?? this.halfTimeStatKeys,
+      swapSides: swapSides ?? this.swapSides,
     );
   }
 

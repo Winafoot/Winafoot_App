@@ -19,6 +19,10 @@ import 'services/email_sync.dart';
 import 'config/theme.dart';
 import 'routes/app_router.gr.dart';
 
+/// Jeton App Check de debug fixe, passé par `--dart-define=APPCHECK_DEBUG_TOKEN=<uuid>` (jamais committé) :
+/// il évite d'enregistrer un nouveau jeton à chaque réinstallation de l'émulateur. Vide : jeton généré.
+const String _kAppCheckDebugToken = String.fromEnvironment('APPCHECK_DEBUG_TOKEN');
+
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
@@ -95,11 +99,15 @@ AppModel initModel() {
           providerAndroid:
               kReleaseMode
                   ? const AndroidPlayIntegrityProvider()
-                  : const AndroidDebugProvider(),
+                  : AndroidDebugProvider(
+                    debugToken: _kAppCheckDebugToken.isEmpty ? null : _kAppCheckDebugToken,
+                  ),
           providerApple:
               kReleaseMode
                   ? const AppleAppAttestProvider()
-                  : const AppleDebugProvider(),
+                  : AppleDebugProvider(
+                    debugToken: _kAppCheckDebugToken.isEmpty ? null : _kAppCheckDebugToken,
+                  ),
         );
       } catch (e, st) {
         developer.log(

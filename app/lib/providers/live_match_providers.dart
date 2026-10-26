@@ -1,10 +1,21 @@
+import 'dart:math' as math;
+
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:wina/data/match_repository.dart';
 import 'package:wina/models/game_match.dart';
 import 'package:wina/models/live_match.dart';
 import 'package:wina/models/match_composition.dart';
 import 'package:wina/models/stat_catalog.dart';
+import 'package:wina/providers/assistant_providers.dart';
 import 'package:wina/providers/match_providers.dart';
+
+int _eventCounter = 0;
+
+/// Identifiant d'événement unique sur tous les téléphones : horodatage, compteur et aléa.
+String newEventId() =>
+    '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}'
+    '${(_eventCounter++).toRadixString(36)}'
+    '${math.Random().nextInt(1 << 20).toRadixString(36)}';
 
 /// État du match en direct. `null` tant qu'aucun match n'est démarré.
 class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
@@ -49,10 +60,30 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
       ...s.substituteIds.where((String id) => id != inId && id != outId),
       outId,
     ];
+    // Numéros affichés : sans numéro attribué, un titulaire porte celui de son
+    // emplacement (index + 1), qu un remplaçant n a pas. On fige donc le numéro
+    // du sortant (il le garde sur le banc) et on en donne un libre à l entrant
+    // qui n en a pas, au lieu de lui laisser celui de l emplacement : il
+    // doublerait celui du sortant et changerait au fil des remplacements.
+    final Map<String, int> numbers = Map<String, int>.from(s.numbers);
+    numbers.putIfAbsent(outId, () => idx + 1);
+    if (!numbers.containsKey(inId)) {
+      final Set<int> used = <int>{
+        ...numbers.values,
+        for (int i = 0; i < next.length; i++)
+          if (next[i] != null && !numbers.containsKey(next[i])) i + 1,
+      };
+      int free = 1;
+      while (used.contains(free)) {
+        free++;
+      }
+      numbers[inId] = free;
+    }
     state = s.copyWith(
       assignments: next,
       substituteIds: subs,
       selectedPlayerId: inId,
+      numbers: numbers,
     );
   }
 
@@ -64,10 +95,35 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
     required String playerName,
     required int delta,
   }) {
+    final String? pid = state?.selectedPlayerId;
+    if (pid == null) return;
+    bumpFor(
+      playerId: pid,
+      statKey: statKey,
+      statLabel: statLabel,
+      playerName: playerName,
+      delta: delta,
+    );
+  }
+
+  /// Même effet que [bump] pour un joueur désigné (saisie de l'adjoint), avec l'identifiant [eventId] de
+  /// l'événement : celui de l'adjoint, pour que son affichage immédiat et l'état publié par le coach
+  /// parlent du même événement. Sans [eventId], un identifiant est généré.
+  void bumpFor({
+    required String playerId,
+    required String statKey,
+    required String statLabel,
+    required String playerName,
+    required int delta,
+    String? eventId,
+  }) {
     final LiveMatch? s = state;
     if (s == null) return;
-    final String? pid = s.selectedPlayerId;
-    if (pid == null) return;
+    // Commande rejouée (ou déjà appliquée) : l'événement existe, rien à refaire.
+    if (eventId != null && s.events.any((MatchEvent e) => e.id == eventId)) {
+      return;
+    }
+    final String pid = playerId;
 
     final int cur = s.statValue(pid, statKey);
     final int max = maxStatValue(statKey);
@@ -97,6 +153,7 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
       scoreThem: them,
       events: <MatchEvent>[
         MatchEvent(
+          id: eventId ?? newEventId(),
           atSeconds: s.elapsedSeconds,
           playerId: pid,
           playerName: playerName,
@@ -114,6 +171,18 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
   /// du joueur concerné et, pour les buts, score — sans journaliser de nouvelle
   /// ligne (contrairement au `-` du compteur, qui lui reste tracé).
   void removeEvent(int index) {
+    _removeEventAt(index);
+  }
+
+  /// Retire l'événement d'identifiant [id] (voir [removeEvent]) ; sans effet s'il n'existe plus.
+  void removeEventById(String id) {
+    final LiveMatch? s = state;
+    if (s == null || id.isEmpty) return;
+    final int index = s.events.indexWhere((MatchEvent e) => e.id == id);
+    if (index >= 0) _removeEventAt(index);
+  }
+
+  void _removeEventAt(int index) {
     final LiveMatch? s = state;
     if (s == null || index < 0 || index >= s.events.length) return;
 
@@ -162,6 +231,15 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
       scoreThem: them,
       events: rest,
     );
+  }
+
+  /// « Changer de côté » : inverse le sens du terrain (le coach qui ne commence pas du bon côté).
+  void toggleSwapSides() => setSwapSides(!(state?.swapSides ?? false));
+
+  void setSwapSides(bool value) {
+    final LiveMatch? s = state;
+    if (s == null || s.swapSides == value) return;
+    state = s.copyWith(swapSides: value);
   }
 
   void togglePause() {
@@ -228,11 +306,22 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
   }
 
   void clear() => state = null;
+
+  /// Reprise d'un match laissé ouvert (appli fermée ou plantée) : l'état publié sur Firebase, en pause.
+  void restore(LiveMatch live) =>
+      state = live.copyWith(status: MatchStatus.paused);
 }
 
-final liveMatchProvider = StateNotifierProvider<LiveMatchNotifier, LiveMatch?>(
-  (ref) => LiveMatchNotifier(),
-);
+/// Sur le téléphone du coach : l'état de jeu lui-même. Sur celui de l'adjoint : le miroir du match publié
+/// par le coach ([AssistantLiveNotifier]), ce qui permet de réutiliser l'écran du direct tel quel.
+final liveMatchProvider = StateNotifierProvider<LiveMatchNotifier, LiveMatch?>((
+  ref,
+) {
+  final String? coach = ref.watch(
+    assistantOfProvider.select((AsyncValue<String?> v) => v.valueOrNull),
+  );
+  return coach == null ? LiveMatchNotifier() : AssistantLiveNotifier(ref, coach);
+});
 
 /// Quitte un match en direct sans le finaliser : marque le document Firestore
 /// abandonné (non bloquant) et efface l'état en mémoire. Partagé par le bouton

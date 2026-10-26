@@ -5,29 +5,12 @@ import 'package:wina/config/theme.dart';
 import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/widget/gerer_equipe_scaffold.dart';
+import 'package:wina/view/widget/stat_tone.dart';
 import 'package:wina/view/widget/match_wizard.dart';
 
-/// Thèmes de chaque colonne (12 / 11 / 14 bascules), dans l'ordre de lecture
-/// du client. Un thème n'est jamais coupé entre deux colonnes : aucune borne
-/// d'index à recaler quand le catalogue bouge. Tout thème absent d'ici
-/// disparaîtrait de l'écran (le test du paramétrage le vérifie).
-const List<List<StatCategory>> _kColumns = <List<StatCategory>>[
-  <StatCategory>[
-    StatCategory.passes,
-    StatCategory.efficacite,
-    StatCategory.tirs,
-    StatCategory.offensives,
-  ],
-  <StatCategory>[StatCategory.coupsDePiedArretes, StatCategory.fautesSanctions],
-  <StatCategory>[
-    StatCategory.gardienDefense,
-    StatCategory.technique,
-    StatCategory.duels,
-  ],
-];
-
 /// Écran « Paramétrez les statistiques » : active/désactive les statistiques
-/// suivies pendant le match (3 colonnes de bascules, un titre par thème).
+/// suivies pendant le match : 28 bascules en 2 colonnes de 14, « Perdus » (rouge) à gauche et
+/// « Gagnés » (vert) à droite, chacune dans son ordre de priorité.
 /// Les 5 statistiques calculées (totaux, réussite de passes) n'y figurent pas :
 /// elles s'affichent d'elles-mêmes quand toutes leurs composantes sont suivies.
 /// « Valider » enregistre la sélection sur le match et revient au hub.
@@ -87,31 +70,38 @@ class _ParametrerStatsScreenState extends ConsumerState<ParametrerStatsScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            for (int i = 0; i < _kColumns.length; i++) ...<Widget>[
-              if (i > 0) cSw(16),
-              Expanded(child: _column(_kColumns[i])),
-            ],
+            Expanded(
+              child: _column(
+                'app.parametrer-stats.perdus'.tr(),
+                statsOfSide(kStatToggles, StatSide.bad),
+              ),
+            ),
+            cSw(16),
+            Expanded(
+              child: _column(
+                'app.parametrer-stats.gagnes'.tr(),
+                statsOfSide(kStatToggles, StatSide.good),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _column(List<StatCategory> themes) {
+  Widget _column(String title, List<StatDef> stats) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        for (final StatCategory theme in themes) ...<Widget>[
-          _ThemeTitle(theme.label),
-          for (final StatDef s in kStatToggles)
-            if (s.category == theme) ...<Widget>[
-              _StatToggle(
-                label: s.label,
-                value: _selected.contains(s.key),
-                onChanged: (bool on) => _toggle(s.key, on),
-              ),
-              cSh(10),
-            ],
+        _ThemeTitle(title),
+        for (final StatDef s in stats) ...<Widget>[
+          _StatToggle(
+            label: s.label,
+            tint: statTint(s.key),
+            value: _selected.contains(s.key),
+            onChanged: (bool on) => _toggle(s.key, on),
+          ),
+          cSh(isPhoneLayout ? 6 : 10),
         ],
       ],
     );
@@ -143,11 +133,15 @@ class _StatToggle extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
+    this.tint,
   });
 
   final String label;
   final bool value;
   final ValueChanged<bool> onChanged;
+
+  /// Fond selon la nature de la stat (vert, rouge, jaune pour le carton jaune).
+  final Color? tint;
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +149,10 @@ class _StatToggle extends StatelessWidget {
       padding: EdgeInsets.only(left: cW(16), right: cW(8)),
       height: isPhoneLayout ? 34 : cH(44),
       decoration: BoxDecoration(
-        color: AppColor.surface,
+        color:
+            tint == null
+                ? AppColor.surface
+                : Color.alphaBlend(tint!, AppColor.surface),
         borderRadius: BorderRadius.circular(cR(12)),
         boxShadow: <BoxShadow>[
           BoxShadow(

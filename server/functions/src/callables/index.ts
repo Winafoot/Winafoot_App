@@ -93,6 +93,20 @@ export const resetLinkedTeamPassword = onCall(
   limitedAuthedCallableAdapter("callables/billing/reset_linked_team_password", { scope: "reset-linked-team-password", perUid: LIMITS.resetLinkedTeamPasswordUid }),
 );
 
+// Adjoint du coach (compte qui voit le match en cours et y saisit des statistiques) : créé, réinitialisé et supprimé par le coach seul.
+export const createAssistant = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/create_assistant", { scope: "create-assistant", perUid: LIMITS.assistantUid }),
+);
+export const resetAssistantPassword = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/reset_assistant_password", { scope: "reset-assistant-password", perUid: LIMITS.assistantUid }),
+);
+export const deleteAssistant = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/delete_assistant", { scope: "delete-assistant", perUid: LIMITS.assistantUid }),
+);
+
 // Authentifié : simule un achat pour l'appelant. Refusé tant que TEST_PURCHASES_ENABLED n'est pas "true" sur la
 // fonction (projet de test uniquement, jamais en production).
 export const grantTestSubscription = onCall(

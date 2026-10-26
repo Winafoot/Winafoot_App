@@ -67,6 +67,8 @@ export const LIMITS = {
   // Équipes liées : au plus 2 par abonnement, quelques essais d'identifiant ou de mot de passe suffisent.
   createLinkedTeamUid: { limit: 10, windowMs: HOUR },
   resetLinkedTeamPasswordUid: { limit: 10, windowMs: HOUR },
+  // Adjoint : un seul par coach, quelques essais d'identifiant ou de mot de passe suffisent.
+  assistantUid: { limit: 10, windowMs: HOUR },
   grantTestSubscriptionUid: { limit: 20, windowMs: HOUR },
 
   // Endpoints HTTP de la landing.

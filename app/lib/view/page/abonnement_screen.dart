@@ -372,10 +372,12 @@ class _TeamTile extends StatelessWidget {
                   )
                   : null,
           borderRadius: BorderRadius.circular(r(16)),
-          border:
-              selected
-                  ? Border.all(color: AppColor.primaryColor, width: 2)
-                  : null,
+          // Bordure toujours présente (transparente si non choisie) : sans elle, la
+          // tuile choisie serait plus grande de 4 px que les deux autres.
+          border: Border.all(
+            color: selected ? AppColor.primaryColor : Colors.transparent,
+            width: 2,
+          ),
         ),
         child: Row(
           children: <Widget>[
@@ -508,10 +510,12 @@ class _PlanCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColor.surface,
             borderRadius: BorderRadius.circular(r(24)),
-            border:
-                highlighted
-                    ? Border.all(color: AppColor.primaryColor, width: 2)
-                    : null,
+            // Bordure toujours présente : les deux cartes gardent le même cadre
+            // intérieur, donc titres, prix et coches sont à la même hauteur.
+            border: Border.all(
+              color: highlighted ? AppColor.primaryColor : Colors.transparent,
+              width: 2,
+            ),
           ),
           child: child,
         ),
@@ -761,6 +765,7 @@ class _YearlyCard extends StatelessWidget {
                     ),
             filled: true,
           ),
+          const Spacer(),
           sh(10),
           _PlanButton(
             label: 'app.subscription.subscribe-year'.tr(),
@@ -846,6 +851,7 @@ class _MonthlyCard extends StatelessWidget {
           _CheckLine(text: 'app.subscription.monthly-1'.tr(), filled: false),
           _CheckLine(text: 'app.subscription.monthly-2'.tr(), filled: false),
           _CheckLine(text: 'app.subscription.monthly-3'.tr(), filled: false),
+          const Spacer(),
           sh(10),
           _PlanButton(
             label: 'app.subscription.subscribe-month'.tr(),

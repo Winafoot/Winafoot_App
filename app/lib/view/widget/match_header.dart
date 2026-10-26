@@ -24,6 +24,7 @@ class MatchHeader extends StatelessWidget {
     this.onBack,
     this.clockFontSize = 24,
     this.controls = const <Widget>[],
+    this.trailing,
   });
 
   final String title;
@@ -41,6 +42,10 @@ class MatchHeader extends StatelessWidget {
   /// Contrôles insérés entre le chrono et le score (pilules pause / mi-temps).
   final List<Widget> controls;
 
+  /// Bouton accolé au score. Sur téléphone (écran de direct) il remplace la
+  /// signature Wina pour laisser la place aux contrôles agrandis.
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -52,9 +57,9 @@ class MatchHeader extends StatelessWidget {
           cSw(7),
         ],
         WhistleIcon(size: cIc(24), color: AppColor.primaryColor),
-        // Téléphone, écran de direct : pas de titre (le chrono, le score et les
+        // Écran de direct : pas de titre (le chrono, le score et les
         // deux pilules occupent déjà toute la largeur).
-        if (!(isPhoneLayout && controls.isNotEmpty)) ...<Widget>[
+        if (controls.isEmpty) ...<Widget>[
           cSw(10),
           Text(
             title,
@@ -81,10 +86,14 @@ class MatchHeader extends StatelessWidget {
         cSw(16),
         Text(
           '$scoreUs - $scoreThem',
-          style: AppThemeStyle.boldStyle(cFs(22), AppColor.primaryLabels),
+          style: AppThemeStyle.boldStyle(
+            cFs(controls.isNotEmpty ? 26 : 22),
+            AppColor.primaryLabels,
+          ),
         ),
+        if (trailing != null) ...<Widget>[cSw(8), trailing!],
         const Spacer(),
-        const WinaWordmark(size: 30),
+        if (!(isPhoneLayout && trailing != null)) const WinaWordmark(size: 30),
       ],
     );
   }
