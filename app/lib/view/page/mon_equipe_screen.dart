@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/coach_profile.dart';
 import 'package:wina/models/player.dart';
@@ -115,9 +116,9 @@ class _MonEquipeScreenState extends ConsumerState<MonEquipeScreen> {
             ),
             // Barre de navigation flottante, superposée au bas du contenu.
             Positioned(
-              left: formatWidth(33),
-              right: formatWidth(33),
-              bottom: formatHeight(_kNavBottomMargin),
+              left: isPhoneLayout ? 16 : cW(33),
+              right: isPhoneLayout ? 16 : cW(33),
+              bottom: cH(_kNavBottomMargin),
               child: _BottomNavBar(
                 currentIndex: index,
                 onSelect:
@@ -128,7 +129,7 @@ class _MonEquipeScreenState extends ConsumerState<MonEquipeScreen> {
             Positioned(
               left: 0,
               right: 0,
-              bottom: formatHeight(
+              bottom: cH(
                 _kNavBottomMargin + _kNavBarHeight - _kCoupDEnvoiHeight / 2,
               ),
               child: const Center(child: _CoupDEnvoiButton()),
@@ -154,7 +155,10 @@ class _MonEquipeScreenState extends ConsumerState<MonEquipeScreen> {
           (Object error, _) => Center(
             child: Text(
               'app.mon-equipe.erreur-chargement'.tr(),
-              style: AppThemeStyle.mediumStyle(15, AppColor.secondaryLabels),
+              style: AppThemeStyle.mediumStyle(
+                cFs(15),
+                AppColor.secondaryLabels,
+              ),
             ),
           ),
     );
@@ -169,15 +173,17 @@ class _MonEquipeScreenState extends ConsumerState<MonEquipeScreen> {
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+          padding: EdgeInsets.symmetric(
+            horizontal: isPhoneLayout ? 16 : cW(40),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              sh(18),
+              cSh(isPhoneLayout ? 8 : 18),
               _TopBar(coach: coach, jerseys: jerseys),
-              sh(14),
+              cSh(isPhoneLayout ? 6 : 14),
               Container(height: 1, color: AppColor.divider),
-              sh(16),
+              cSh(isPhoneLayout ? 8 : 16),
               _BodyHeader(
                 searchField: SearchField(
                   controller: _searchController,
@@ -190,42 +196,45 @@ class _MonEquipeScreenState extends ConsumerState<MonEquipeScreen> {
                     ref.watch(maxSquadSizeProvider).valueOrNull ??
                     kMaxSquadSize,
               ),
-              sh(16),
+              cSh(isPhoneLayout ? 8 : 16),
             ],
           ),
         ),
         // Grille des postes (défilable si l'effectif dépasse la hauteur).
         Expanded(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+            padding: EdgeInsets.symmetric(
+              horizontal: isPhoneLayout ? 16 : cW(40),
+            ),
             child:
                 roster.isEmpty
                     ? EmptyStatePlaceholder(
                       icon: Iconsax.profile_2user,
                       title: 'app.mon-equipe.effectif-vide-titre'.tr(),
                       subtitle: 'app.mon-equipe.effectif-vide-sous-titre'.tr(),
-                      padding: EdgeInsets.only(
-                        bottom: formatHeight(kBottomNavClearance),
-                      ),
+                      padding: EdgeInsets.only(bottom: cH(kBottomNavClearance)),
                     )
                     : visible.isEmpty
                     ? EmptyStatePlaceholder(
                       icon: Iconsax.search_normal_1,
                       title: 'app.mon-equipe.aucun-resultat-titre'.tr(),
                       subtitle: 'app.mon-equipe.aucun-resultat-sous-titre'.tr(),
-                      padding: EdgeInsets.only(
-                        bottom: formatHeight(kBottomNavClearance),
-                      ),
+                      padding: EdgeInsets.only(bottom: cH(kBottomNavClearance)),
+                    )
+                    : isPhoneLayout
+                    // Téléphone : 4 colonnes de postes qui défilent chacune
+                    // dans leur colonne, pas de long défilement de page.
+                    ? Padding(
+                      padding: EdgeInsets.only(bottom: cH(kBottomNavClearance)),
+                      child: _PositionGrid(roster: visible),
                     )
                     : SingleChildScrollView(
-                      padding: EdgeInsets.only(
-                        bottom: formatHeight(kBottomNavClearance),
-                      ),
+                      padding: EdgeInsets.only(bottom: cH(kBottomNavClearance)),
                       child: _PositionGrid(roster: visible),
                     ),
           ),
         ),
-        sh(32),
+        if (!isPhoneLayout) cSh(32),
       ],
     );
   }
@@ -251,38 +260,41 @@ class _TopBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Flexible(
+          // Le nom prend presque toute la place libre (Flexible + Spacer à parts
+          // égales le coupait à la moitié : « Équipe de … » sur tablette).
+          flex: 9,
           child: Text(
             teamName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppThemeStyle.semiBStyle(30, AppColor.primaryLabels),
+            style: AppThemeStyle.semiBStyle(cFs(30), AppColor.primaryLabels),
           ),
         ),
-        sw(20),
+        cSw(20),
         if (coach?.category != null) ...[
           _Chip(
             label: coach!.category!.label,
-            style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+            style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
           ),
-          sw(8),
+          cSw(8),
         ],
         if (coach?.division != null) ...[
           _Chip(
             label: coach!.division!.label,
-            style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+            style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
           ),
-          sw(8),
+          cSw(8),
         ],
         if (coach?.coachFirstName != null) ...[
           _Chip(
             label: 'app.mon-equipe.puce-coach'.tr(
               namedArgs: <String, String>{'prenom': coach!.coachFirstName!},
             ),
-            style: AppThemeStyle.regularStyle(15, AppColor.primaryLabels),
+            style: AppThemeStyle.regularStyle(cFs(15), AppColor.primaryLabels),
           ),
-          sw(8),
+          cSw(8),
         ],
-        sw(6),
+        cSw(6),
         _JerseySelector(
           jerseys: jerseys,
           onTap:
@@ -294,9 +306,9 @@ class _TopBar extends StatelessWidget {
         ),
         const Spacer(),
         const NotificationBell(),
-        sw(16),
+        cSw(16),
         const SettingsButton(),
-        sw(18),
+        cSw(18),
         const WinaWordmark(),
       ],
     );
@@ -312,13 +324,10 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(14),
-        vertical: formatHeight(6),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(6)),
       decoration: BoxDecoration(
         color: AppColor.chipBackground,
-        borderRadius: BorderRadius.circular(r(16)),
+        borderRadius: BorderRadius.circular(cR(16)),
       ),
       child: Text(
         label,
@@ -344,13 +353,10 @@ class _JerseySelector extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: formatWidth(12),
-          vertical: formatHeight(6),
-        ),
+        padding: EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(6)),
         decoration: BoxDecoration(
           color: AppColor.chipBackground,
-          borderRadius: BorderRadius.circular(r(16)),
+          borderRadius: BorderRadius.circular(cR(16)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -362,22 +368,18 @@ class _JerseySelector extends StatelessWidget {
               // ~248x264) : sans compensation le maillot rendu paraît bien
               // plus petit que `size`. On agrandit le rendu de ~1/0.72 sans
               // toucher à l'empreinte de mise en page (absorbée par les
-              // espacements sw(8) alentour) — même correctif que dans
+              // espacements cSw(8) alentour) — même correctif que dans
               // gerer_equipe_numbers_screen.dart.
               ShirtIcon(asset: shown[i].color.asset, size: 22),
-              sw(8),
+              cSw(8),
               // Le trait ne sépare que le maillot titulaire (le premier) du
               // reste (remplaçant(s) + crayon), conformément au design Figma.
               if (i == 0 && shown.length > 1) ...[
-                Container(
-                  width: 1,
-                  height: formatHeight(26),
-                  color: AppColor.divider,
-                ),
-                sw(8),
+                Container(width: 1, height: cH(26), color: AppColor.divider),
+                cSw(8),
               ],
             ],
-            Icon(Iconsax.edit_2, size: sp(20), color: AppColor.primaryLabels),
+            Icon(Iconsax.edit_2, size: cIc(20), color: AppColor.primaryLabels),
           ],
         ),
       ),
@@ -413,9 +415,9 @@ class _BodyHeader extends StatelessWidget {
           children: [
             Text(
               'app.mon-equipe.detail-joueurs'.tr(),
-              style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(cFs(18), AppColor.primaryLabels),
             ),
-            sh(6),
+            cSh(6),
             Text(
               'app.mon-equipe.compteur-joueurs'.tr(
                 namedArgs: <String, String>{
@@ -423,26 +425,26 @@ class _BodyHeader extends StatelessWidget {
                   'max': '$maxPlayers',
                 },
               ),
-              style: AppThemeStyle.mediumStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(cFs(13), AppColor.primaryLabels),
             ),
           ],
         ),
         const Spacer(),
         searchField,
-        sw(14),
+        cSw(14),
         _PillButton(
           label: 'app.mon-equipe.creer-joueur'.tr(),
           labelSize: 14,
           icon: Icon(
             Iconsax.arrow_circle_right,
-            size: sp(18),
+            size: cIc(18),
             // Même bascule que le libellé (cf. _PillButton).
             color:
                 isSquadFull(playerCount, max: maxPlayers)
                     ? AppColor.primaryLabels
                     : AppColor.textLight,
           ),
-          borderRadius: r(999),
+          borderRadius: cR(999),
           onTap:
               isSquadFull(playerCount, max: maxPlayers)
                   ? null
@@ -475,7 +477,7 @@ class _PositionGrid extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: _PositionCard(position: left, players: _of(left))),
-          sw(40),
+          cSw(40),
           Expanded(child: _PositionCard(position: right, players: _of(right))),
         ],
       ),
@@ -484,10 +486,29 @@ class _PositionGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isPhoneLayout) {
+      const List<PlayerPosition> order = <PlayerPosition>[
+        PlayerPosition.gardien,
+        PlayerPosition.defenseur,
+        PlayerPosition.milieu,
+        PlayerPosition.attaquant,
+      ];
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (int i = 0; i < order.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(
+              child: _PositionCard(position: order[i], players: _of(order[i])),
+            ),
+          ],
+        ],
+      );
+    }
     return Column(
       children: [
         _row(PlayerPosition.gardien, PlayerPosition.defenseur),
-        sh(20),
+        cSh(20),
         _row(PlayerPosition.milieu, PlayerPosition.attaquant),
       ],
     );
@@ -502,6 +523,7 @@ class _PositionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isPhoneLayout) return _phoneColumn();
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -513,43 +535,43 @@ class _PositionCard extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               color: AppColor.surface,
-              borderRadius: BorderRadius.circular(r(12)),
+              borderRadius: BorderRadius.circular(cR(12)),
             ),
-            padding: EdgeInsets.symmetric(
-              horizontal: formatWidth(16),
-              vertical: formatHeight(10),
-            ),
+            padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(10)),
             child: Row(
               children: [
                 Text(
                   position.label,
-                  style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
                 ),
                 const Spacer(),
                 SizedBox(
-                  width: formatWidth(70),
+                  width: cW(70),
                   child: Text(
                     'app.mon-equipe.pied-fort'.tr(),
                     textAlign: TextAlign.right,
                     style: AppThemeStyle.regularStyle(
-                      13,
+                      cFs(13),
                       AppColor.primaryLabels,
                     ),
                   ),
                 ),
-                sw(12),
-                SizedBox(width: sp(16)),
+                cSw(12),
+                SizedBox(width: cIc(16)),
               ],
             ),
           ),
-          sh(8),
+          cSh(8),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: formatWidth(16)),
+            padding: EdgeInsets.symmetric(horizontal: cW(16)),
             // Sans fond, les noms en vert de marque deviennent illisibles sur
             // la photo de pelouse du bas de page (AppBackground).
             decoration: BoxDecoration(
               color: AppColor.rosterRowSurface,
-              borderRadius: BorderRadius.circular(r(12)),
+              borderRadius: BorderRadius.circular(cR(12)),
             ),
             child: Column(
               children: [
@@ -563,6 +585,61 @@ class _PositionCard extends StatelessWidget {
   }
 }
 
+extension on _PositionCard {
+  /// Carte du téléphone : entête fixe + liste des joueurs qui défile dans la
+  /// carte (la carte épouse son contenu, jusqu'à la hauteur disponible).
+  Widget _phoneColumn() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: AppColor.surface,
+            borderRadius: BorderRadius.circular(cR(12)),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(10), vertical: cH(8)),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  position.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
+                ),
+              ),
+              Text(
+                '${players.length}',
+                style: AppThemeStyle.semiBStyle(cFs(13), AppColor.primaryColor),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+        Flexible(
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: cW(10)),
+            decoration: BoxDecoration(
+              color: AppColor.rosterRowSurface,
+              borderRadius: BorderRadius.circular(cR(12)),
+            ),
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              children: [
+                for (final Player player in players) _PlayerRow(player: player),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PlayerRow extends StatelessWidget {
   const _PlayerRow({required this.player});
 
@@ -571,7 +648,7 @@ class _PlayerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: formatHeight(33),
+      height: isPhoneLayout ? 30 : cH(33),
       child: Row(
         children: [
           Expanded(
@@ -579,18 +656,23 @@ class _PlayerRow extends StatelessWidget {
               player.fullName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.mediumStyle(15, AppColor.rosterName),
+              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.rosterName),
             ),
           ),
-          SizedBox(
-            width: formatWidth(70),
-            child: Text(
-              player.strongFoot.label,
-              textAlign: TextAlign.right,
-              style: AppThemeStyle.mediumStyle(15, AppColor.primaryLabels),
+          // Téléphone : carte étroite, le pied fort est dans la fiche joueur.
+          if (!isPhoneLayout)
+            SizedBox(
+              width: cW(70),
+              child: Text(
+                player.strongFoot.label,
+                textAlign: TextAlign.right,
+                style: AppThemeStyle.mediumStyle(
+                  cFs(15),
+                  AppColor.primaryLabels,
+                ),
+              ),
             ),
-          ),
-          sw(12),
+          cSw(12),
           // Œil : ouvre la fiche « Détail joueur » du joueur de la ligne.
           GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -600,10 +682,13 @@ class _PlayerRow extends StatelessWidget {
                     builder: (_) => DetailJoueurScreen(player: player),
                   ),
                 ),
-            child: Icon(
-              Iconsax.eye,
-              size: sp(16),
-              color: AppColor.primaryLabels,
+            child: Padding(
+              padding: EdgeInsets.all(isPhoneLayout ? 6 : 0),
+              child: Icon(
+                Iconsax.eye,
+                size: cIc(16),
+                color: AppColor.primaryLabels,
+              ),
             ),
           ),
         ],
@@ -629,9 +714,9 @@ class _CoupDEnvoiButton extends ConsumerWidget {
       child: _PillButton(
         label: 'app.mon-equipe.coup-denvoi'.tr(),
         labelSize: 15,
-        icon: WhistleIcon(size: sp(18), color: AppColor.textLight),
+        icon: WhistleIcon(size: cIc(18), color: AppColor.textLight),
         iconLeading: true,
-        borderRadius: r(28),
+        borderRadius: cR(28),
         verticalPadding: 15,
         horizontalPadding: 28,
         onTap: () {
@@ -689,8 +774,8 @@ class _PillButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(horizontalPadding),
-            vertical: formatHeight(verticalPadding),
+            horizontal: cW(horizontalPadding),
+            vertical: cH(verticalPadding),
           ),
           decoration: BoxDecoration(
             color: onTap == null ? AppColor.disabled : AppColor.primaryColor,
@@ -698,7 +783,8 @@ class _PillButton extends StatelessWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: iconLeading ? [icon, sw(10), text] : [text, sw(10), icon],
+            children:
+                iconLeading ? [icon, cSw(10), text] : [text, cSw(10), icon],
           ),
         ),
       ),
@@ -720,14 +806,14 @@ class _BottomNavBar extends StatelessWidget {
     // Fond à 60% d'opacité + background blur du Figma (blur 30 = rayon,
     // soit un sigma Gaussien de 15 : rayon ≈ 2 × sigma).
     return ClipRRect(
-      borderRadius: BorderRadius.circular(r(999)),
+      borderRadius: BorderRadius.circular(cR(999)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
         child: Container(
-          height: formatHeight(_kNavBarHeight),
+          height: cH(_kNavBarHeight),
           decoration: BoxDecoration(
             color: AppColor.navBar.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(r(999)),
+            borderRadius: BorderRadius.circular(cR(999)),
           ),
           child: Row(
             children: [
@@ -750,7 +836,7 @@ class _BottomNavBar extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: formatWidth(_kNavCenterGap)),
+              SizedBox(width: isPhoneLayout ? 150 : cW(_kNavCenterGap)),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -801,13 +887,13 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: sp(22), color: AppColor.textLight),
-            sh(4),
+            Icon(icon, size: cIc(22), color: AppColor.textLight),
+            cSh(4),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.mediumStyle(8, AppColor.textLight),
+              style: AppThemeStyle.mediumStyle(cFs(8), AppColor.textLight),
             ),
           ],
         ),

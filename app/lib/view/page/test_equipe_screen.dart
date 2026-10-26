@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/data/composition_repository.dart';
 import 'package:wina/data/search/union_search.dart';
@@ -222,26 +223,35 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
     return Column(
       children: <Widget>[
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+          padding: EdgeInsets.symmetric(
+            horizontal: isPhoneLayout ? 16 : cW(40),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[sh(18), _header(), sh(14), VerticalDivider()],
+            children: <Widget>[
+              cSh(isPhoneLayout ? 8 : 18),
+              _header(),
+              cSh(isPhoneLayout ? 6 : 14),
+              VerticalDivider(),
+            ],
           ),
         ),
         Expanded(
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              formatWidth(40),
-              formatHeight(16),
-              formatWidth(40),
-              formatHeight(kBottomNavClearance),
+              isPhoneLayout ? 16 : cW(40),
+              isPhoneLayout ? 8 : cH(16),
+              isPhoneLayout ? 16 : cW(40),
+              cH(kBottomNavClearance),
             ),
             child: LayoutBuilder(
               builder: (BuildContext context, BoxConstraints constraints) {
                 // Largeur des cartes calculée pour remplir la ligne : 5 colonnes
                 // séparées par [gap], occupant toute la largeur disponible.
-                const int cols = 5;
-                final double gap = formatWidth(14);
+                // Téléphone : 3 cartes horizontales (aperçu + actions) par ligne
+                // plutôt que 5 cartes hautes.
+                final int cols = isPhoneLayout ? 3 : 5;
+                final double gap = cW(14);
                 final double cardW =
                     (constraints.maxWidth - gap * (cols - 1)) / cols;
                 return Column(
@@ -253,21 +263,21 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
                           child: Text(
                             'app.test-equipe.titre'.tr(),
                             style: AppThemeStyle.semiBStyle(
-                              28,
+                              cFs(28),
                               AppColor.primaryLabels,
                             ),
                           ),
                         ),
-                        sw(16),
+                        cSw(16),
                         _CreateButton(onTap: () => _create(count)),
                       ],
                     ),
-                    sh(20),
+                    cSh(20),
                     _headingWithFilter(
                       'app.test-equipe.section-personnalisees'.tr(),
                       showCountFilter: clubFormat == null,
                     ),
-                    sh(12),
+                    cSh(12),
                     // Recherche sans aucune correspondance (ni perso ni
                     // standard) : un seul état vide plutôt que deux sections
                     // vides.
@@ -279,9 +289,7 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
                         subtitle:
                             'app.test-equipe.aucun-resultat-sous-titre'.tr(),
                         titleSize: 18,
-                        padding: EdgeInsets.symmetric(
-                          vertical: formatHeight(40),
-                        ),
+                        padding: EdgeInsets.symmetric(vertical: cH(40)),
                       )
                     else ...<Widget>[
                       if (customs.isEmpty && _pending)
@@ -292,14 +300,14 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
                               ? 'app.test-equipe.aucune-composition'.tr()
                               : 'app.test-equipe.aucun-resultat-recherche'.tr(),
                           style: AppThemeStyle.regularStyle(
-                            13,
+                            cFs(13),
                             AppColor.secondaryLabels,
                           ),
                         )
                       else
                         Wrap(
                           spacing: gap,
-                          runSpacing: formatHeight(14),
+                          runSpacing: cH(14),
                           children: <Widget>[
                             for (final CustomComposition c in customs)
                               _CustomCard(
@@ -313,27 +321,27 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
                               ),
                           ],
                         ),
-                      sh(26),
+                      cSh(26),
                       Text(
                         'app.test-equipe.section-standards'.tr(),
                         style: AppThemeStyle.semiBStyle(
-                          16,
+                          cFs(16),
                           AppColor.primaryLabels,
                         ),
                       ),
-                      sh(12),
+                      cSh(12),
                       if (standards.isEmpty)
                         Text(
                           'app.test-equipe.aucun-resultat-recherche'.tr(),
                           style: AppThemeStyle.regularStyle(
-                            13,
+                            cFs(13),
                             AppColor.secondaryLabels,
                           ),
                         )
                       else
                         Wrap(
                           spacing: gap,
-                          runSpacing: formatHeight(14),
+                          runSpacing: cH(14),
                           children: <Widget>[
                             for (final Formation f in standards)
                               _StandardCard(
@@ -358,17 +366,17 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
   Widget _header() {
     return Row(
       children: <Widget>[
-        Icon(Iconsax.people, size: sp(26), color: AppColor.primaryColor),
-        sw(10),
+        Icon(Iconsax.people, size: cIc(26), color: AppColor.primaryColor),
+        cSw(10),
         Text(
           'app.test-equipe.entete'.tr(),
-          style: AppThemeStyle.semiBStyle(28, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(28), AppColor.primaryLabels),
         ),
         const Spacer(),
         const NotificationBell(),
-        sw(16),
+        cSw(16),
         const SettingsButton(),
-        sw(18),
+        cSw(18),
         const WinaWordmark(size: 34),
       ],
     );
@@ -382,7 +390,7 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
       children: <Widget>[
         Text(
           heading,
-          style: AppThemeStyle.semiBStyle(16, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(16), AppColor.primaryLabels),
         ),
         const Spacer(),
         if (showCountFilter) ...<Widget>[
@@ -390,7 +398,7 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
             // 230 dp ne tenait plus le contenu (~237) depuis que
             // `LabeledPillDropdown` garantit 12 dp entre libellé et valeur :
             // « Type d'équipe » s'ellipsait en « Type d'équi… ».
-            width: formatWidth(250),
+            width: cW(250),
             child: LabeledPillDropdown<int>(
               label: 'app.test-equipe.type-equipe'.tr(),
               value: _count,
@@ -400,7 +408,7 @@ class _TestEquipeScreenState extends ConsumerState<TestEquipeScreen> {
               onChanged: (int n) => setState(() => _count = n),
             ),
           ),
-          sw(14),
+          cSw(14),
         ],
         _SearchField(
           controller: _searchController,
@@ -435,12 +443,13 @@ class _CustomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isPhoneLayout) return _phoneCard();
     return Container(
       width: width,
-      padding: EdgeInsets.all(formatWidth(10)),
+      padding: EdgeInsets.all(cW(10)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(16)),
+        borderRadius: BorderRadius.circular(cR(16)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Column(
@@ -454,18 +463,21 @@ class _CustomCard extends StatelessWidget {
                   composition.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppThemeStyle.mediumStyle(12, AppColor.primaryLabels),
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(12),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
-              sw(6),
+              cSw(6),
               LabelPill(composition.formationLabel, horizontalPadding: 10),
-              sw(6),
+              cSw(6),
               InkResponse(
                 onTap: onToggleFavorite,
-                radius: sp(20),
+                radius: cIc(20),
                 child: Icon(
                   composition.isFavorite ? Iconsax.heart : Iconsax.heart_copy,
-                  size: sp(20),
+                  size: cIc(20),
                   color:
                       composition.isFavorite
                           ? AppColor.destructive
@@ -474,24 +486,24 @@ class _CustomCard extends StatelessWidget {
               ),
             ],
           ),
-          sh(8),
+          cSh(8),
           FormationPitch(
             formation: composition.toFormation(),
             markerFraction: 0.16,
           ),
-          sh(10),
+          cSh(10),
           _CardButton(
             label: 'app.test-equipe.action-tester'.tr(),
             onTap: onTest,
           ),
-          sh(8),
+          cSh(8),
           _CardButton(label: 'utils.modify'.tr(), onTap: onEdit),
-          sh(8),
+          cSh(8),
           _CardButton(
             label: 'app.test-equipe.action-dupliquer'.tr(),
             onTap: onDuplicate,
           ),
-          sh(8),
+          cSh(8),
           _CardButton(
             label: 'app.test-equipe.action-supprimer'.tr(),
             accent: AppColor.destructive,
@@ -520,12 +532,13 @@ class _StandardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isPhoneLayout) return _phoneCard();
     return Container(
       width: width,
-      padding: EdgeInsets.all(formatWidth(10)),
+      padding: EdgeInsets.all(cW(10)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(16)),
+        borderRadius: BorderRadius.circular(cR(16)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Column(
@@ -538,17 +551,178 @@ class _StandardCard extends StatelessWidget {
               const Spacer(),
             ],
           ),
-          sh(8),
+          cSh(8),
           FormationPitch(formation: formation, markerFraction: 0.16),
-          sh(10),
+          cSh(10),
           _CardButton(
             label: 'app.test-equipe.action-creer-depuis-modele'.tr(),
             onTap: onDuplicate,
           ),
-          sh(8),
+          cSh(8),
           _CardButton(
             label: 'app.test-equipe.action-tester'.tr(),
             onTap: onTest,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Cartes téléphone : aperçu du schéma à gauche, infos et actions (icônes) à
+// droite. Hauteur fixe ~ celle de l'aperçu, au lieu d'une carte haute à quatre
+// boutons pleine largeur.
+const double _kPhonePitchW = 76;
+
+Widget _phoneShell(double width, Widget pitch, Widget side) {
+  return Container(
+    width: width,
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+      color: AppColor.surface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColor.divider),
+    ),
+    child: IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          SizedBox(width: _kPhonePitchW, child: Center(child: pitch)),
+          const SizedBox(width: 8),
+          Expanded(child: side),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Petit bouton icône (zone tactile 34x30) avec info-bulle.
+class _IconAction extends StatelessWidget {
+  const _IconAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 34,
+          height: 30,
+          child: Icon(icon, size: 18, color: color ?? AppColor.primaryLabels),
+        ),
+      ),
+    );
+  }
+}
+
+extension on _CustomCard {
+  Widget _phoneCard() {
+    return _phoneShell(
+      width,
+      FormationPitch(
+        formation: composition.toFormation(),
+        markerFraction: 0.16,
+      ),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  composition.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(13),
+                    AppColor.primaryLabels,
+                  ),
+                ),
+              ),
+              InkResponse(
+                onTap: onToggleFavorite,
+                radius: 18,
+                child: Icon(
+                  composition.isFavorite ? Iconsax.heart : Iconsax.heart_copy,
+                  size: 18,
+                  color:
+                      composition.isFavorite
+                          ? AppColor.destructive
+                          : AppColor.secondaryLabels,
+                ),
+              ),
+            ],
+          ),
+          LabelPill(composition.formationLabel, horizontalPadding: 10),
+          Row(
+            children: <Widget>[
+              _IconAction(
+                icon: Iconsax.play,
+                tooltip: 'app.test-equipe.action-tester'.tr(),
+                onTap: onTest,
+                color: AppColor.primaryColor,
+              ),
+              _IconAction(
+                icon: Iconsax.edit_2,
+                tooltip: 'utils.modify'.tr(),
+                onTap: onEdit,
+              ),
+              _IconAction(
+                icon: Iconsax.copy,
+                tooltip: 'app.test-equipe.action-dupliquer'.tr(),
+                onTap: onDuplicate,
+              ),
+              _IconAction(
+                icon: Iconsax.trash,
+                tooltip: 'app.test-equipe.action-supprimer'.tr(),
+                onTap: onDelete,
+                color: AppColor.destructive,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+extension on _StandardCard {
+  Widget _phoneCard() {
+    return _phoneShell(
+      width,
+      FormationPitch(formation: formation, markerFraction: 0.16),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          LabelPill(formation.label, horizontalPadding: 10),
+          Row(
+            children: <Widget>[
+              _IconAction(
+                icon: Iconsax.play,
+                tooltip: 'app.test-equipe.action-tester'.tr(),
+                onTap: onTest,
+                color: AppColor.primaryColor,
+              ),
+              _IconAction(
+                icon: Iconsax.copy,
+                tooltip: 'app.test-equipe.action-creer-depuis-modele'.tr(),
+                onTap: onDuplicate,
+              ),
+            ],
           ),
         ],
       ),
@@ -567,22 +741,19 @@ class _CardButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color fg = accent ?? AppColor.primaryLabels;
-    final double badge = sp(16);
+    final double badge = cIc(16);
     return Material(
       color: AppColor.surface,
-      borderRadius: BorderRadius.circular(r(999)),
+      borderRadius: BorderRadius.circular(cR(999)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(r(999)),
+            borderRadius: BorderRadius.circular(cR(999)),
             border: Border.all(color: AppColor.divider),
           ),
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(10),
-            vertical: formatHeight(9),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(10), vertical: cH(9)),
           child: Row(
             children: <Widget>[
               Expanded(
@@ -591,10 +762,10 @@ class _CardButton extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppThemeStyle.semiBStyle(12, fg),
+                  style: AppThemeStyle.semiBStyle(cFs(12), fg),
                 ),
               ),
-              sw(8),
+              cSw(8),
               SizedBox(
                 width: badge,
                 height: badge,
@@ -647,21 +818,21 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: formatWidth(240),
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(14)),
+      width: cW(240),
+      padding: EdgeInsets.symmetric(horizontal: cW(14)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Row(
         children: <Widget>[
           Icon(
             Iconsax.search_normal_1_copy,
-            size: sp(16),
+            size: cIc(16),
             color: AppColor.secondaryLabels,
           ),
-          sw(8),
+          cSw(8),
           Expanded(
             child: TextField(
               controller: controller,
@@ -671,13 +842,16 @@ class _SearchField extends StatelessWidget {
               // Valider la recherche referme le clavier.
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(13),
+                AppColor.primaryLabels,
+              ),
               decoration: InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
                 hintText: 'app.recherche.test-equipe-hint'.tr(),
                 hintStyle: AppThemeStyle.regularStyle(
-                  13,
+                  cFs(13),
                   AppColor.secondaryLabels,
                 ),
               ),
@@ -686,10 +860,10 @@ class _SearchField extends StatelessWidget {
           if (controller.text.isNotEmpty)
             InkResponse(
               onTap: onClear,
-              radius: sp(18),
+              radius: cIc(18),
               child: Icon(
                 Iconsax.close_circle,
-                size: sp(16),
+                size: cIc(16),
                 color: AppColor.secondaryLabels,
               ),
             ),
@@ -707,26 +881,23 @@ class _CreateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double badge = sp(20);
+    final double badge = cIc(20);
     return Material(
       color: AppColor.primaryColor,
-      borderRadius: BorderRadius.circular(r(999)),
+      borderRadius: BorderRadius.circular(cR(999)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(999)),
+        borderRadius: BorderRadius.circular(cR(999)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(20),
-            vertical: formatHeight(11),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(20), vertical: cH(11)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
                 'app.test-equipe.creer-composition'.tr(),
-                style: AppThemeStyle.semiBStyle(14, AppColor.textLight),
+                style: AppThemeStyle.semiBStyle(cFs(14), AppColor.textLight),
               ),
-              sw(10),
+              cSw(10),
               SizedBox(
                 width: badge,
                 height: badge,

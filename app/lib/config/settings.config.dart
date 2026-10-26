@@ -61,7 +61,8 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart' show MaterialPageRoute;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
@@ -140,6 +141,7 @@ String? _appMetadata(String? Function(AppMetadataConfig config) getter) {
 bool _hasSocialUrl() =>
     _appMetadata((c) => c.facebookUrl) != null ||
     _appMetadata((c) => c.instagramUrl) != null ||
+    _appMetadata((c) => c.tiktokUrl) != null ||
     _appMetadata((c) => c.twitterUrl) != null ||
     _appMetadata((c) => c.linkedinUrl) != null ||
     _appMetadata((c) => c.snapchatUrl) != null;
@@ -640,6 +642,26 @@ KosmosSettingsConfig initKosmosSettingsConfig() {
                     prefixBuilder:
                         (_, __) => SvgPicture.asset(
                           "assets/svg/insta.svg",
+                          fit: BoxFit.cover,
+                        ),
+                  ),
+
+                /// Node "Notre page TikTok"
+                if (_appMetadata((c) => c.tiktokUrl) != null)
+                  CelluleModel(
+                    tag: "social-tiktok",
+                    onTap: (context, __) async {
+                      final String? url = _appMetadata((c) => c.tiktokUrl);
+                      if (url != null) {
+                        await _launchOrNotify(context, Uri.parse(url));
+                      }
+                      return null;
+                    },
+                    tileBuilder:
+                        (_, __) => "package.settings.node.social.tiktok".tr(),
+                    prefixBuilder:
+                        (_, __) => SvgPicture.asset(
+                          "assets/svg/tiktok.svg",
                           fit: BoxFit.cover,
                         ),
                   ),

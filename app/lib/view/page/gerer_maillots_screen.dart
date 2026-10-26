@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/data/coach_profile_repository.dart';
 import 'package:wina/models/coach_profile.dart';
@@ -136,14 +137,17 @@ class _GererMaillotsScreenState extends ConsumerState<GererMaillotsScreen> {
               onEdit: _edit,
               onDelete: _delete,
             ),
-        loading: () => AppLoader(padding: EdgeInsets.all(formatWidth(40))),
+        loading: () => AppLoader(padding: EdgeInsets.all(cW(40))),
         error:
             (Object e, _) => Padding(
-              padding: EdgeInsets.all(formatWidth(40)),
+              padding: EdgeInsets.all(cW(40)),
               child: Text(
                 '${'app.gerer-maillots.erreur-chargement'.tr()}\n$e',
                 textAlign: TextAlign.center,
-                style: AppThemeStyle.mediumStyle(15, AppColor.secondaryLabels),
+                style: AppThemeStyle.mediumStyle(
+                  cFs(15),
+                  AppColor.secondaryLabels,
+                ),
               ),
             ),
       ),
@@ -170,46 +174,106 @@ class _MaillotsCard extends StatelessWidget {
   final void Function(int index, Jersey jersey) onEdit;
   final void Function(int index, Jersey jersey) onDelete;
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _card(Widget child) {
     return Container(
-      width: formatWidth(430),
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(28),
-        vertical: formatHeight(28),
-      ),
+      padding:
+          isPhoneLayout
+              ? const EdgeInsets.all(12)
+              : EdgeInsets.symmetric(horizontal: cW(28), vertical: cH(28)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(16)),
+        borderRadius: BorderRadius.circular(cR(16)),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _savedList() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CpLabel('app.gerer-maillots.section-enregistres'.tr()),
+        cSh(8),
+        for (int i = 0; i < jerseys.length; i++) ...[
+          if (i > 0) cSh(8),
+          _JerseyRow(
+            jersey: jerseys[i],
+            onEdit: () => onEdit(i, jerseys[i]),
+            onDelete: () => onDelete(i, jerseys[i]),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _addForm() {
+    final bool phone = isPhoneLayout;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        JerseyForm(controller: controller),
+        SizedBox(height: phone ? 8 : cH(18)),
+        if (!phone) ...[Container(height: 1, color: AppColor.divider), cSh(18)],
+        busy
+            ? AppLoader(padding: EdgeInsets.symmetric(vertical: cH(12)))
+            : CpButton(label: 'utils.save'.tr(), onTap: onSave),
+        if (!phone) ...[cSh(14), const CpRequiredNote()],
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Téléphone : maillots enregistrés à gauche, ajout à droite, côte à côte
+    // (une seule carte verticale obligeait à défiler longuement).
+    if (isPhoneLayout) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (jerseys.isNotEmpty) ...[
+              Expanded(child: _card(_savedList())),
+              const SizedBox(width: 12),
+            ],
+            Expanded(child: _card(_addForm())),
+          ],
+        ),
+      );
+    }
+    return Container(
+      width: cW(430),
+      padding: EdgeInsets.symmetric(horizontal: cW(28), vertical: cH(28)),
+      decoration: BoxDecoration(
+        color: AppColor.surface,
+        borderRadius: BorderRadius.circular(cR(16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (jerseys.isNotEmpty) ...[
             CpLabel('app.gerer-maillots.section-enregistres'.tr()),
-            sh(8),
+            cSh(8),
             for (int i = 0; i < jerseys.length; i++) ...[
-              if (i > 0) sh(8),
+              if (i > 0) cSh(8),
               _JerseyRow(
                 jersey: jerseys[i],
                 onEdit: () => onEdit(i, jerseys[i]),
                 onDelete: () => onDelete(i, jerseys[i]),
               ),
             ],
-            sh(18),
+            cSh(18),
             Container(height: 1, color: AppColor.divider),
-            sh(18),
+            cSh(18),
           ],
           JerseyForm(controller: controller),
-          sh(18),
+          cSh(18),
           Container(height: 1, color: AppColor.divider),
-          sh(18),
+          cSh(18),
           busy
-              ? AppLoader(
-                padding: EdgeInsets.symmetric(vertical: formatHeight(12)),
-              )
+              ? AppLoader(padding: EdgeInsets.symmetric(vertical: cH(12)))
               : CpButton(label: 'utils.save'.tr(), onTap: onSave),
-          sh(14),
+          cSh(14),
           const CpRequiredNote(),
         ],
       ),
@@ -233,49 +297,52 @@ class _JerseyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(14),
-        vertical: formatHeight(10),
-      ),
+      padding:
+          isPhoneLayout
+              ? const EdgeInsets.symmetric(horizontal: 10, vertical: 6)
+              : EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(10)),
       decoration: BoxDecoration(
         color: AppColor.background,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Row(
         children: [
-          ShirtIcon(asset: jersey.color.asset, size: 24),
-          sw(10),
+          ShirtIcon(asset: jersey.color.asset, size: isPhoneLayout ? 34 : 24),
+          cSw(10),
           Expanded(
             child: Text(
               jersey.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.mediumStyle(14, AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(cFs(14), AppColor.primaryLabels),
             ),
           ),
-          sw(8),
+          cSw(8),
           Text(
             jersey.color.label,
-            style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+            style: AppThemeStyle.regularStyle(
+              cFs(12),
+              AppColor.secondaryLabels,
+            ),
           ),
-          sw(12),
+          cSw(12),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onEdit,
             child: Icon(
               Iconsax.edit_2,
-              size: sp(18),
+              size: cIc(18),
               color: AppColor.primaryLabels,
             ),
           ),
-          sw(12),
+          cSw(12),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onDelete,
             child: Icon(
               Iconsax.trash,
-              size: sp(18),
+              size: cIc(18),
               color: AppColor.destructive,
             ),
           ),
@@ -330,15 +397,17 @@ class _JerseyEditDialogState extends State<_JerseyEditDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: AppColor.surface,
-      insetPadding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r(20))),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isPhoneLayout ? 80 : cW(40),
+        vertical: isPhoneLayout ? 12 : 24,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cR(20)),
+      ),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: formatWidth(430)),
+        constraints: BoxConstraints(maxWidth: cW(430)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(28),
-            vertical: formatHeight(28),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(28), vertical: cH(28)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -346,11 +415,14 @@ class _JerseyEditDialogState extends State<_JerseyEditDialog> {
               Text(
                 'app.gerer-maillots.modifier-titre'.tr(),
                 textAlign: TextAlign.center,
-                style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+                style: AppThemeStyle.semiBStyle(
+                  cFs(18),
+                  AppColor.primaryLabels,
+                ),
               ),
-              sh(20),
+              cSh(20),
               CpLabel('app.gerer-maillots.champ-nom'.tr()),
-              sh(8),
+              cSh(8),
               CpTextField(
                 controller: _nom,
                 hint: 'app.gerer-maillots.champ-nom-hint'.tr(),
@@ -359,9 +431,9 @@ class _JerseyEditDialogState extends State<_JerseyEditDialog> {
                 },
                 error: _submitted && _nom.text.trim().isEmpty,
               ),
-              sh(18),
+              cSh(18),
               CpLabel('app.gerer-maillots.champ-couleur'.tr()),
-              sh(8),
+              cSh(8),
               CpDropdown<JerseyColorOption>(
                 value: _color,
                 values: JerseyColorOption.values,
@@ -369,9 +441,9 @@ class _JerseyEditDialogState extends State<_JerseyEditDialog> {
                 leadingOf: (JerseyColorOption v) => ShirtIcon(asset: v.asset),
                 onChanged: (JerseyColorOption v) => setState(() => _color = v),
               ),
-              sh(24),
+              cSh(24),
               CpButton(label: 'utils.save'.tr(), onTap: _submit),
-              sh(12),
+              cSh(12),
               CpButton(
                 label: 'utils.cancel'.tr(),
                 soft: true,

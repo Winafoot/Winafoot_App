@@ -1,5 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/coach_profile.dart';
 import 'package:wina/models/game_match.dart';
@@ -73,8 +75,8 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
       child: Center(
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(40),
-            vertical: formatHeight(80),
+            horizontal: isPhoneLayout ? 16 : cW(40),
+            vertical: isPhoneLayout ? 4 : cH(80),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,9 +84,9 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
               Expanded(child: _ownColumn(coach)),
               Padding(
                 padding: EdgeInsets.only(
-                  top: formatHeight(96),
-                  left: formatWidth(24),
-                  right: formatWidth(24),
+                  top: isPhoneLayout ? 34 : cH(96),
+                  left: isPhoneLayout ? 12 : cW(24),
+                  right: isPhoneLayout ? 12 : cW(24),
                 ),
                 child: const VsBadge(),
               ),
@@ -100,21 +102,30 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
     return Column(
       children: <Widget>[
         TeamLabelBadge('app.coup-denvoi-step1.mon-equipe'.tr()),
-        sh(14),
-        const TeamCrest(size: 92),
-        sh(14),
-        Text(
-          coach?.teamName ?? 'app.coup-denvoi-step1.mon-equipe'.tr(),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: AppThemeStyle.semiBStyle(21, AppColor.primaryLabels),
+        cSh(14),
+        // Téléphone : sans écusson, pour tenir dans la hauteur sans défiler.
+        if (!isPhoneLayout) ...<Widget>[TeamCrest(size: 92), cSh(14)],
+        // Nom figé (grisé, non cliquable) : seul celui de l'adversaire se saisit.
+        Container(
+          width: isPhoneLayout ? 230 : cW(300),
+          padding: EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(10)),
+          decoration: BoxDecoration(
+            color: AppColor.divider.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(cR(12)),
+          ),
+          child: Text(
+            coach?.teamName ?? 'app.coup-denvoi-step1.mon-equipe'.tr(),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppThemeStyle.semiBStyle(cFs(21), AppColor.secondaryLabels),
+          ),
         ),
-        sh(14),
+        cSh(14),
         Wrap(
           alignment: WrapAlignment.center,
-          spacing: formatWidth(8),
-          runSpacing: formatHeight(8),
+          spacing: cW(8),
+          runSpacing: cH(8),
           children: <Widget>[
             if (coach?.category != null) InfoChip(coach!.category!.label),
             if (coach?.division != null) InfoChip(coach!.division!.label),
@@ -138,42 +149,70 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
     return Column(
       children: <Widget>[
         TeamLabelBadge('app.coup-denvoi-step1.equipe-adverse'.tr()),
-        sh(14),
-        const TeamCrest(size: 92),
-        sh(14),
+        cSh(14),
+        if (!isPhoneLayout) ...<Widget>[TeamCrest(size: 92), cSh(14)],
         SizedBox(
           // Même largeur que les pilules Catégorie/Division juste en dessous :
           // sans borne, `IntrinsicWidth` laissait le nom déborder de l'écran.
-          width: formatWidth(300),
-          child: TextField(
-            controller: _name,
-            textAlign: TextAlign.center,
-            minLines: 1,
-            maxLines: 2,
-            maxLength: 40,
-            // Deux lignes pour l'affichage seulement : sans ces deux réglages,
-            // Flutter traite le champ en multi-lignes et Entrée insère un saut
-            // de ligne dans le nom au lieu de valider la saisie.
-            keyboardType: TextInputType.text,
-            textInputAction: TextInputAction.done,
-            cursorColor: AppColor.primaryColor,
-            style: AppThemeStyle.semiBStyle(21, AppColor.primaryLabels),
-            decoration: InputDecoration(
-              isCollapsed: true,
-              counterText: '',
-              border: InputBorder.none,
-              hintText: 'app.coup-denvoi-step1.hint-nom-equipe'.tr(),
-              hintStyle: AppThemeStyle.mediumStyle(
-                21,
-                AppColor.secondaryLabels,
+          width: isPhoneLayout ? 230 : cW(300),
+          // Encadré + crayon : signale que le nom est à taper.
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColor.surface,
+              borderRadius: BorderRadius.circular(cR(12)),
+              border: Border.all(color: AppColor.primaryColor, width: 1.5),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: cW(14),
+                vertical: cH(10),
+              ),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextField(
+                      controller: _name,
+                      textAlign: TextAlign.center,
+                      minLines: 1,
+                      maxLines: 2,
+                      maxLength: 40,
+                      // Deux lignes pour l'affichage seulement : sans ces deux réglages,
+                      // Flutter traite le champ en multi-lignes et Entrée insère un saut
+                      // de ligne dans le nom au lieu de valider la saisie.
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      cursorColor: AppColor.primaryColor,
+                      style: AppThemeStyle.semiBStyle(
+                        cFs(21),
+                        AppColor.primaryLabels,
+                      ),
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        counterText: '',
+                        border: InputBorder.none,
+                        hintText: 'app.coup-denvoi-step1.hint-nom-equipe'.tr(),
+                        hintStyle: AppThemeStyle.mediumStyle(
+                          cFs(21),
+                          AppColor.secondaryLabels,
+                        ),
+                      ),
+                      onChanged: notifier.setOpponentName,
+                    ),
+                  ),
+                  cSw(8),
+                  Icon(
+                    Iconsax.edit_2,
+                    size: cIc(20),
+                    color: AppColor.primaryColor,
+                  ),
+                ],
               ),
             ),
-            onChanged: notifier.setOpponentName,
           ),
         ),
-        sh(18),
+        cSh(18),
         SizedBox(
-          width: formatWidth(300),
+          width: isPhoneLayout ? 230 : cW(300),
           child: LabeledPillDropdown<TeamCategory>(
             label: 'app.coup-denvoi-step1.categorie'.tr(),
             value: category,
@@ -182,9 +221,9 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
             onChanged: notifier.setOpponentCategory,
           ),
         ),
-        sh(10),
+        cSh(10),
         SizedBox(
-          width: formatWidth(300),
+          width: isPhoneLayout ? 230 : cW(300),
           child: LabeledPillDropdown<TeamDivision>(
             label: 'app.coup-denvoi-step1.division'.tr(),
             value: division,

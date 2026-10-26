@@ -1,5 +1,5 @@
-import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
 import 'package:wina/view/widget/custom_back_button.dart';
@@ -24,6 +24,7 @@ class MatchHeader extends StatelessWidget {
     this.onBack,
     this.clockFontSize = 24,
     this.controls = const <Widget>[],
+    this.trailing,
   });
 
   final String title;
@@ -41,43 +42,58 @@ class MatchHeader extends StatelessWidget {
   /// Contrôles insérés entre le chrono et le score (pilules pause / mi-temps).
   final List<Widget> controls;
 
+  /// Bouton accolé au score. Sur téléphone (écran de direct) il remplace la
+  /// signature Wina pour laisser la place aux contrôles agrandis.
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: <Widget>[
         if (onBack != null) ...<Widget>[
           CustomBackButton(onTap: onBack!),
-          sw(7),
+          cSw(7),
           const HeaderDivider(),
-          sw(7),
+          cSw(7),
         ],
-        WhistleIcon(size: sp(24), color: AppColor.primaryColor),
-        sw(10),
-        Text(
-          title,
-          style: AppThemeStyle.semiBStyle(24, AppColor.primaryLabels),
-        ),
-        sw(16),
+        WhistleIcon(size: cIc(24), color: AppColor.primaryColor),
+        // Écran de direct : pas de titre (le chrono, le score et les
+        // deux pilules occupent déjà toute la largeur).
+        if (controls.isEmpty) ...<Widget>[
+          cSw(10),
+          Text(
+            title,
+            style: AppThemeStyle.semiBStyle(cFs(24), AppColor.primaryLabels),
+          ),
+        ],
+        cSw(16),
         const HeaderDivider(),
-        sw(16),
+        cSw(16),
         Text(
           clock,
-          style: AppThemeStyle.boldStyle(clockFontSize, AppColor.primaryColor),
+          style: AppThemeStyle.boldStyle(
+            cFs(clockFontSize),
+            AppColor.primaryColor,
+          ),
         ),
         for (int i = 0; i < controls.length; i++) ...<Widget>[
-          sw(16),
-          if (i > 0) ...<Widget>[const HeaderDivider(), sw(16)],
+          cSw(16),
+          if (i > 0) ...<Widget>[const HeaderDivider(), cSw(16)],
           controls[i],
         ],
-        sw(16),
+        cSw(16),
         const HeaderDivider(),
-        sw(16),
+        cSw(16),
         Text(
           '$scoreUs - $scoreThem',
-          style: AppThemeStyle.boldStyle(22, AppColor.primaryLabels),
+          style: AppThemeStyle.boldStyle(
+            cFs(controls.isNotEmpty ? 26 : 22),
+            AppColor.primaryLabels,
+          ),
         ),
+        if (trailing != null) ...<Widget>[cSw(8), trailing!],
         const Spacer(),
-        const WinaWordmark(size: 30),
+        if (!(isPhoneLayout && trailing != null)) const WinaWordmark(size: 30),
       ],
     );
   }

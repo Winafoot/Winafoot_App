@@ -45,13 +45,18 @@ export const LIMITS = {
   resetPasswordIp: { limit: 10, windowMs: 15 * MINUTE },
   resetPasswordAccount: { limit: 3, windowMs: HOUR },
   resetPasswordAccountDay: { limit: 6, windowMs: DAY },
+  // Saisie du code reçu : le plafond d'essais par code (5) est la vraie protection, ceci borne les rafales.
+  confirmResetIp: { limit: 20, windowMs: 15 * MINUTE },
 
   // Inscription d'un coach depuis l'app : par IP seulement (aucun compte n'existe encore). Large devant
   // un usage humain (un club peut inscrire plusieurs coachs depuis le même réseau), bas devant un script.
   registerIp: { limit: 10, windowMs: HOUR },
+  // Première connexion Google / Apple : une fiche par compte, quelques essais suffisent.
+  socialSignupUid: { limit: 10, windowMs: HOUR },
 
   // Callables authentifiés : par uid (adaptateur).
-  verificationUid: { limit: 3, windowMs: HOUR },
+  verificationUid: { limit: 6, windowMs: HOUR },
+  verifyCodeUid: { limit: 20, windowMs: HOUR },
   deleteAccountUid: { limit: 3, windowMs: HOUR },
   addNotificationUid: { limit: 60, windowMs: HOUR },
   // Effectif : large devant un usage humain (un effectif de 20 se saisit en une fois), bas devant un script.
@@ -62,6 +67,8 @@ export const LIMITS = {
   // Équipes liées : au plus 2 par abonnement, quelques essais d'identifiant ou de mot de passe suffisent.
   createLinkedTeamUid: { limit: 10, windowMs: HOUR },
   resetLinkedTeamPasswordUid: { limit: 10, windowMs: HOUR },
+  // Adjoint : un seul par coach, quelques essais d'identifiant ou de mot de passe suffisent.
+  assistantUid: { limit: 10, windowMs: HOUR },
   grantTestSubscriptionUid: { limit: 20, windowMs: HOUR },
 
   // Endpoints HTTP de la landing.
@@ -76,6 +83,6 @@ export const LIMITS = {
   supportGlobal: { limit: 20, windowMs: HOUR },
 
   // Tous les mails déclenchés par un appel public (réinitialisation, suppression de compte) : le
-  // quota MailerSend est partagé avec les invitations des coachs, qui ne passent pas par ce plafond.
+  // quota Resend est partagé avec les invitations des coachs, qui ne passent pas par ce plafond.
   publicMailGlobal: { limit: 300, windowMs: DAY },
 } as const;

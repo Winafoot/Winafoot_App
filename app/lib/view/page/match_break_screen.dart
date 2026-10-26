@@ -72,6 +72,29 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
       Navigator.of(context).pop();
     }
 
+    // Le bouton « Démarrer 2e mi-temps » est irréversible : on confirme pour
+    // éviter une erreur de sélection. La flèche et le retour système, eux,
+    // reprennent directement via `resume`.
+    void confirmSecondHalf() {
+      showDialog<void>(
+        context: context,
+        barrierColor: AppColor.scrim,
+        builder:
+            (BuildContext ctx) => AppConfirmDialog(
+              title: 'app.match-break.titre-2e-mi-temps'.tr(),
+              message: 'app.match-break.message-2e-mi-temps'.tr(),
+              primaryLabel: 'app.match-break.rester-sur-ecran'.tr(),
+              onPrimary: () => Navigator.of(ctx).pop(),
+              secondaryLabel: 'app.match-break.demarrer-2e-mi-temps'.tr(),
+              onSecondary: () {
+                Navigator.of(ctx).pop();
+                resume();
+              },
+              secondaryAccent: AppColor.primaryColor,
+            ),
+      );
+    }
+
     final Widget scaffold = Scaffold(
       backgroundColor: AppColor.background,
       body: SafeArea(
@@ -146,7 +169,7 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
                                     ? 'app.match-break.demarrer-2e-mi-temps'
                                         .tr()
                                     : 'app.match-break.reprendre-match'.tr(),
-                            onResume: resume,
+                            onResume: isHalfTime ? confirmSecondHalf : resume,
                             onEditStats: () => _editStats(context, ref),
                             onEditCompo:
                                 () => openLiveCompositionEditor(context, ref),

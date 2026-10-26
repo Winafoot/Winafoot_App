@@ -14,17 +14,17 @@ import 'package:wina/models/userAppData/user_app_data.dart';
 import 'package:permissionrequest/permissons_package.dart';
 
 import 'config/maintenance_gate.dart';
+import 'config/orientation_controller.dart';
 import 'services/email_sync.dart';
 import 'config/theme.dart';
 import 'routes/app_router.gr.dart';
 
+/// Jeton App Check de debug fixe, passé par `--dart-define=APPCHECK_DEBUG_TOKEN=<uuid>` (jamais committé) :
+/// il évite d'enregistrer un nouveau jeton à chaque réinstallation de l'émulateur. Vide : jeton généré.
+const String _kAppCheckDebugToken = String.fromEnvironment('APPCHECK_DEBUG_TOKEN');
+
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  // App 100% tablette : verrouillage en paysage (les deux sens).
-  await SystemChrome.setPreferredOrientations(const [
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.black,
@@ -38,6 +38,8 @@ Future<void> main(List<String> args) async {
     permissionSeenGuard: PermissionSeenGuard(),
   );
   _startAnalyticsScreenTracking(appRouter);
+  // Paysage par défaut ; portrait sur téléphone pour le parcours d'entrée.
+  OrientationController.attach(appRouter);
 
   return await Application.launch(
     initModel(),
@@ -75,7 +77,13 @@ AppModel initModel() {
     appTitle: "Wina",
     // App 100% tablette : le design de référence fait 1194x834, ce qui aligne
     // sp()/sh()/formatWidth() sur les valeurs px du design Figma.
-    responsive: const ResponsiveConfig(size: Size(1194, 834)),
+    responsive: const ResponsiveConfig(
+      size: Size(1194, 834),
+      // Téléphone en portrait (parcours d'entrée) : design 390x844. minWidth 450 par défaut
+      // forcerait un téléphone de 390 dp à s'afficher plus large que son écran.
+      portraitSize: Size(390, 844),
+      minWidth: 320,
+    ),
     userConfig: UserConfig(
       fromJson: (Map<String, dynamic>? json, userType) {
         return UserAppData.fromJson(json ?? {});
@@ -88,12 +96,18 @@ AppModel initModel() {
       // journalisé et n'empêche pas le démarrage : les requêtes partent alors sans jeton.
       try {
         await FirebaseAppCheck.instance.activate(
-          providerAndroid: kReleaseMode
-              ? const AndroidPlayIntegrityProvider()
-              : const AndroidDebugProvider(),
-          providerApple: kReleaseMode
-              ? const AppleAppAttestProvider()
-              : const AppleDebugProvider(),
+          providerAndroid:
+              kReleaseMode
+                  ? const AndroidPlayIntegrityProvider()
+                  : AndroidDebugProvider(
+                    debugToken: _kAppCheckDebugToken.isEmpty ? null : _kAppCheckDebugToken,
+                  ),
+          providerApple:
+              kReleaseMode
+                  ? const AppleAppAttestProvider()
+                  : AppleDebugProvider(
+                    debugToken: _kAppCheckDebugToken.isEmpty ? null : _kAppCheckDebugToken,
+                  ),
         );
       } catch (e, st) {
         developer.log(

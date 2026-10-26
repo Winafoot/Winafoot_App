@@ -78,12 +78,12 @@ describe("onCreateUser", () => {
 
   // La fiche est déjà créée : un échec d'envoi est journalisé (motif seulement) et le trigger réussit.
   it("logs a failed welcome email without failing the trigger", async () => {
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend : 422 : domaine non vérifié"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend : 422 : domaine non vérifié"));
     const snap = await snapshotFor("coach5", { email: "fail@club.test" });
 
     await expect(onCreateUser(snap as any, { params: { userId: "coach5" } })).resolves.toBeUndefined();
 
-    expect(logger.error).toHaveBeenCalledWith("[onCreateUser] e-mail de bienvenue non envoyé : MailerSend : 422 : domaine non vérifié");
+    expect(logger.error).toHaveBeenCalledWith("[onCreateUser] e-mail de bienvenue non envoyé : Resend : 422 : domaine non vérifié");
   });
 
   it("sends a welcome email without a contact link when app_config has no contact address", async () => {

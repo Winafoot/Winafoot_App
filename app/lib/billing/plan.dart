@@ -13,7 +13,9 @@ class PlanProduct {
   final int teams;
   final BillingPeriod period;
 
-  static final RegExp _pattern = RegExp(r'^wina_?(?:team_?([123])|([123])_?teams?)[_:](monthly|yearly|annual)[0-9]*(?::[a-z0-9_.-]+)?$');
+  static final RegExp _pattern = RegExp(
+    r'^wina_(?:team([123])|([123])teams?)[_:](monthly|yearly|annual)(?::[a-z0-9_.-]+)?$',
+  );
 
   static PlanProduct? parse(String? productId) {
     if (productId == null) return null;

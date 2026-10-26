@@ -123,9 +123,7 @@ Formation _fromLabel(String label, int playerCount) {
     final int count = bands[i];
     if (count <= 0) continue;
     final double y = n == 1 ? 0.48 : yBottom - (yBottom - yTop) * i / (n - 1);
-    final PlayerPosition role = i == 0
-        ? _d
-        : (i == n - 1 ? _a : _m);
+    final PlayerPosition role = i == 0 ? _d : (i == n - 1 ? _a : _m);
     slots.addAll(_line(role, y, count));
   }
   return Formation(label: label, playerCount: playerCount, slots: slots);

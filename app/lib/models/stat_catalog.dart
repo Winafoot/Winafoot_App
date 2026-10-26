@@ -66,7 +66,7 @@ class StatDef {
   bool get isTotal => isCalculated && !bilanOnly;
 }
 
-/// Catalogue des 42 statistiques (37 saisies + 5 calculées), dans l'ordre des
+/// Catalogue des 33 statistiques (28 saisies + 5 calculées), dans l'ordre des
 /// 9 thèmes du client. Les clés sont persistées (`playerStats`,
 /// `enabledStatKeys`) : n'en renommer aucune, seuls libellés et thèmes changent.
 const List<StatDef> kStatCatalog = <StatDef>[
@@ -104,14 +104,8 @@ const List<StatDef> kStatCatalog = <StatDef>[
   ),
   // ── Efficacité ──
   StatDef(
-    'interceptions',
-    'Interception de ballons',
-    defaultOn: true,
-    category: StatCategory.efficacite,
-  ),
-  StatDef(
     'recuperations',
-    'Récupération de ballons',
+    'Récupérations de ballons',
     defaultOn: true,
     category: StatCategory.efficacite,
   ),
@@ -129,16 +123,10 @@ const List<StatDef> kStatCatalog = <StatDef>[
     category: StatCategory.tirs,
   ),
   StatDef(
-    'tirsBloques',
-    'Tirs bloqués',
-    defaultOn: true,
-    category: StatCategory.tirs,
-  ),
-  StatDef(
     'totalTirs',
     'Total tirs',
     category: StatCategory.tirs,
-    parts: <String>['tirsCadres', 'tirsNonCadres', 'tirsBloques'],
+    parts: <String>['tirsCadres', 'tirsNonCadres'],
   ),
   // ── Offensives ──
   StatDef(
@@ -167,23 +155,6 @@ const List<StatDef> kStatCatalog = <StatDef>[
   ),
   // ── Coups de pied arrêtés ──
   StatDef(
-    'corners',
-    'Corners obtenus',
-    category: StatCategory.coupsDePiedArretes,
-  ),
-  StatDef(
-    'coupsFrancsCrees',
-    'Coups francs obtenus',
-    defaultOn: true,
-    category: StatCategory.coupsDePiedArretes,
-  ),
-  StatDef(
-    'coupsFrancsSubis',
-    'Coups francs subis',
-    defaultOn: true,
-    category: StatCategory.coupsDePiedArretes,
-  ),
-  StatDef(
     'penaltysCrees',
     'Penaltys obtenus',
     defaultOn: true,
@@ -192,12 +163,6 @@ const List<StatDef> kStatCatalog = <StatDef>[
   StatDef(
     'penaltysSubis',
     'Penaltys subis',
-    category: StatCategory.coupsDePiedArretes,
-  ),
-  StatDef(
-    'nombreTouches',
-    'Nombre de touches',
-    defaultOn: true,
     category: StatCategory.coupsDePiedArretes,
   ),
   // ── Fautes et sanctions ──
@@ -224,7 +189,7 @@ const List<StatDef> kStatCatalog = <StatDef>[
     'Cartons rouges',
     category: StatCategory.fautesSanctions,
   ),
-  StatDef('horsJeu', 'Hors-jeux', category: StatCategory.fautesSanctions),
+  StatDef('horsJeu', 'Hors-jeu', category: StatCategory.fautesSanctions),
   // ── Gardien et défense ──
   StatDef('butsSubis', 'Buts subis', category: StatCategory.gardienDefense),
   StatDef(
@@ -234,7 +199,7 @@ const List<StatDef> kStatCatalog = <StatDef>[
   ),
   StatDef(
     'tirsSubisHors',
-    'Tirs subis hors surface',
+    'Tirs subis hors de la surface',
     defaultOn: true,
     category: StatCategory.gardienDefense,
   ),
@@ -250,22 +215,16 @@ const List<StatDef> kStatCatalog = <StatDef>[
     category: StatCategory.gardienDefense,
     parts: <String>['tirsSubisHors', 'tirsSubisDans'],
   ),
-  StatDef(
-    'degagements',
-    'Dégagements',
-    defaultOn: true,
-    category: StatCategory.gardienDefense,
-  ),
   // ── Technique ──
   StatDef(
     'controleReussi',
-    'Contrôles de balle réussis',
+    'Contrôles réussis',
     defaultOn: true,
     category: StatCategory.technique,
   ),
   StatDef(
     'controleManque',
-    'Contrôles de balle manqués',
+    'Contrôles manqués',
     defaultOn: true,
     category: StatCategory.technique,
   ),
@@ -283,32 +242,20 @@ const List<StatDef> kStatCatalog = <StatDef>[
     category: StatCategory.duels,
   ),
   StatDef(
-    'duelsOffGagnes',
-    'Duels offensifs gagnés',
+    'duelsGagnes',
+    'Duels gagnés',
     defaultOn: true,
     category: StatCategory.duels,
   ),
   StatDef(
-    'duelsOffPerdus',
-    'Duels offensifs perdus',
-    defaultOn: true,
-    category: StatCategory.duels,
-  ),
-  StatDef(
-    'duelsDefGagnes',
-    'Duels défensifs gagnés',
-    defaultOn: true,
-    category: StatCategory.duels,
-  ),
-  StatDef(
-    'duelsDefPerdus',
-    'Duels défensifs perdus',
+    'duelsPerdus',
+    'Duels perdus',
     defaultOn: true,
     category: StatCategory.duels,
   ),
 ];
 
-/// Les 37 statistiques saisies : seules à être des bascules du paramétrage
+/// Les 28 statistiques saisies : seules à être des bascules du paramétrage
 /// (les 5 calculées apparaissent d'elles-mêmes, voir
 /// [enabledStatsInCatalogOrder]).
 final List<StatDef> kStatToggles = <StatDef>[
@@ -385,7 +332,7 @@ List<String> defaultEnabledStatKeys() => <String>[
 /// Clés de [keys] qui sont des bascules du paramétrage : écarte les stats
 /// calculées et les clés inconnues que d'anciens matchs portent encore
 /// (`enabledStatKeys` d'avant les stats calculées). C'est ce qui se compte
-/// dans « X / 37 » et dans les pastilles « N statistiques ».
+/// dans « X / 28 » et dans les pastilles « N statistiques ».
 List<String> toggleKeys(Iterable<String> keys) => <String>[
   for (final String k in keys)
     if (_statByKey[k]?.isCalculated == false) k,

@@ -615,6 +615,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               type: AlertType.error);
                           Navigator.of(ctx).pop();
                         }, (r) {
+                          final onCodeSent = config?.authentificationConfig
+                              .onResetPasswordCodeSent;
+                          if (onCodeSent != null) {
+                            Navigator.of(ctx).pop(true);
+                            onCodeSent(context, resetEmail!);
+                            return;
+                          }
                           final themeData = loadThemeData(
                               null, "dialog_alert", () => const AlertTheme(),
                               isDark: ref.watch(isDarkModeProvider).isDarkMode);
@@ -682,6 +689,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               type: AlertType.error);
                           Navigator.of(ctx).pop();
                         }, (r) {
+                          final onCodeSent = config?.authentificationConfig
+                              .onResetPasswordCodeSent;
+                          if (onCodeSent != null) {
+                            Navigator.of(ctx).pop(true);
+                            onCodeSent(context, resetEmail!);
+                            return;
+                          }
                           final themeData = loadThemeData(
                               null, "dialog_alert", () => const AlertTheme(),
                               isDark: ref.watch(isDarkModeProvider).isDarkMode);

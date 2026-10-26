@@ -175,13 +175,13 @@
         "or-connect-with": "ou connectez-vous avec",
         "or-signup-with": "ou inscrivez-vous avec",
         "verify-email": "Vérifiez votre boîte mail",
-        "verify-email-subtitle": "Vous avez reçu un email afin de réinitialiser votre mot de passe.",
+        "verify-email-subtitle": "Vous avez reçu un code pour réinitialiser votre mot de passe.",
         "create-account-verify-email": "Vérifiez votre boîte mail",
         "create-account-title": "Créez un compte",
-        "create-account-verify-email-subtitle": "Un email de vérification vous a été envoyé à l'adresse {}",
+        "create-account-verify-email-subtitle": "Un code de vérification vous a été envoyé à l'adresse {}",
         "reset-password-modal": {
           "title": "Réinitialiser mot de passe",
-          "subtitle": "Entrez l’adresse email associée à votre compte. Nous vous enverrons un email de réinitialisation sur celle-ci."
+          "subtitle": "Entrez l’adresse email associée à votre compte. Nous vous enverrons un code de réinitialisation sur celle-ci."
         },
         "tiers-signin": {
           "get-password-title": "Entrez votre mot de passe",
@@ -343,6 +343,7 @@
         "social": {
           "facebook": "Notre page Facebook",
           "instagram": "Notre Instagram",
+          "tiktok": "Notre TikTok",
           "twitter": "Twitter",
           "linkedin": "Linkedin",
           "snapchat": "Snapchat"
@@ -419,6 +420,45 @@
     "save": "Enregistrer"
   },
   "app": {
+    "resume-match": {
+      "titre": "Reprendre le match en cours ?",
+      "message": "Un match contre {} est resté ouvert : {} - {} à {}. Voulez-vous le reprendre ? Le chrono sera en pause.",
+      "sans-adversaire": "votre adversaire",
+      "reprendre": "Reprendre le match",
+      "abandonner": "Abandonner"
+    },
+    "assistant": {
+      "title": "Mon adjoint",
+      "intro": "Créez un compte pour votre adjoint. Dès que vous lancez un match, il se connecte sur son téléphone, voit le match en direct et saisit des statistiques avec vous. Il n'a accès à rien d'autre.",
+      "settings-sub": "Un adjoint pour saisir les statistiques avec vous",
+      "identifier": "Identifiant de l'adjoint",
+      "identifier-hint": "ex. adjoint-u15",
+      "login-help": "Il se connecte avec cet identifiant et son mot de passe, comme sur l'écran de connexion.",
+      "create": "Créer l'adjoint",
+      "created": "Adjoint créé",
+      "change-password": "Changer le mot de passe",
+      "save-password": "Enregistrer",
+      "password-changed": "Mot de passe modifié",
+      "delete": "Supprimer l'adjoint",
+      "deleted": "Adjoint supprimé",
+      "delete-title": "Supprimer l'adjoint ?",
+      "delete-message": "Son compte sera supprimé et il ne pourra plus accéder aux matchs. Vous pourrez en créer un autre.",
+      "keep": "Le garder",
+      "already-exists": "Vous avez déjà un adjoint.",
+      "waiting-title": "En attente du match",
+      "waiting-message": "Dès que le coach lance le match, il s'affichera ici automatiquement.",
+      "logout": "Se déconnecter",
+      "coach-away": "En attente du coach…",
+      "ended-title": "Match terminé",
+      "ended-message": "Le coach a mis fin au match contre {}.",
+      "ended-message-solo": "Le coach a mis fin au match.",
+      "ended-ok": "OK",
+      "toast-pause": "Le coach a mis le match en pause",
+      "toast-half-time": "Mi-temps",
+      "toast-resume": "Le match reprend",
+      "toast-second-half": "2e mi-temps : le match reprend",
+      "toast-compo": "Le coach a modifié la composition"
+    },
     "teams": {
       "create-title": "Créer une équipe",
       "create-intro": "Votre formule inclut {} équipe(s) supplémentaire(s). Chaque équipe a son propre compte, qui se connecte avec un identifiant et un mot de passe.",
@@ -581,6 +621,8 @@
       "numero": "Numéro",
       "attribuer-numeros": "Attribuer les numéros",
       "numeros-remplacants": "Numéros des remplaçants",
+      "ajouter-remplacants": "Ajouter les remplaçants",
+      "modifier-remplacants": "Modifier les remplaçants",
       "brassard-capitaine": "Brassard de capitaine",
       "attribuer-numero": "Attribuer un numéro",
       "attribuer": "Attribuer",
@@ -603,10 +645,12 @@
     },
     "gerer-equipe-placement": {
       "titre": "Placez vos joueurs",
-      "modifier-numeros": "Modifier\nnuméros",
-      "modifier-composition": "Modifier\ncomposition",
+      "modifier-numeros": "Modifier numéros",
+      "modifier-composition": "Modifier composition",
       "joueurs-a-placer": "Joueurs à placer",
       "consigne": "Pour placer un joueur, glissez le numéro de ce dernier sur le terrain à l’emplacement que vous souhaitez.",
+      "consigne-telephone": "Touchez un joueur puis un emplacement, ou glissez-le.",
+      "tous-places": "Tous les joueurs sont placés.",
       "mon-equipe": "Mon équipe",
       "gardiens": "Gardiens",
       "defenseurs": "Défenseurs",
@@ -686,6 +730,8 @@
       "remplacer-joueur": "Remplacer un joueur",
       "aucun-remplacant": "Aucun remplaçant disponible sur le banc.",
       "historique": "Historique",
+      "changer-de-cote": "Changer de côté",
+      "en-pause": "Match en pause",
       "aucune-action": "Aucune action pour le moment.",
       "a-l-instant": "À l’instant",
       "il-y-a-min": "Il y a {minutes} min"
@@ -694,6 +740,8 @@
       "titre-mi-temps": "Mi-temps",
       "titre-pause": "Pause",
       "demarrer-2e-mi-temps": "Démarrer 2e mi-temps",
+      "titre-2e-mi-temps": "Démarrer la 2e mi-temps ?",
+      "message-2e-mi-temps": "Souhaitez-vous vraiment démarrer la 2e mi-temps ? Le chrono reprendra et la mi-temps sera terminée.",
       "reprendre-match": "Reprendre le match",
       "titre-fin-match": "Mettre fin au match ?",
       "message-fin-match": "Souhaitez-vous vraiment mettre fin au match ? Le résultat sera enregistré et les statistiques ne pourront plus être modifiées.",
@@ -792,6 +840,8 @@
       "aucun-resultat": "Aucun résultat",
       "aucun-resultat-detail": "Aucun match ne correspond à votre recherche.",
       "statistiques-globales": "Statistiques globales",
+      "onglet-resume": "Résumé",
+      "onglet-terrain": "Terrain",
       "bilan-collectif": "Bilan collectif",
       "bilan-individuel": "Bilan individuel",
       "selectionner-joueur": "Pour le bilan individuel, sélectionnez un joueur sur le terrain.",
@@ -890,7 +940,9 @@
     },
     "parametrer-stats": {
       "titre": "Paramétrez les statistiques",
-      "selection": "{} / {} sélectionnées"
+      "selection": "{} / {} sélectionnées",
+      "perdus": "Perdus",
+      "gagnes": "Gagnés"
     },
     "maintenance-page": {
       "titre": "Application en maintenance",

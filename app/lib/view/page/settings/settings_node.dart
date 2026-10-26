@@ -75,6 +75,38 @@ class _SettingsViewState extends State<SettingsView> {
   void initState() {
     super.initState();
     _validateUniqueNodeTitles();
+    _openFirstPane();
+  }
+
+  /// Ouvre d'office la première cellule qui a un panneau (sous-liste ou
+  /// contenu) : la zone de droite n'est jamais vide à l'arrivée.
+  void _openFirstPane() {
+    for (int g = 0; g < widget.items.length; g++) {
+      final children = widget.items[g].children;
+      for (int i = 0; i < children.length; i++) {
+        final node = children[i];
+        if (node.hasChildren) {
+          _leftSelected = _LeftSelection(group: g, index: i);
+          _panes.add(
+            _Pane.list(
+              title: node.paneTitle ?? node.title,
+              nodes: node.children,
+            ),
+          );
+          return;
+        }
+        if (node.hasCustomContent) {
+          _leftSelected = _LeftSelection(group: g, index: i);
+          _panes.add(
+            _Pane.custom(
+              title: node.paneTitle ?? node.title,
+              builder: node.contentBuilder!,
+            ),
+          );
+          return;
+        }
+      }
+    }
   }
 
   void _validateUniqueNodeTitles() {
@@ -217,9 +249,16 @@ class _SettingsViewState extends State<SettingsView> {
       borderRadius: BorderRadius.circular(r(30)),
       child: Container(
         width: double.infinity,
-        height: formatHeight(60),
+        // Minimum et non hauteur fixe : sur téléphone l'échelle écrase 54 sous
+        // la hauteur d'un titre + sous-titre, qui débordait de quelques px.
+        constraints: BoxConstraints(minHeight: formatHeight(54)),
         padding: EdgeInsets.symmetric(horizontal: formatWidth(12)),
         decoration: BoxDecoration(
+          // Teinte légère en plus de la bordure verte : la cellule choisie se lit d'un coup d'œil.
+          color:
+              isSelected
+                  ? AppColor.primaryColor.withValues(alpha: .07)
+                  : Colors.transparent,
           borderRadius: BorderRadius.circular(r(30)),
           border: Border.all(
             color: isSelected ? AppColor.primaryColor : AppColor.cellBorder,
@@ -263,71 +302,164 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
+  /// Répartit les cartes de groupe dans [cols] colonnes : chacune va dans la colonne la plus
+  /// courte, la hauteur d'une carte étant estimée à son titre plus ses cellules. L'ordre est
+  /// conservé à l'intérieur d'une colonne.
+  List<List<int>> _balancedColumns(int cols) {
+    final List<List<int>> columns = List<List<int>>.generate(
+      cols,
+      (_) => <int>[],
+    );
+    final List<double> heights = List<double>.filled(cols, 0);
+    for (int i = 0; i < widget.items.length; i++) {
+      int target = 0;
+      for (int c = 1; c < cols; c++) {
+        if (heights[c] < heights[target]) target = c;
+      }
+      columns[target].add(i);
+      heights[target] += 1.2 + widget.items[i].children.length;
+    }
+    return columns;
+  }
+
+  Widget _groupCard(int i) {
+    return Container(
+      padding: EdgeInsets.all(formatWidth(21.5)),
+      decoration: BoxDecoration(
+        color: AppColor.surface,
+        borderRadius: BorderRadius.circular(r(16)),
+        border: Border.all(color: AppColor.cellBorder.withValues(alpha: .35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.items[i].title,
+            style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+          ),
+          SizedBox(height: formatHeight(12)),
+          for (
+            int index = 0;
+            index < widget.items[i].children.length;
+            index++
+          ) ...[
+            if (index > 0) SizedBox(height: formatHeight(6.5)),
+            _cell(
+              node: widget.items[i].children[index],
+              isSelected: _isLeftSelected(i, index),
+              onTap:
+                  () => _openFromLeft(
+                    itemGroupIndex: i,
+                    childIndex: index,
+                    node: widget.items[i].children[index],
+                  ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _paneBody(int paneLevel) {
+    final pane = _panes[paneLevel];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          pane.title,
+          style: AppThemeStyle.semiBStyle(16, AppColor.primaryLabels),
+        ),
+        SizedBox(height: formatHeight(12)),
+        if (pane.type == _PaneType.list)
+          ListView.separated(
+            shrinkWrap: true,
+            primary: false,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              final node = pane.nodes![index];
+              return _cell(
+                node: node,
+                isSelected: _isPaneSelected(paneLevel, index),
+                onTap:
+                    () => _openFromPane(
+                      paneLevel: paneLevel,
+                      nodeIndex: index,
+                      node: node,
+                    ),
+              );
+            },
+            separatorBuilder:
+                (context, index) => SizedBox(height: formatHeight(6.5)),
+            itemCount: pane.nodes!.length,
+          ),
+        if (pane.type == _PaneType.custom)
+          Builder(builder: (context) => pane.builder!(context)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // === Colonne gauche ===
-        SizedBox(
-          width: formatWidth(366),
-          child: SingleChildScrollView(
-            child: Container(
-              margin: EdgeInsets.only(bottom: formatHeight(16)),
-              padding: EdgeInsets.all(formatWidth(21.5)),
-              decoration: BoxDecoration(
-                color: AppColor.surface,
-                borderRadius: BorderRadius.circular(r(12)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (widget.leftHeaderBuilder != null) ...[
-                    widget.leftHeaderBuilder!(context),
-                    Divider(
-                      thickness: .4,
-                      color: DefaultColor.darkBlue.withValues(alpha: .17),
-                    ),
-                    sh(12),
-                  ],
-                  for (int i = 0; i < widget.items.length; i++) ...[
-                    Text(
-                      widget.items[i].title,
-                      style: AppThemeStyle.mediumStyle(
-                        14,
-                        AppColor.primaryLabels,
-                      ),
-                    ),
-                    SizedBox(height: formatHeight(12)),
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final child = widget.items[i].children[index];
-                        final bool isSelected = _isLeftSelected(i, index);
-
-                        return _cell(
-                          node: child,
-                          isSelected: isSelected,
-                          onTap:
-                              () => _openFromLeft(
-                                itemGroupIndex: i,
-                                childIndex: index,
-                                node: child,
+        // === Menu : cartes en grille (colonnes ET lignes) ===
+        // Sans panneau ouvert le menu occupe toute la page ; avec un panneau il
+        // garde 3/5 de la largeur et le panneau prend le reste.
+        Expanded(
+          flex: _panes.isEmpty ? 1 : 3,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final int cols = constraints.maxWidth >= formatWidth(560) ? 2 : 1;
+              final double gap = formatWidth(11);
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: formatHeight(16)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (widget.leftHeaderBuilder != null) ...[
+                        Container(
+                          padding: EdgeInsets.all(formatWidth(21.5)),
+                          decoration: BoxDecoration(
+                            color: AppColor.surface,
+                            borderRadius: BorderRadius.circular(r(12)),
+                          ),
+                          child: widget.leftHeaderBuilder!(context),
+                        ),
+                        SizedBox(height: gap),
+                      ],
+                      // Bento : colonnes indépendantes, chaque carte allant dans la
+                      // plus courte (hauteur estimée au nombre de cellules). Des
+                      // lignes de hauteur égale laissaient un grand vide sous une
+                      // carte courte voisine d'une carte longue.
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final (int c, List<int> column)
+                              in _balancedColumns(cols).indexed) ...[
+                            if (c > 0) SizedBox(width: gap),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  for (final (int k, int i)
+                                      in column.indexed) ...[
+                                    if (k > 0) SizedBox(height: gap),
+                                    _groupCard(i),
+                                  ],
+                                ],
                               ),
-                        );
-                      },
-                      separatorBuilder:
-                          (context, index) =>
-                              SizedBox(height: formatHeight(6.5)),
-                      itemCount: widget.items[i].children.length,
-                    ),
-                    if (i != widget.items.length - 1)
-                      SizedBox(height: formatHeight(16)),
-                  ],
-                ],
-              ),
-            ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
 
@@ -335,79 +467,32 @@ class _SettingsViewState extends State<SettingsView> {
 
         if (_panes.isNotEmpty)
           Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(_panes.length, (paneLevel) {
-                  final pane = _panes[paneLevel];
-                  final bool isForm = pane.type == _PaneType.custom;
-
-                  // Chaque pane défile verticalement, comme la colonne de
-                  // gauche : le viewport horizontal borne leur hauteur, et
-                  // celle-ci se réduit à l'ouverture du clavier.
-                  return SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (int paneLevel = 0; paneLevel < _panes.length; paneLevel++)
+                  Expanded(
                     child: Container(
-                      width: isForm ? formatWidth(377) : formatWidth(345),
                       margin: EdgeInsets.only(
-                        right: formatWidth(11),
+                        right:
+                            paneLevel == _panes.length - 1
+                                ? 0
+                                : formatWidth(11),
                         bottom: formatHeight(16),
                       ),
-                      padding: EdgeInsets.all(formatWidth(isForm ? 28 : 22)),
+                      padding: EdgeInsets.all(
+                        formatWidth(
+                          _panes[paneLevel].type == _PaneType.custom ? 28 : 22,
+                        ),
+                      ),
                       decoration: BoxDecoration(
                         color: AppColor.surface,
                         borderRadius: BorderRadius.circular(r(12)),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            pane.title,
-                            style: AppThemeStyle.semiBStyle(
-                              16,
-                              AppColor.primaryLabels,
-                            ),
-                          ),
-                          SizedBox(height: formatHeight(12)),
-                          if (pane.type == _PaneType.list)
-                            ListView.separated(
-                              shrinkWrap: true,
-                              primary: false,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemBuilder: (context, index) {
-                                final node = pane.nodes![index];
-                                final bool isSelected = _isPaneSelected(
-                                  paneLevel,
-                                  index,
-                                );
-
-                                return _cell(
-                                  node: node,
-                                  isSelected: isSelected,
-                                  onTap:
-                                      () => _openFromPane(
-                                        paneLevel: paneLevel,
-                                        nodeIndex: index,
-                                        node: node,
-                                      ),
-                                );
-                              },
-                              separatorBuilder:
-                                  (context, index) =>
-                                      SizedBox(height: formatHeight(6.5)),
-                              itemCount: pane.nodes!.length,
-                            ),
-                          if (pane.type == _PaneType.custom)
-                            Builder(
-                              builder: (context) => pane.builder!(context),
-                            ),
-                        ],
-                      ),
+                      child: SingleChildScrollView(child: _paneBody(paneLevel)),
                     ),
-                  );
-                }),
-              ),
+                  ),
+              ],
             ),
           ),
       ],

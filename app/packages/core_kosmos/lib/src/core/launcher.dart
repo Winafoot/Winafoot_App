@@ -10,6 +10,70 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:url_strategy/url_strategy.dart';
 
+/// [ScreenUtilInit] dont la taille de design suit l'orientation de l'écran :
+/// [portraitSize] en portrait (si fournie), [landscapeSize] sinon.
+///
+/// [ScreenUtilInit] relit `designSize` à chaque construction. Ce widget est son
+/// parent : il s'enregistre donc avant lui comme observateur de métriques et se
+/// reconstruit dans la même image que lui, qui reconstruit alors tout l'arbre
+/// avec la nouvelle taille.
+class _OrientationScreenUtil extends StatefulWidget {
+  final Size landscapeSize;
+  final Size? portraitSize;
+  final ScreenUtilInitBuilder builder;
+  final Widget child;
+
+  const _OrientationScreenUtil({
+    required this.landscapeSize,
+    required this.portraitSize,
+    required this.builder,
+    required this.child,
+  });
+
+  @override
+  State<_OrientationScreenUtil> createState() => _OrientationScreenUtilState();
+}
+
+class _OrientationScreenUtilState extends State<_OrientationScreenUtil>
+    with WidgetsBindingObserver {
+  late bool _portrait = _isPortrait();
+
+  bool _isPortrait() {
+    final Size size = WidgetsBinding.instance.platformDispatcher.views.first
+        .physicalSize;
+    return size.height > size.width;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeMetrics() {
+    final bool portrait = _isPortrait();
+    if (portrait != _portrait) setState(() => _portrait = portrait);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScreenUtilInit(
+      designSize: _portrait
+          ? (widget.portraitSize ?? widget.landscapeSize)
+          : widget.landscapeSize,
+      builder: widget.builder,
+      child: widget.child,
+    );
+  }
+}
+
 /// {@category Core}
 /// {@category Launcher}
 ///
@@ -113,8 +177,9 @@ abstract class Application {
           supportedLocales: config.localization.supportedLocales,
           fallbackLocale: config.localization.defaultLocale,
           path: config.localization.translationPath,
-          child: ScreenUtilInit(
-            designSize: config.responsive.size,
+          child: _OrientationScreenUtil(
+            landscapeSize: config.responsive.size,
+            portraitSize: config.responsive.portraitSize,
             builder: (context, child) {
               if (!GetIt.instance.isRegistered<AppTheme>()) {
                 GetIt.instance.registerSingleton(initTheme != null

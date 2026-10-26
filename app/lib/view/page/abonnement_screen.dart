@@ -55,14 +55,21 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
   }
 
   void _notifyError(String message) {
-    showAppNotif(context, title: 'utils.error'.tr(), subTitle: message, success: false);
+    showAppNotif(
+      context,
+      title: 'utils.error'.tr(),
+      subTitle: message,
+      success: false,
+    );
   }
 
   Future<void> _buy(String productId) async {
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      final PurchaseResult result = await ref.read(billingServiceProvider).purchase(productId);
+      final PurchaseResult result = await ref
+          .read(billingServiceProvider)
+          .purchase(productId);
       if (!mounted) return;
       if (result == PurchaseResult.cancelled) {
         setState(() => _busy = false);
@@ -136,7 +143,10 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                   Expanded(
                     child: LayoutBuilder(
                       builder: (BuildContext context, BoxConstraints box) {
-                        final double width = math.min(box.maxWidth, formatWidth(880));
+                        final double width = math.min(
+                          box.maxWidth,
+                          formatWidth(880),
+                        );
                         return FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.topCenter,
@@ -150,20 +160,35 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                                 Text(
                                   'app.subscription.choose'.tr(),
                                   textAlign: TextAlign.center,
-                                  style: AppThemeStyle.boldStyle(32, AppColor.primaryLabels),
+                                  style: AppThemeStyle.boldStyle(
+                                    32,
+                                    AppColor.primaryLabels,
+                                  ),
                                 ),
                                 sh(22),
-                                _TeamSelector(selected: _teams, onSelect: (int n) => setState(() => _teams = n)),
+                                _TeamSelector(
+                                  selected: _teams,
+                                  onSelect:
+                                      (int n) => setState(() => _teams = n),
+                                ),
                                 sh(28),
                                 offers.when(
-                                  data: (Map<int, TeamsOffer> byTeams) => _buildCards(byTeams[_teams]),
-                                  loading: () => Padding(
-                                    padding: EdgeInsets.symmetric(vertical: formatHeight(60)),
-                                    child: const AppLoader(),
-                                  ),
-                                  error: (Object _, StackTrace _) => _Unavailable(
-                                    onRetry: () => ref.invalidate(offersProvider),
-                                  ),
+                                  data:
+                                      (Map<int, TeamsOffer> byTeams) =>
+                                          _buildCards(byTeams[_teams]),
+                                  loading:
+                                      () => Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: formatHeight(60),
+                                        ),
+                                        child: const AppLoader(),
+                                      ),
+                                  error:
+                                      (Object _, StackTrace _) => _Unavailable(
+                                        onRetry:
+                                            () =>
+                                                ref.invalidate(offersProvider),
+                                      ),
                                 ),
                                 sh(14),
                                 _Footer(onRestore: _restore),
@@ -171,10 +196,17 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: TextButton(
-                                    onPressed: () => UserController.logoutUser(context, ref),
+                                    onPressed:
+                                        () => UserController.logoutUser(
+                                          context,
+                                          ref,
+                                        ),
                                     child: Text(
                                       'app.subscription.logout'.tr(),
-                                      style: AppThemeStyle.regularStyle(14, AppColor.secondaryLabels).copyWith(
+                                      style: AppThemeStyle.regularStyle(
+                                        14,
+                                        AppColor.secondaryLabels,
+                                      ).copyWith(
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
@@ -205,13 +237,28 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
     }
     final List<Widget> cards = <Widget>[
       if (offer.yearly != null)
-        Expanded(child: _YearlyCard(offer: offer, busy: _busy, onSubscribe: () => _buy(offer.yearly!.productId))),
+        Expanded(
+          child: _YearlyCard(
+            offer: offer,
+            busy: _busy,
+            onSubscribe: () => _buy(offer.yearly!.productId),
+          ),
+        ),
       if (offer.yearly != null && offer.monthly != null) sw(28),
       if (offer.monthly != null)
-        Expanded(child: _MonthlyCard(offer: offer, busy: _busy, onSubscribe: () => _buy(offer.monthly!.productId))),
+        Expanded(
+          child: _MonthlyCard(
+            offer: offer,
+            busy: _busy,
+            onSubscribe: () => _buy(offer.monthly!.productId),
+          ),
+        ),
     ];
     return IntrinsicHeight(
-      child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: cards),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: cards,
+      ),
     );
   }
 }
@@ -259,7 +306,11 @@ class _TeamSelector extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: <Widget>[
-                _TeamTile(teams: n, selected: selected == n, onTap: () => onSelect(n)),
+                _TeamTile(
+                  teams: n,
+                  selected: selected == n,
+                  onTap: () => onSelect(n),
+                ),
                 if (n == 2)
                   Positioned(
                     left: 0,
@@ -286,7 +337,11 @@ class _TeamSelector extends StatelessWidget {
 }
 
 class _TeamTile extends StatelessWidget {
-  const _TeamTile({required this.teams, required this.selected, required this.onTap});
+  const _TeamTile({
+    required this.teams,
+    required this.selected,
+    required this.onTap,
+  });
 
   final int teams;
   final bool selected;
@@ -299,18 +354,30 @@ class _TeamTile extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: formatWidth(22), vertical: formatHeight(18)),
+        padding: EdgeInsets.symmetric(
+          horizontal: formatWidth(22),
+          vertical: formatHeight(18),
+        ),
         decoration: BoxDecoration(
           color: selected ? null : AppColor.surface,
-          gradient: selected
-              ? const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: <Color>[AppColor.buttonGradientTop, AppColor.buttonGradientBottom],
-                )
-              : null,
+          gradient:
+              selected
+                  ? const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[
+                      AppColor.buttonGradientTop,
+                      AppColor.buttonGradientBottom,
+                    ],
+                  )
+                  : null,
           borderRadius: BorderRadius.circular(r(16)),
-          border: selected ? Border.all(color: AppColor.primaryColor, width: 2) : null,
+          // Bordure toujours présente (transparente si non choisie) : sans elle, la
+          // tuile choisie serait plus grande de 4 px que les deux autres.
+          border: Border.all(
+            color: selected ? AppColor.primaryColor : Colors.transparent,
+            width: 2,
+          ),
         ),
         child: Row(
           children: <Widget>[
@@ -333,15 +400,22 @@ class _TeamTile extends StatelessWidget {
                           '$teams',
                           style: AppThemeStyle.semiBStyle(
                             22,
-                            selected ? AppColor.textLight : AppColor.primaryLabels,
+                            selected
+                                ? AppColor.textLight
+                                : AppColor.primaryLabels,
                           ),
                         ),
                         sw(5),
                         Text(
-                          (teams == 1 ? 'app.subscription.team-one' : 'app.subscription.team-many').tr(),
+                          (teams == 1
+                                  ? 'app.subscription.team-one'
+                                  : 'app.subscription.team-many')
+                              .tr(),
                           style: AppThemeStyle.semiBStyle(
                             22,
-                            selected ? AppColor.textLight : AppColor.primaryColor,
+                            selected
+                                ? AppColor.textLight
+                                : AppColor.primaryColor,
                           ),
                         ),
                       ],
@@ -351,10 +425,15 @@ class _TeamTile extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         Text(
-                          (selected ? 'app.subscription.selected' : 'app.subscription.pick').tr(),
+                          (selected
+                                  ? 'app.subscription.selected'
+                                  : 'app.subscription.pick')
+                              .tr(),
                           style: AppThemeStyle.regularStyle(
                             14,
-                            selected ? AppColor.textLight : AppColor.primaryLabels,
+                            selected
+                                ? AppColor.textLight
+                                : AppColor.primaryLabels,
                           ),
                         ),
                         if (!selected) ...<Widget>[
@@ -362,7 +441,10 @@ class _TeamTile extends StatelessWidget {
                           Container(
                             width: formatWidth(6),
                             height: formatWidth(6),
-                            decoration: const BoxDecoration(color: AppColor.primaryLabels, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(
+                              color: AppColor.primaryLabels,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ],
                       ],
@@ -389,12 +471,18 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(14), vertical: formatHeight(vertical)),
+      padding: EdgeInsets.symmetric(
+        horizontal: formatWidth(14),
+        vertical: formatHeight(vertical),
+      ),
       decoration: BoxDecoration(
         color: AppColor.buttonGradientBottom,
         borderRadius: BorderRadius.circular(r(10)),
       ),
-      child: Text(label, style: AppThemeStyle.boldStyle(fontSize, AppColor.textLight)),
+      child: Text(
+        label,
+        style: AppThemeStyle.boldStyle(fontSize, AppColor.textLight),
+      ),
     );
   }
 }
@@ -413,15 +501,30 @@ class _PlanCard extends StatelessWidget {
       clipBehavior: Clip.none,
       children: <Widget>[
         Container(
-          padding: EdgeInsets.fromLTRB(formatWidth(28), formatHeight(26), formatWidth(28), formatHeight(26)),
+          padding: EdgeInsets.fromLTRB(
+            formatWidth(28),
+            formatHeight(26),
+            formatWidth(28),
+            formatHeight(26),
+          ),
           decoration: BoxDecoration(
             color: AppColor.surface,
             borderRadius: BorderRadius.circular(r(24)),
-            border: highlighted ? Border.all(color: AppColor.primaryColor, width: 2) : null,
+            // Bordure toujours présente : les deux cartes gardent le même cadre
+            // intérieur, donc titres, prix et coches sont à la même hauteur.
+            border: Border.all(
+              color: highlighted ? AppColor.primaryColor : Colors.transparent,
+              width: 2,
+            ),
           ),
           child: child,
         ),
-        if (badge != null) Positioned(top: -formatHeight(18), left: formatWidth(28), child: badge!),
+        if (badge != null)
+          Positioned(
+            top: -formatHeight(18),
+            left: formatWidth(28),
+            child: badge!,
+          ),
       ],
     );
   }
@@ -429,7 +532,11 @@ class _PlanCard extends StatelessWidget {
 
 /// Prix en gros caractères suivi de son unité (« / an », « / mois »). Le prix rétrécit au lieu de déborder.
 class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.price, required this.unit, required this.color});
+  const _PriceRow({
+    required this.price,
+    required this.unit,
+    required this.color,
+  });
 
   final String price;
   final String unit;
@@ -449,7 +556,10 @@ class _PriceRow extends StatelessWidget {
           ),
         ),
         sw(8),
-        Text(unit, style: AppThemeStyle.regularStyle(18, AppColor.secondaryLabels)),
+        Text(
+          unit,
+          style: AppThemeStyle.regularStyle(18, AppColor.secondaryLabels),
+        ),
       ],
     );
   }
@@ -474,16 +584,28 @@ class _CheckLine extends StatelessWidget {
             decoration: BoxDecoration(
               color: filled ? AppColor.buttonGradientBottom : null,
               shape: BoxShape.circle,
-              border: filled ? null : Border.all(color: AppColor.buttonGradientBottom, width: 2),
+              border:
+                  filled
+                      ? null
+                      : Border.all(
+                        color: AppColor.buttonGradientBottom,
+                        width: 2,
+                      ),
             ),
             child: Icon(
               Icons.check,
               size: sp(15),
-              color: filled ? AppColor.textLight : AppColor.buttonGradientBottom,
+              color:
+                  filled ? AppColor.textLight : AppColor.buttonGradientBottom,
             ),
           ),
           sw(12),
-          Expanded(child: Text(text, style: AppThemeStyle.regularStyle(16, AppColor.primaryLabels))),
+          Expanded(
+            child: Text(
+              text,
+              style: AppThemeStyle.regularStyle(16, AppColor.primaryLabels),
+            ),
+          ),
         ],
       ),
     );
@@ -492,7 +614,11 @@ class _CheckLine extends StatelessWidget {
 
 /// Bouton pilule : plein (dégradé vert) ou bordé vert, avec pastille flèche.
 class _PlanButton extends StatelessWidget {
-  const _PlanButton({required this.label, required this.filled, required this.onTap});
+  const _PlanButton({
+    required this.label,
+    required this.filled,
+    required this.onTap,
+  });
 
   final String label;
   final bool filled;
@@ -500,7 +626,8 @@ class _PlanButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color fg = filled ? AppColor.textLight : AppColor.buttonGradientBottom;
+    final Color fg =
+        filled ? AppColor.textLight : AppColor.buttonGradientBottom;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -511,15 +638,22 @@ class _PlanButton extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: formatWidth(16)),
           decoration: BoxDecoration(
             color: filled ? null : AppColor.surface,
-            gradient: filled
-                ? const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: <Color>[AppColor.buttonGradientTop, AppColor.buttonGradientBottom],
-                  )
-                : null,
+            gradient:
+                filled
+                    ? const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: <Color>[
+                        AppColor.buttonGradientTop,
+                        AppColor.buttonGradientBottom,
+                      ],
+                    )
+                    : null,
             borderRadius: BorderRadius.circular(r(29)),
-            border: filled ? null : Border.all(color: AppColor.primaryColor, width: 2),
+            border:
+                filled
+                    ? null
+                    : Border.all(color: AppColor.primaryColor, width: 2),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -534,11 +668,17 @@ class _PlanButton extends StatelessWidget {
               Container(
                 width: formatWidth(22),
                 height: formatWidth(22),
-                decoration: BoxDecoration(color: filled ? AppColor.textLight : fg, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: filled ? AppColor.textLight : fg,
+                  shape: BoxShape.circle,
+                ),
                 child: Icon(
                   Icons.chevron_right,
                   size: sp(16),
-                  color: filled ? AppColor.buttonGradientBottom : AppColor.textLight,
+                  color:
+                      filled
+                          ? AppColor.buttonGradientBottom
+                          : AppColor.textLight,
                 ),
               ),
             ],
@@ -550,7 +690,11 @@ class _PlanButton extends StatelessWidget {
 }
 
 class _YearlyCard extends StatelessWidget {
-  const _YearlyCard({required this.offer, required this.busy, required this.onSubscribe});
+  const _YearlyCard({
+    required this.offer,
+    required this.busy,
+    required this.onSubscribe,
+  });
 
   final TeamsOffer offer;
   final bool busy;
@@ -559,10 +703,14 @@ class _YearlyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final PlanOffer yearly = offer.yearly!;
-    final String? fullPrice = offer.yearlyFullPrice == null
-        ? null
-        : formatMoney(offer.yearlyFullPrice!, yearly.currencyCode);
-    final String perMonth = formatMoney(offer.yearlyPerMonth!, yearly.currencyCode);
+    final String? fullPrice =
+        offer.yearlyFullPrice == null
+            ? null
+            : formatMoney(offer.yearlyFullPrice!, yearly.currencyCode);
+    final String perMonth = formatMoney(
+      offer.yearlyPerMonth!,
+      yearly.currencyCode,
+    );
     return _PlanCard(
       highlighted: true,
       badge: _Pill(label: 'app.subscription.save-yearly'.tr()),
@@ -570,9 +718,16 @@ class _YearlyCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           sh(8),
-          Text('app.subscription.yearly-title'.tr(), style: AppThemeStyle.semiBStyle(24, AppColor.primaryLabels)),
+          Text(
+            'app.subscription.yearly-title'.tr(),
+            style: AppThemeStyle.semiBStyle(24, AppColor.primaryLabels),
+          ),
           sh(18),
-          _PriceRow(price: yearly.priceString, unit: 'app.subscription.per-year'.tr(), color: AppColor.rosterName),
+          _PriceRow(
+            price: yearly.priceString,
+            unit: 'app.subscription.per-year'.tr(),
+            color: AppColor.rosterName,
+          ),
           sh(10),
           Text.rich(
             TextSpan(
@@ -586,8 +741,12 @@ class _YearlyCard extends StatelessWidget {
                     ).copyWith(decoration: TextDecoration.lineThrough),
                   ),
                 TextSpan(
-                  text: '${fullPrice != null ? ' · ' : ''}${'app.subscription.per-month-equiv'.tr(args: <String>[perMonth])}',
-                  style: AppThemeStyle.regularStyle(15, AppColor.secondaryLabels),
+                  text:
+                      '${fullPrice != null ? ' · ' : ''}${'app.subscription.per-month-equiv'.tr(args: <String>[perMonth])}',
+                  style: AppThemeStyle.regularStyle(
+                    15,
+                    AppColor.secondaryLabels,
+                  ),
                 ),
               ],
             ),
@@ -598,13 +757,21 @@ class _YearlyCard extends StatelessWidget {
           _CheckLine(text: 'app.subscription.yearly-1'.tr(), filled: true),
           _CheckLine(text: 'app.subscription.yearly-2'.tr(), filled: true),
           _CheckLine(
-            text: offer.teams == 1
-                ? 'app.subscription.yearly-3-one'.tr()
-                : 'app.subscription.yearly-3-many'.tr(args: <String>['${offer.teams}']),
+            text:
+                offer.teams == 1
+                    ? 'app.subscription.yearly-3-one'.tr()
+                    : 'app.subscription.yearly-3-many'.tr(
+                      args: <String>['${offer.teams}'],
+                    ),
             filled: true,
           ),
+          const Spacer(),
           sh(10),
-          _PlanButton(label: 'app.subscription.subscribe-year'.tr(), filled: true, onTap: busy ? null : onSubscribe),
+          _PlanButton(
+            label: 'app.subscription.subscribe-year'.tr(),
+            filled: true,
+            onTap: busy ? null : onSubscribe,
+          ),
         ],
       ),
     );
@@ -612,7 +779,11 @@ class _YearlyCard extends StatelessWidget {
 }
 
 class _MonthlyCard extends StatelessWidget {
-  const _MonthlyCard({required this.offer, required this.busy, required this.onSubscribe});
+  const _MonthlyCard({
+    required this.offer,
+    required this.busy,
+    required this.onSubscribe,
+  });
 
   final TeamsOffer offer;
   final bool busy;
@@ -634,13 +805,22 @@ class _MonthlyCard extends StatelessWidget {
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
-                  child: Text('app.subscription.monthly-title'.tr(), style: AppThemeStyle.semiBStyle(24, AppColor.primaryLabels)),
+                  child: Text(
+                    'app.subscription.monthly-title'.tr(),
+                    style: AppThemeStyle.semiBStyle(24, AppColor.primaryLabels),
+                  ),
                 ),
               ),
               const Spacer(),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: formatWidth(14), vertical: formatHeight(6)),
-                decoration: BoxDecoration(color: AppColor.background, borderRadius: BorderRadius.circular(r(14))),
+                padding: EdgeInsets.symmetric(
+                  horizontal: formatWidth(14),
+                  vertical: formatHeight(6),
+                ),
+                decoration: BoxDecoration(
+                  color: AppColor.background,
+                  borderRadius: BorderRadius.circular(r(14)),
+                ),
                 child: Text(
                   'app.subscription.no-commitment'.tr(),
                   style: AppThemeStyle.mediumStyle(13, AppColor.grey5A6574),
@@ -649,14 +829,20 @@ class _MonthlyCard extends StatelessWidget {
             ],
           ),
           sh(18),
-          _PriceRow(price: monthly.priceString, unit: 'app.subscription.per-month'.tr(), color: AppColor.primaryLabels),
+          _PriceRow(
+            price: monthly.priceString,
+            unit: 'app.subscription.per-month'.tr(),
+            color: AppColor.primaryLabels,
+          ),
           sh(10),
           Text(
             offer.teams == 1
                 ? 'app.subscription.for-one-team'.tr()
                 : 'app.subscription.per-team'.tr(
-                    args: <String>[formatMoney(offer.monthlyPerTeam!, monthly.currencyCode)],
-                  ),
+                  args: <String>[
+                    formatMoney(offer.monthlyPerTeam!, monthly.currencyCode),
+                  ],
+                ),
             style: AppThemeStyle.regularStyle(15, AppColor.secondaryLabels),
           ),
           sh(16),
@@ -665,8 +851,13 @@ class _MonthlyCard extends StatelessWidget {
           _CheckLine(text: 'app.subscription.monthly-1'.tr(), filled: false),
           _CheckLine(text: 'app.subscription.monthly-2'.tr(), filled: false),
           _CheckLine(text: 'app.subscription.monthly-3'.tr(), filled: false),
+          const Spacer(),
           sh(10),
-          _PlanButton(label: 'app.subscription.subscribe-month'.tr(), filled: false, onTap: busy ? null : onSubscribe),
+          _PlanButton(
+            label: 'app.subscription.subscribe-month'.tr(),
+            filled: false,
+            onTap: busy ? null : onSubscribe,
+          ),
         ],
       ),
     );
@@ -679,15 +870,22 @@ class _Footer extends StatelessWidget {
 
   final VoidCallback onRestore;
 
-  TextStyle get _link => AppThemeStyle.regularStyle(12, AppColor.primaryLabels).copyWith(
-    decoration: TextDecoration.underline,
-  );
+  TextStyle get _link => AppThemeStyle.regularStyle(
+    12,
+    AppColor.primaryLabels,
+  ).copyWith(decoration: TextDecoration.underline);
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle trial = AppThemeStyle.regularStyle(14, AppColor.primaryLabels);
+    final TextStyle trial = AppThemeStyle.regularStyle(
+      14,
+      AppColor.primaryLabels,
+    );
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(24), vertical: formatHeight(14)),
+      padding: EdgeInsets.symmetric(
+        horizontal: formatWidth(24),
+        vertical: formatHeight(14),
+      ),
       decoration: BoxDecoration(
         color: AppColor.surface.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(r(16)),
@@ -721,14 +919,23 @@ class _Footer extends StatelessWidget {
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 // Même chemin que « link-cgvu » dans settings.config.dart.
-                onTap: () => AutoRouter.of(context).pushNamed('legal-information/cgvu'),
+                onTap:
+                    () => AutoRouter.of(
+                      context,
+                    ).pushNamed('legal-information/cgvu'),
                 child: Text('app.subscription.terms'.tr(), style: _link),
               ),
-              Text(' · ', style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels)),
+              Text(
+                ' · ',
+                style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+              ),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 // Même chemin que « link-policy » dans settings.config.dart.
-                onTap: () => AutoRouter.of(context).pushNamed('legal-information/privacy-policy'),
+                onTap:
+                    () => AutoRouter.of(
+                      context,
+                    ).pushNamed('legal-information/privacy-policy'),
                 child: Text('app.subscription.privacy'.tr(), style: _link),
               ),
             ],
@@ -759,7 +966,11 @@ class _Unavailable extends StatelessWidget {
           sh(20),
           SizedBox(
             width: formatWidth(260),
-            child: _PlanButton(label: 'app.subscription.retry'.tr(), filled: true, onTap: onRetry),
+            child: _PlanButton(
+              label: 'app.subscription.retry'.tr(),
+              filled: true,
+              onTap: onRetry,
+            ),
           ),
         ],
       ),
@@ -790,7 +1001,10 @@ class _ActivatingOverlay extends StatelessWidget {
                   const AppLoader(),
                   sh(20),
                   Text(
-                    (late ? 'app.subscription.activating-late' : 'app.subscription.activating').tr(),
+                    (late
+                            ? 'app.subscription.activating-late'
+                            : 'app.subscription.activating')
+                        .tr(),
                     textAlign: TextAlign.center,
                     style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
                   ),

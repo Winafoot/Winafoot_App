@@ -42,7 +42,10 @@ enum TeamDivision {
   d2('Départemental 2'),
   d3('Départemental 3'),
   d4('Départemental 4'),
-  d5('Départemental 5');
+  d5('Départemental 5'),
+  d6('Départemental 6'),
+  d7('Départemental 7'),
+  d8('Départemental 8');
 
   const TeamDivision(this.label);
 

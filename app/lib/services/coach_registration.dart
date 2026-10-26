@@ -39,14 +39,14 @@ abstract class CoachRegistration {
   }) async {
     final String address = email.trim().toLowerCase();
     try {
-      await FirebaseFunctions.instanceFor(region: kCloudRegion)
-          .httpsCallable('registerCoach')
-          .call(<String, dynamic>{
-            'email': address,
-            'password': password,
-            'firstname': firstname.trim(),
-            'acceptedCgu': acceptedCgu,
-          });
+      await FirebaseFunctions.instanceFor(
+        region: kCloudRegion,
+      ).httpsCallable('registerCoach').call(<String, dynamic>{
+        'email': address,
+        'password': password,
+        'firstname': firstname.trim(),
+        'acceptedCgu': acceptedCgu,
+      });
     } on FirebaseFunctionsException catch (e) {
       throw RegistrationException(errorFromCode(e.code), e.message);
     } catch (_) {

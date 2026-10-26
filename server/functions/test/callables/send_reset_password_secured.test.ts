@@ -29,6 +29,28 @@ describe("sendResetPassword (secured)", () => {
     expect(sendEmail).toHaveBeenCalledTimes(1);
   });
 
+  it("puts a six-digit code, and no link, in the mail", async () => {
+    const uid = await seedCoach("coach@club.test");
+
+    await sendResetPassword({ email: "coach@club.test" });
+
+    const [, , html, , text] = vi.mocked(sendEmail).mock.calls[0];
+    const code = /(d{6})/.exec(text as string)?.[1];
+    expect(code).toBeDefined();
+    expect(html).toContain(code);
+    expect(html).not.toContain("oobCode");
+    expect((await firestore().collection("email_codes").doc(`reset-password_${uid}`).get()).exists).toBe(true);
+  });
+
+  it("drops the code when the mail provider fails", async () => {
+    const uid = await seedCoach("coach@club.test");
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
+
+    await sendResetPassword({ email: "coach@club.test" });
+
+    expect((await firestore().collection("email_codes").doc(`reset-password_${uid}`).get()).exists).toBe(false);
+  });
+
   it("answers true and sends nothing for an unknown address", async () => {
     const result = await sendResetPassword({ email: "ghost@club.test" });
 
@@ -38,7 +60,7 @@ describe("sendResetPassword (secured)", () => {
 
   it("answers true even when the mail provider fails, never leaking the error", async () => {
     await seedCoach("coach@club.test");
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     const result = await sendResetPassword({ email: "coach@club.test" });
 
@@ -86,7 +108,7 @@ describe("sendResetPassword (secured)", () => {
 });
 
 // Sans limite par compte, une adresse de coach connue suffit à inonder sa boîte et à
-// épuiser le quota MailerSend. La limite par IP est posée par l'adaptateur (v2_limited).
+// épuiser le quota Resend. La limite par IP est posée par l'adaptateur (v2_limited).
 describe("sendResetPassword (secured) — per-account limit", () => {
   it(`mails an account at most ${LIMITS.resetPasswordAccount.limit} times per window, always answering true`, async () => {
     await seedCoach("coach@club.test");
