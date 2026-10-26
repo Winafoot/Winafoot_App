@@ -1,0 +1,79 @@
+name: Android -> Google Play
+
+# Lancement manuel pour l'instant : Codemagic reste déclenché par les tags v* et publierait le même build.
+# Pour basculer, remplacer workflow_dispatch par un déclencheur sur tag (voir le bloc commenté) et couper Codemagic.
+on:
+  workflow_dispatch:
+  # push:
+  #   tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      # Variable de dépôt ANDROID_BUILD_NUMBER_OFFSET = dernier versionCode déjà envoyé sur Google Play.
+      - name: Numéro de build
+        env:
+          OFFSET: ${{ vars.ANDROID_BUILD_NUMBER_OFFSET }}
+        run: echo "BUILD_NUMBER=$(( ${{ github.run_number }} + ${OFFSET:-0} ))" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Analyse
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Tests
+        run: flutter test
+
+      - name: Signature (key.properties)
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
+          cat > android/key.properties <<PROPS
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyPassword=${ANDROID_KEY_PASSWORD:-$ANDROID_KEYSTORE_PASSWORD}
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=$RUNNER_TEMP/upload-keystore.jks
+          PROPS
+
+      - name: Build AAB
+        # Clé publique du SDK RevenueCat (variable du dépôt) : sans elle l'app ne peut pas charger les formules.
+        run: |
+          flutter build appbundle --release \
+            --build-number=$BUILD_NUMBER \
+            --dart-define=RC_ANDROID_KEY="${{ vars.RC_ANDROID_KEY }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aab
+          path: app/build/app/outputs/bundle/release/*.aab
+
+      - name: Publication Google Play (piste interne, brouillon)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GCLOUD_SERVICE_ACCOUNT_CREDENTIALS }}
+          packageName: fr.winafoot.app
+          releaseFiles: app/build/app/outputs/bundle/release/*.aab
+          tracks: internal
+          status: draft

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:wina/billing/access_info.dart';
 import 'package:wina/billing/billing_service.dart';
+import 'package:wina/billing/fallback_billing_service.dart';
 import 'package:wina/billing/offers.dart';
 import 'package:wina/billing/test_billing_service.dart';
 import 'package:wina/data/linked_team_repository.dart';

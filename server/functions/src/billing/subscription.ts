@@ -45,9 +45,10 @@ export interface Access {
  *   - `wina_team<1|2|3>_<monthly|yearly>` : ancienne écriture, toujours acceptée.
  * Sur Google Play, RevenueCat envoie « identifiant de l'abonnement:identifiant du plan » : le séparateur
  * peut donc être `:` (`wina_1team:monthly`), et un identifiant de plan de base peut suivre
- * (`wina_3teams_annual:p1y`).
+ * (`wina_3teams_annual:p1y`). Les abonnements Play créés sous la forme `wina<n>_team` (`wina3_team:monthly`) et un plan de
+ * base suffixé d'un chiffre (`wina_1team:annual1`) sont aussi acceptés : un identifiant Play ne se renomme pas.
  */
-const PRODUCT = /^wina_(?:team([123])|([123])teams?)[_:](monthly|yearly|annual)(?::[a-z0-9_.-]+)?$/;
+const PRODUCT = /^wina_?(?:team_?([123])|([123])_?teams?)[_:](monthly|yearly|annual)[0-9]*(?::[a-z0-9_.-]+)?$/;
 
 export function parseProduct(productId: unknown): { teamsAllowed: TeamsAllowed; period: SubscriptionPeriod } | null {
   if (typeof productId !== "string") return null;

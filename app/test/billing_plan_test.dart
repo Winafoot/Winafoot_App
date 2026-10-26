@@ -26,6 +26,12 @@ void main() {
         // Google Play, mêmes noms, avec ou sans identifiant de plan de base.
         'wina_1team:monthly': (1, BillingPeriod.monthly),
         'wina_3teams_annual:p1y': (3, BillingPeriod.yearly),
+        // Abonnements Play réellement créés dans la console : `wina<n>_team`, et un plan de base « annual1 ».
+        'wina_1team:annual1': (1, BillingPeriod.yearly),
+        'wina2_team:monthly': (2, BillingPeriod.monthly),
+        'wina2_team:annual': (2, BillingPeriod.yearly),
+        'wina3_team:monthly': (3, BillingPeriod.monthly),
+        'wina3_team:annual': (3, BillingPeriod.yearly),
       };
       expected.forEach((String id, (int, BillingPeriod) want) {
         final PlanProduct? p = PlanProduct.parse(id);
@@ -44,6 +50,8 @@ void main() {
         'wina_0team_annual',
         'wina_2teams_weekly',
         'xwina_2teams_annual',
+        'wina4_team:monthly',
+        'wina2_team:weekly',
         'autre',
       ]) {
         expect(PlanProduct.parse(id), isNull, reason: '$id');

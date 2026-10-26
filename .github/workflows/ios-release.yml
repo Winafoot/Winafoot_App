@@ -1,0 +1,119 @@
+name: iOS -> TestFlight
+
+# Lancement manuel pour l'instant : Codemagic reste déclenché par les tags v* et publierait le même build.
+on:
+  workflow_dispatch:
+  # push:
+  #   tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: app
+    env:
+      BUNDLE_ID: fr.winafoot.app
+    steps:
+      - uses: actions/checkout@v4
+
+      # Variable de dépôt IOS_BUILD_NUMBER_OFFSET = dernier numéro de build déjà envoyé sur TestFlight.
+      - name: Numéro de build
+        env:
+          OFFSET: ${{ vars.IOS_BUILD_NUMBER_OFFSET }}
+        run: echo "BUILD_NUMBER=$(( ${{ github.run_number }} + ${OFFSET:-0} ))" >> "$GITHUB_ENV"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # Le Swift Package Manager de Flutter résout une autre version du SDK Firebase que celle du
+      # Podfile.lock (cloud_firestore 6.3.0 ne compile plus). On reste sur CocoaPods.
+      - name: Désactiver Swift Package Manager
+        run: flutter config --no-enable-swift-package-manager
+
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Pods
+        run: cd ios && pod install
+
+      - name: Certificat et profil de distribution
+        env:
+          IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+          KEYCHAIN_PASSWORD="$(uuidgen)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$IOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychain -d user -s "$KEYCHAIN" login.keychain
+
+          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
+          security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" > "$RUNNER_TEMP/profile.plist"
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$RUNNER_TEMP/profile.plist")
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print Name" "$RUNNER_TEMP/profile.plist")
+          TEAM_ID=$(/usr/libexec/PlistBuddy -c "Print TeamIdentifier:0" "$RUNNER_TEMP/profile.plist")
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          cp "$RUNNER_TEMP/profile.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
+          echo "TEAM_ID=$TEAM_ID" >> "$GITHUB_ENV"
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+
+          cat > "$RUNNER_TEMP/export_options.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict><key>$BUNDLE_ID</key><string>$PROFILE_NAME</string></dict>
+          </dict>
+          </plist>
+          PLIST
+
+      # Le projet Xcode est en signature automatique avec une autre équipe : sans compte Apple connecté,
+      # l'archive échoue (« No Accounts »). On le passe en signature manuelle avec le profil importé,
+      # uniquement sur le runner (équivalent de `xcode-project use-profiles` de Codemagic).
+      - name: Signature manuelle du projet Xcode
+        run: |
+          perl -pi -e 's/DEVELOPMENT_TEAM = [A-Z0-9]+;/DEVELOPMENT_TEAM = $ENV{TEAM_ID};\n\t\t\t\tCODE_SIGN_STYLE = Manual;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "$ENV{PROFILE_NAME}";\n\t\t\t\t"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";/g' ios/Runner.xcodeproj/project.pbxproj
+          grep -n "DEVELOPMENT_TEAM\|CODE_SIGN_STYLE\|PROVISIONING_PROFILE_SPECIFIER" ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Analyse
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Tests
+        run: flutter test
+
+      - name: Build IPA
+        run: |
+          flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
+            --dart-define=RC_IOS_KEY="${{ vars.RC_IOS_KEY }}" \
+            --export-options-plist="$RUNNER_TEMP/export_options.plist"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: app/build/ios/ipa/*.ipa
+
+      - name: Chemin de l'IPA
+        id: ipa
+        run: echo "path=$(ls build/ios/ipa/*.ipa | head -n 1)" >> "$GITHUB_OUTPUT"
+
+      - name: Envoi TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: app/${{ steps.ipa.outputs.path }}
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}

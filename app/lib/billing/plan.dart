@@ -1,7 +1,9 @@
 /// Produits d'abonnement Wina : `wina_<1|2|3>team[s]_<monthly|annual>` (App Store Connect : `wina_1team_monthly`,
 /// `wina_3teams_annual`...), ou l'ancienne écriture `wina_team<n>_<monthly|yearly>`. « annual » vaut yearly.
 /// Sur Google Play, RevenueCat expose « identifiant de l'abonnement:identifiant du plan » : le séparateur peut
-/// être `:` et un identifiant de plan de base peut suivre (`wina_3teams_annual:p1y`).
+/// être `:` et un identifiant de plan de base peut suivre (`wina_3teams_annual:p1y`). Les abonnements Play créés
+/// sous la forme `wina<n>_team` (`wina3_team:monthly`) et un plan de base suffixé d'un chiffre (`wina_1team:annual1`)
+/// sont aussi acceptés : un identifiant Play ne se renomme pas.
 /// Même motif que `parseProduct` côté serveur (functions/src/billing/subscription.ts).
 enum BillingPeriod { monthly, yearly }
 

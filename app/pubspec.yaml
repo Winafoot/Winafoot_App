@@ -122,7 +122,7 @@ flutter_native_splash:
 
 flutter_launcher_icons:
   # Source hors assets/ : sert uniquement à générer les icônes, ne doit pas être embarquée dans le bundle
-  image_path: "tool/branding/logo_wina_v2.png"
+  image_path: "tool/branding/logo_wina_v3.png"
   android: "launcher_icon"
   ios: true
   remove_alpha_ios: true

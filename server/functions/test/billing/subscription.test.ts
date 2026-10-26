@@ -48,6 +48,12 @@ describe("parseProduct", () => {
     // Google Play, mêmes noms : abonnement seul, ou suivi de l'identifiant du plan de base.
     ["wina_1team:monthly", 1, "monthly"],
     ["wina_3teams_annual:p1y", 3, "yearly"],
+    // Abonnements Play réellement créés dans la console : `wina<n>_team`, et un plan de base « annual1 ».
+    ["wina_1team:annual1", 1, "yearly"],
+    ["wina2_team:monthly", 2, "monthly"],
+    ["wina2_team:annual", 2, "yearly"],
+    ["wina3_team:monthly", 3, "monthly"],
+    ["wina3_team:annual", 3, "yearly"],
   ])("reads %s", (id, teamsAllowed, period) => {
     expect(parseProduct(id)).toEqual({ teamsAllowed, period });
   });
@@ -59,6 +65,8 @@ describe("parseProduct", () => {
     "wina_0team_annual",
     "wina_2teams_weekly",
     "wina_2teams_annual:",
+    "wina4_team:monthly",
+    "wina2_team:weekly",
     "xwina_2teams_annual",
     "autre",
     "",

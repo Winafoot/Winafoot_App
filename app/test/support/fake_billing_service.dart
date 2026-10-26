@@ -12,7 +12,7 @@ class FakeBillingService implements BillingService {
   });
 
   final bool available;
-  final List<PlanOffer> offers;
+  List<PlanOffer> offers;
   PurchaseResult purchaseResult;
   bool restoreResult;
   Object? purchaseError;
