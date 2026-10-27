@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:kosmos_auth/kosmos_auth.dart' show KosmosAuth;
 import 'package:wina/billing/access_info.dart';
+import 'package:wina/config/legal_links.dart';
 import 'package:wina/config/skeleton_config.dart' show kCloudRegion;
 import 'package:wina/config/theme.dart';
 import 'package:wina/view/widget/confirm_dialog.dart';
@@ -108,10 +109,6 @@ class SettingsWebPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final config =
-        GetIt.I.isRegistered<AppMetadataConfig>()
-            ? GetIt.I<AppMetadataConfig>()
-            : null;
     final List<SettingsNode> socialNodes = _socialNodes();
 
     return Scaffold(
@@ -364,37 +361,17 @@ class SettingsWebPage extends ConsumerWidget {
                               title:
                                   'package.settings.node.link.privacy-policy'
                                       .tr(),
-                              onTap:
-                                  () => _showSettingsDialog(
-                                    context,
-                                    'package.settings.node.link.privacy-policy'
-                                        .tr(),
-                                    (_) => legalPaneContent(
-                                      config?.confidentialityPolicy,
-                                    ),
-                                  ),
+                              onTap: () => openLegalLink(context, kPrivacyUri),
                             ),
                             SettingsNode(
                               title: 'package.settings.node.link.cgvu'.tr(),
-                              onTap:
-                                  () => _showSettingsDialog(
-                                    context,
-                                    'package.settings.node.link.cgvu'.tr(),
-                                    (_) => legalPaneContent(config?.cgvu),
-                                  ),
+                              onTap: () => openLegalLink(context, kCguUri),
                             ),
                             SettingsNode(
                               title:
                                   'package.settings.node.link.legal-notice'
                                       .tr(),
-                              onTap:
-                                  () => _showSettingsDialog(
-                                    context,
-                                    'package.settings.node.link.legal-notice'
-                                        .tr(),
-                                    (_) =>
-                                        legalPaneContent(config?.legalNotice),
-                                  ),
+                              onTap: () => openLegalLink(context, kLegalNoticeUri),
                             ),
                           ],
                         ),
