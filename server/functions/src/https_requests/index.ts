@@ -15,4 +15,4 @@ export const onSendLandingPageMailDeleteAccount = onRequest({ secrets: MAILER_SE
 export const deleteAccountByEmail = onRequest({ maxInstances: PUBLIC_MAX_INSTANCES }, requestAdapter("https_requests/landing_page/delete_account_by_email_secured"));
 
 // Webhook RevenueCat : appelé par RevenueCat seul, protégé par le secret REVENUECAT_WEBHOOK_SECRET (pas d'App Check sur onRequest).
-export const revenuecatWebhook = onRequest({ secrets: REVENUECAT_SECRET_PARAMS, maxInstances: PUBLIC_MAX_INSTANCES }, requestAdapter("https_requests/billing/revenuecat_webhook"));
+export const revenuecatWebhook = onRequest({ secrets: [...REVENUECAT_SECRET_PARAMS, ...MAILER_SECRET_PARAMS], maxInstances: PUBLIC_MAX_INSTANCES }, requestAdapter("https_requests/billing/revenuecat_webhook"));

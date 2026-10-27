@@ -150,48 +150,69 @@ class CheckProfilScaffold extends StatelessWidget {
                 // complétion de profil obligatoire.
                 const WinaWordmark(size: 34, tappable: false),
                 Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        vertical: cH(20),
-                        horizontal: narrow ? cW(16) : 0,
-                      ),
-                      child: Container(
-                        width: narrow ? double.infinity : (width ?? cW(430)),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: cW(28),
-                          vertical: cH(28),
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColor.surface,
-                          borderRadius: BorderRadius.circular(cR(20)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Row(
-                              children: [
-                                if (onBack != null) ...[
-                                  CustomBackButton(onTap: onBack!),
-                                  cSw(12),
-                                ],
-                                Flexible(
-                                  child: Text(
-                                    title,
-                                    style: AppThemeStyle.semiBStyle(
-                                      cFs(18),
-                                      AppColor.primaryLabels,
-                                    ),
-                                  ),
+                  // Tient sur un écran sans défilement : la carte est réduite si besoin ;
+                  // le clavier ouvert fait défiler au lieu de la réduire encore.
+                  child: LayoutBuilder(
+                    builder: (BuildContext context, BoxConstraints cons) {
+                      final double fullHeight =
+                          cons.maxHeight +
+                          MediaQuery.viewInsetsOf(context).bottom;
+                      final double gutter = narrow ? cW(16) : 0;
+                      return SingleChildScrollView(
+                        child: SizedBox(
+                          width: cons.maxWidth,
+                          height: fullHeight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: cH(20),
+                                horizontal: gutter,
+                              ),
+                              child: Container(
+                                width:
+                                    narrow
+                                        ? cons.maxWidth - 2 * gutter
+                                        : (width ?? cW(430)),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: cW(28),
+                                  vertical: cH(28),
                                 ),
-                              ],
+                                decoration: BoxDecoration(
+                                  color: AppColor.surface,
+                                  borderRadius: BorderRadius.circular(cR(20)),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        if (onBack != null) ...[
+                                          CustomBackButton(onTap: onBack!),
+                                          cSw(12),
+                                        ],
+                                        Flexible(
+                                          child: Text(
+                                            title,
+                                            style: AppThemeStyle.semiBStyle(
+                                              cFs(18),
+                                              AppColor.primaryLabels,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    cSh(22),
+                                    ...children,
+                                  ],
+                                ),
+                              ),
                             ),
-                            cSh(22),
-                            ...children,
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -408,7 +429,18 @@ class CpButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(label, style: AppThemeStyle.semiBStyle(cFs(15), fg)),
+              // Le libellé rétrécit au lieu de déborder quand le bouton est étroit (deux boutons côte à côte
+              // sur téléphone, libellé long).
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: AppThemeStyle.semiBStyle(cFs(15), fg),
+                  ),
+                ),
+              ),
               cSw(7),
               SizedBox(
                 width: badge,

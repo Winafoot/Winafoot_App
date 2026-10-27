@@ -1,9 +1,31 @@
+import { readFileSync } from "fs";
+import { join } from "path";
 import { Resend } from "resend";
 import { UserModel } from "../model/user/user_model";
 import { AppMetadataConfig } from "../model/config/app_metadata_config";
 import { EnvProvider } from "../provider/env_provider";
 import { describeError } from "./describe_error";
 import { mailIdentity } from "./mail_identity";
+import { withHeaderImage } from "../template/_email_layout";
+
+/** Identifiant de l'image du bandeau jointe au mail (`<img src="cid:...">`). */
+const INLINE_HEADER_ID = "wina-header";
+let inlineHeader: Buffer | null | undefined;
+
+/**
+ * Bandeau des e-mails (functions/assets/mail/header.jpg), lu une fois puis gardé en mémoire. Absent ou illisible :
+ * `null`, et les e-mails partent avec le bandeau vert uni.
+ */
+function inlineHeaderImage(): Buffer | null {
+  if (inlineHeader === undefined) {
+    try {
+      inlineHeader = readFileSync(join(__dirname, "..", "..", "assets", "mail", "header.jpg"));
+    } catch {
+      inlineHeader = null;
+    }
+  }
+  return inlineHeader;
+}
 
 /**
  * Envoie un e-mail transactionnel via Resend.
@@ -45,6 +67,15 @@ export async function sendEmail(
 
   const resend = new Resend(resendConfig.apiKey);
 
+  // Bandeau : adresse https saisie dans `mail.headerImageUrl`, sinon image jointe au mail (aucun hébergement).
+  const hostedUrl: string | undefined = mailConfig.headerImageUrl;
+  const inline: Buffer | null = hostedUrl ? null : inlineHeaderImage();
+  const html: string = withHeaderImage(emailContent, hostedUrl ?? (inline ? `cid:${INLINE_HEADER_ID}` : undefined), appName);
+  const attachment =
+    inline != null && html !== emailContent
+      ? { filename: "header.jpg", content: inline, contentId: INLINE_HEADER_ID }
+      : undefined;
+
   try {
     // Le SDK ne lève pas sur un refus de l'API : il renvoie `{ data, error }`.
     const { data, error } = await resend.emails.send({
@@ -52,7 +83,8 @@ export async function sendEmail(
       to: [userModel.email ?? ""],
       replyTo,
       subject: `${appName} - ${subject}`,
-      html: emailContent,
+      html,
+      ...(attachment != null ? { attachments: [attachment] } : {}),
       text,
     });
     if (error != null) throw error;

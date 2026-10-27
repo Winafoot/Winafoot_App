@@ -18,6 +18,19 @@ const EMAIL_CSS = `body,table,td{font-family:Helvetica,Arial,sans-serif !importa
 
 const SPACER_40 = `<table class="s-10 w-full" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;" width="100%"><tbody><tr><td style="line-height: 40px; font-size: 40px; width: 100%; height: 40px; margin: 0;" align="left" width="100%" height="40">&#160;</td></tr></tbody></table>`;
 
+/**
+ * Remplace le bandeau vert uni du gabarit par une image (terrain + logo) : adresse https, ou `cid:` pour une image
+ * jointe au mail. Sans source valide, ou si
+ * le bandeau n'est pas trouvé, le HTML reste tel quel : l'e-mail part toujours, simplement sans l'image.
+ */
+export function withHeaderImage(html: string, imageUrl: string | undefined, appName: string = DEFAULT_APP_NAME): string {
+  const url: string = (imageUrl ?? "").trim();
+  if (!/^(https:\/\/[^\s"'<>]+|cid:[A-Za-z0-9_-]+)$/.test(url)) return html;
+  const banner = `<table class="header" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%;"><tbody><tr><td align="center" bgcolor="${EMAIL_PRIMARY}" style="background-color: ${EMAIL_PRIMARY}; padding: 0; margin: 0; line-height: 0; font-size: 0;"><img src="${escapeHtml(url)}" alt="${escapeHtml(appName)}" width="600" style="display: block; width: 100%; max-width: 600px; height: auto; border: 0;"></td></tr></tbody></table>`;
+  const pattern = /<table class="header"[\s\S]*?<\/table>/;
+  return pattern.test(html) ? html.replace(pattern, () => banner) : html;
+}
+
 export function wrapEmailLayout(logoUrl: string, content: string, appName: string = DEFAULT_APP_NAME): string {
   const brand = logoUrl
     ? `<img src="${logoUrl}" alt="${escapeHtml(appName)}" style="display: block; margin: 0 auto; height: 48px">`

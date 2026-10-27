@@ -49,7 +49,7 @@ export async function issueCode(purpose: OtpPurpose, uid: string, now: number = 
  * demander un nouveau. Un code expiré, absent ou mal formé répond `false` sans autre indice.
  */
 export async function consumeCode(purpose: OtpPurpose, uid: string, input: unknown, now: number = Date.now()): Promise<boolean> {
-  if (typeof input !== "string" || !new RegExp(`^\d{${OTP_LENGTH}}$`).test(input.trim())) return false;
+  if (typeof input !== "string" || !new RegExp(`^[0-9]{${OTP_LENGTH}}$`).test(input.trim())) return false;
   const code: string = input.trim();
   const ref = codeRef(purpose, uid);
 

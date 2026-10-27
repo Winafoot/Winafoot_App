@@ -101,11 +101,10 @@ flutter:
     - assets/translations/
 
 flutter_native_splash:
-  # Fond clair aligné sur AppColor.background (lib/config/theme.dart), et non
-  # plus une image plein écran sombre, pour que le démarrage soit de la même
-  # teinte que scaffoldBackgroundColor.
-  color: "#EFF4EF"
-  image: "tool/branding/splash_icon_android12.png"
+  # Fond blanc, comme le logo de l icône (logo_wina_v3.png) : le démarrage affiche le même logo que
+  # l icône de l application, sur fond uni (pas d image plein écran).
+  color: "#FFFFFF"
+  image: "tool/branding/splash_icon_v3.png"
   # Sans ce paramètre, l'outil supprime android:screenOrientation du manifest
   # et casse le verrouillage paysage
   android_screen_orientation: sensorLandscape
@@ -114,11 +113,11 @@ flutter_native_splash:
   # icône centrée (rognée en cercle) sur un fond uni. Doit donc être configuré
   # séparément, sinon le démarrage est incorrect sur Android 12 à 15.
   android_12:
-    color: "#EFF4EF"
-    color_dark: "#EFF4EF"
+    color: "#FFFFFF"
+    color_dark: "#FFFFFF"
     # 1152x1152, marque inscrite dans le cercle de 768 px imposé par l'API
-    image: "tool/branding/splash_icon_android12.png"
-    image_dark: "tool/branding/splash_icon_android12.png"
+    image: "tool/branding/splash_icon_v3.png"
+    image_dark: "tool/branding/splash_icon_v3.png"
 
 flutter_launcher_icons:
   # Source hors assets/ : sert uniquement à générer les icônes, ne doit pas être embarquée dans le bundle

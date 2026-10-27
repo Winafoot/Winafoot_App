@@ -102,7 +102,8 @@ abstract class KosmosAuth {
       return Left(FirebaseErrorHandler.getErrorMessage(e));
     } catch (e) {
       printExcept(e);
-      return Left("package.kosmos-auth.error-default".tr());
+      return Left("package.kosmos-auth.error-with-code"
+          .tr(args: <String>[e.runtimeType.toString()]));
     }
   }
 

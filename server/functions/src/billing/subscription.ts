@@ -17,6 +17,8 @@ export interface SubscriptionData {
   store: "app_store" | "play_store";
   /** Horodatage du dernier événement pris en compte : un événement plus ancien est ignoré. */
   lastEventMs: number;
+  /** Faux dès que l'utilisateur résilie (CANCELLATION) : l'abonnement ne sera plus renouvelé ni prélevé. Absent : inconnu. */
+  autoRenew?: boolean;
 }
 
 /** Les champs de l'événement RevenueCat dont le serveur se sert (https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields). */
@@ -94,6 +96,11 @@ export function applyEvent(prev: SubscriptionData | undefined, event: RevenueCat
   const expiresAtMs = graceUntil ?? event.expiration_at_ms ?? prev?.expiresAtMs ?? 0;
   const trialEndMs = event.period_type === "TRIAL" ? (event.expiration_at_ms ?? null) : (prev?.trialEndMs ?? null);
 
+  // Résiliation : plus de renouvellement (donc plus de prélèvement) ; achat, renouvellement, reprise ou changement de formule : il revient.
+  let autoRenew: boolean | undefined = prev?.autoRenew;
+  if (event.type === "CANCELLATION" || event.type === "EXPIRATION") autoRenew = false;
+  else if (event.type === "INITIAL_PURCHASE" || event.type === "RENEWAL" || event.type === "UNCANCELLATION" || event.type === "PRODUCT_CHANGE") autoRenew = true;
+
   return {
     productId: (event.type === "PRODUCT_CHANGE" ? event.new_product_id : event.product_id) as string,
     period: product.period,
@@ -103,6 +110,7 @@ export function applyEvent(prev: SubscriptionData | undefined, event: RevenueCat
     expiresAtMs,
     store: event.store === "PLAY_STORE" ? "play_store" : event.store != null ? "app_store" : (prev?.store ?? "app_store"),
     lastEventMs: event.event_timestamp_ms,
+    autoRenew,
   };
 }
 

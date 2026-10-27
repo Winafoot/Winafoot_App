@@ -1,4 +1,6 @@
 import { onMessagePublished } from "firebase-functions/v2/pubsub";
+import { onSchedule } from "firebase-functions/v2/scheduler";
+import { sendTrialRemindersHandler } from "./billing/send_trial_reminders";
 import { onBudgetAlertHandler } from "./billing/on_budget_alert";
 import { onDocumentCreated, onDocumentDeleted, onDocumentUpdated, onDocumentWritten } from "firebase-functions/v2/firestore";
 import { ALGOLIA_ENABLED } from "../config/algolia";
@@ -19,6 +21,13 @@ export const onCreateReport = onDocumentCreated({ document: "reports/{reportId}"
 /** Fiches utilisateur : e-mail de bienvenue à la création, nettoyage des sous-documents à la suppression. */
 export const onCreateUser = onDocumentCreated({ document: "users/{userId}", secrets: MAILER_SECRET_PARAMS, maxInstances: TRIGGER_MAX_INSTANCES }, documentCreatedAdapter("triggers/user/on_create_user"));
 export const onDeleteUser = onDocumentDeleted({ document: "users/{userId}", maxInstances: TRIGGER_MAX_INSTANCES }, documentDeletedAdapter("triggers/user/on_delete_user"));
+
+/** Abonnements : rappel par e-mail 24 à 48 h avant la fin de l'essai gratuit (tous les jours à 10 h, heure de Paris). */
+export const sendTrialReminders = onSchedule(
+  // europe-west1 : Cloud Scheduler y est disponible, et son quota de CPU Cloud Run n'est pas celui, saturé, d'europe-west9.
+  { schedule: "every day 10:00", timeZone: "Europe/Paris", region: "europe-west1", secrets: MAILER_SECRET_PARAMS, maxInstances: TRIGGER_MAX_INSTANCES, timeoutSeconds: 300 },
+  sendTrialRemindersHandler,
+);
 
 /** Coupe-circuit budgétaire : maintenance et détachement de la facturation si le budget est dépassé. */
 // Compte d'exécution propre : seul compte autorisé à détacher la facturation du projet.

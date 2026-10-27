@@ -14,20 +14,20 @@ const DAY = 24 * HOUR;
  * Functions monte à 100 instances par fonction : un afflux d'appels se transforme
  * en facture, et le coupe-circuit budgétaire met ensuite toute l'app en maintenance.
  */
-export const PUBLIC_MAX_INSTANCES = 5;
+export const PUBLIC_MAX_INSTANCES = 1;
 
 /**
  * Callables d'administration : la vérification du claim `admin` se fait DANS le code, donc
  * après le démarrage de l'instance. Un flot anonyme les ferait monter à 100 instances.
  */
-export const ADMIN_MAX_INSTANCES = 2;
+export const ADMIN_MAX_INSTANCES = 1;
 
 /**
  * Triggers Firestore (fiche créée ou supprimée, notification, signalement, configuration) : des
  * événements rares, dont le débit suit celui des callables limités ci-dessus. Au-delà de ce plafond,
  * Eventarc représente l'événement plus tard au lieu de démarrer une instance de plus.
  */
-export const TRIGGER_MAX_INSTANCES = 3;
+export const TRIGGER_MAX_INSTANCES = 1;
 
 /** Coupe-circuit budgétaire : une seule instance traite les alertes, l'une après l'autre. */
 export const BUDGET_ALERT_MAX_INSTANCES = 1;
