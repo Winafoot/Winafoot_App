@@ -19,6 +19,8 @@ class FakeBillingService implements BillingService {
 
   final List<String> loggedIn = <String>[];
   final List<String> purchased = <String>[];
+  final List<String?> replacedProductIds = <String?>[];
+  final List<bool> deferredPurchases = <bool>[];
   int restoreCalls = 0;
 
   @override
@@ -31,9 +33,15 @@ class FakeBillingService implements BillingService {
   Future<List<PlanOffer>> loadOffers() async => offers;
 
   @override
-  Future<PurchaseResult> purchase(String productId) async {
+  Future<PurchaseResult> purchase(
+    String productId, {
+    String? replacingProductId,
+    bool deferred = false,
+  }) async {
     if (purchaseError != null) throw purchaseError!;
     purchased.add(productId);
+    replacedProductIds.add(replacingProductId);
+    deferredPurchases.add(deferred);
     return purchaseResult;
   }
 

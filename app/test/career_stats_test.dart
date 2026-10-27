@@ -16,12 +16,12 @@ void main() {
       final result = aggregateCareerStats(<GameMatch>[
         const GameMatch(
           playerStats: <String, Map<String, int>>{
-            'p1': <String, int>{'butsMarques': 2, 'interceptions': 5},
+            'p1': <String, int>{'butsMarques': 2, 'recuperations': 5},
           },
         ),
       ]);
       expect(result['p1']!['butsMarques'], 2);
-      expect(result['p1']!['interceptions'], 5);
+      expect(result['p1']!['recuperations'], 5);
     });
 
     test('plusieurs matchs : cumule par joueur et par clé', () {
@@ -33,13 +33,13 @@ void main() {
         ),
         const GameMatch(
           playerStats: <String, Map<String, int>>{
-            'p1': <String, int>{'butsMarques': 1, 'corners': 3},
+            'p1': <String, int>{'butsMarques': 1, 'penaltysCrees': 3},
           },
         ),
       ]);
       expect(result['p1']!['butsMarques'], 3); // 2 + 1
       expect(result['p1']!['passesReussies'], 10); // présent dans un seul match
-      expect(result['p1']!['corners'], 3);
+      expect(result['p1']!['penaltysCrees'], 3);
     });
 
     test('joueurs distincts restent séparés', () {
@@ -64,7 +64,7 @@ void main() {
             'p1': <String, int>{
               'passesReussies': 8,
               'passesManquees': 2,
-              'tirsBloques': 1,
+              'tirsNonCadres': 1,
             },
           },
         ),
@@ -123,7 +123,7 @@ void main() {
           'butsMarques': 2,
           'passesReussies': 8,
           'passesManquees': 2,
-          'interceptions': 0, // non activée, jamais saisie : pas de ligne
+          'recuperations': 0, // non activée, jamais saisie : pas de ligne
         },
         'p2': <String, int>{
           'butsMarques': 1,
@@ -135,10 +135,10 @@ void main() {
 
     test('ne garde que les statistiques activées', () {
       final labels = collectifRows(match).map((r) => r.label).toList();
-      final String interception =
-          catalogue.kStatCatalog.firstWhere((s) => s.key == 'interceptions').label;
+      final String recuperation =
+          catalogue.kStatCatalog.firstWhere((s) => s.key == 'recuperations').label;
       expect(labels, contains('Buts marqués'));
-      expect(labels, isNot(contains(interception)));
+      expect(labels, isNot(contains(recuperation)));
     });
 
     test('ajoute Total passes et Réussite de passes dès que les deux composantes sont suivies', () {
@@ -213,11 +213,11 @@ void main() {
       const GameMatch desactivee = GameMatch(
         enabledStatKeys: <String>['butsMarques'],
         playerStats: <String, Map<String, int>>{
-          'p1': <String, int>{'butsMarques': 1, 'corners': 4},
+          'p1': <String, int>{'butsMarques': 1, 'penaltysCrees': 4},
         },
       );
       final rows = collectifRows(desactivee);
-      expect(rows.firstWhere((r) => r.label == 'Corners obtenus').value, '4');
+      expect(rows.firstWhere((r) => r.label == 'Penaltys obtenus').value, '4');
     });
 
     test('formate les totaux bruts en chaîne', () {
@@ -236,7 +236,6 @@ void main() {
       'passesManquees',
       'tirsCadres',
       'tirsNonCadres',
-      'tirsBloques',
     ];
     const Map<String, Map<String, int>> premiere = <String, Map<String, int>>{
       'p1': <String, int>{
@@ -257,14 +256,12 @@ void main() {
         'passesManquees': 33,
         'tirsCadres': 4,
         'tirsNonCadres': 8,
-        'tirsBloques': 2,
       },
       'p2': <String, int>{
         'passesReussies': 59,
         'passesManquees': 21,
         'tirsCadres': 2,
         'tirsNonCadres': 0,
-        'tirsBloques': 1,
       },
     };
     const GameMatch match = GameMatch(
@@ -300,7 +297,7 @@ void main() {
       expect(valeur(rows, 'Passes manquées'), '31');
       expect(valeur(rows, 'Total passes'), '96');
       expect(valeur(rows, 'Réussite de passes'), '67,71\u00A0%');
-      expect(valeur(rows, 'Total tirs'), '10');
+      expect(valeur(rows, 'Total tirs'), '7');
     });
 
     test('Total match : le % vient des sommes, pas d\'une moyenne', () {
@@ -309,7 +306,7 @@ void main() {
       expect(valeur(rows, 'Total passes'), '188');
       // 134 / 188 = 71,28 % ; la moyenne (75 + 67,71) / 2 donnerait 71,36.
       expect(valeur(rows, 'Réussite de passes'), '71,28\u00A0%');
-      expect(valeur(rows, 'Total tirs'), '17');
+      expect(valeur(rows, 'Total tirs'), '14');
       expect(collectifRows(match, MatchPeriod.total), rows);
     });
 
@@ -389,7 +386,6 @@ void main() {
       enabledStatKeys: <String>[
         'tirsCadres',
         'tirsNonCadres',
-        'tirsBloques',
         'passesReussies',
         'passesManquees',
       ],
@@ -414,7 +410,6 @@ void main() {
       expect(blocks.last.rows.map((CollectifRow r) => r.label), <String>[
         'Tirs cadrés',
         'Tirs non cadrés',
-        'Tirs bloqués',
         'Total tirs',
       ]);
     });
@@ -427,7 +422,7 @@ void main() {
   group('statKeyForLabel', () {
     test('résout un libellé connu vers sa clé', () {
       expect(statKeyForLabel('Buts marqués'), 'butsMarques');
-      expect(statKeyForLabel('Interception de ballons'), 'interceptions');
+      expect(statKeyForLabel('Récupérations de ballons'), 'recuperations');
       expect(statKeyForLabel('Total tirs'), 'totalTirs');
     });
 

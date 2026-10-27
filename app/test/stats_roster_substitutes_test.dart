@@ -101,10 +101,15 @@ void main() {
     await pump(tester);
     final Iterable<Image> images =
         tester.widgetList<Image>(find.byType(Image)).cast<Image>();
-    final Set<String> assets =
-        images
-            .map((Image i) => (i.image as AssetImage).assetName)
-            .toSet();
+    // `Image.asset` redimensionné (cacheWidth) enveloppe l'AssetImage dans un ResizeImage.
+    String assetName(Image i) {
+      final ImageProvider<Object> provider = i.image;
+      return ((provider is ResizeImage ? provider.imageProvider : provider)
+              as AssetImage)
+          .assetName;
+    }
+
+    final Set<String> assets = images.map(assetName).toSet();
     expect(assets, contains(teamJersey));
     expect(assets, contains(subJerseyAsset(teamJersey)));
   });

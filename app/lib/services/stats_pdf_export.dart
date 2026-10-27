@@ -243,14 +243,14 @@ const int kStatsPerPage = 10;
 
 // Largeurs de colonnes (pt) : A4 paysage moins marges = 794 pt utiles, donc
 // 100 + 22 + 10 × 67 = 792 tient sur une page. 67 pt = 63 pt utiles (2 pt de
-// marge de chaque côté) : en Poppins gras 9, « Dégagements » (le plus long mot
-// d'un libellé) fait 64,8 pt et se coupe en plein mot ; en 8,5 il fait 61,2 pt.
+// marge de chaque côté) : en Poppins gras 8,5, « Récupérations » (le plus long mot
+// d'un libellé) fait 63,02 pt et se coupe en plein mot ; en 8,3 il fait 61,5 pt.
 const double _kNameWidth = 100;
 const double _kNumberWidth = 22;
 @visibleForTesting
 const double kStatWidth = 67;
 @visibleForTesting
-const double kStatHeaderFontSize = 8.5;
+const double kStatHeaderFontSize = 8.3;
 
 /// Découpe [stats] (dans l'ordre du catalogue) en pages de [maxPerPage]
 /// colonnes au plus. Les catégories consécutives se regroupent sur une même
