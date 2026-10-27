@@ -31,7 +31,11 @@ class FakeBillingService implements BillingService {
   Future<List<PlanOffer>> loadOffers() async => offers;
 
   @override
-  Future<PurchaseResult> purchase(String productId) async {
+  Future<PurchaseResult> purchase(
+    String productId, {
+    String? replacingProductId,
+    bool deferred = false,
+  }) async {
     if (purchaseError != null) throw purchaseError!;
     purchased.add(productId);
     return purchaseResult;
