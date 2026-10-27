@@ -146,16 +146,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
           SizedBox(height: themeData.titleAndFormSpacing ?? formatHeight(44)),
           FormClassicField(
-            fieldName: (config?.authentificationConfig.identifierEmailDomain !=
-                        null
-                    ? "package.field.auth.email-or-identifier.title"
-                    : "package.field.auth.email-or-id.title")
-                .tr(),
-            hintText: (config?.authentificationConfig.identifierEmailDomain !=
-                        null
-                    ? "package.field.auth.email-or-identifier.hint"
-                    : "package.field.auth.email-or-id.hint")
-                .tr(),
+            fieldName:
+                (config?.authentificationConfig.identifierEmailDomain != null
+                        ? "package.field.auth.email-or-identifier.title"
+                        : "package.field.auth.email-or-id.title")
+                    .tr(),
+            hintText:
+                (config?.authentificationConfig.identifierEmailDomain != null
+                        ? "package.field.auth.email-or-identifier.hint"
+                        : "package.field.auth.email-or-id.hint")
+                    .tr(),
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             focusNode: _emailOrIdFocusNode,
@@ -592,10 +592,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         region: config?.cloudRegion ?? "us-central1",
                       );
                       await emailExist.fold((l) {
-                        PopupAlert.toast(context, FToast().init(context),
-                            title: "utils.error".tr(),
-                            subtitle: l.toString(),
-                            type: AlertType.error);
+                        _showLoginErrorDialog(context, l.toString());
                         return;
                       }, (r) async {
                         if (!r) {
@@ -609,14 +606,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         final res = await KosmosAuth.resetPassword(resetEmail!,
                             region: config?.cloudRegion ?? "us-central1");
                         res.fold((l) {
-                          PopupAlert.toast(context, FToast().init(context),
-                              title: "utils.error".tr(),
-                              subtitle: l.toString(),
-                              type: AlertType.error);
+                          _showLoginErrorDialog(context, l.toString());
                           Navigator.of(ctx).pop();
                         }, (r) {
-                          final onCodeSent = config?.authentificationConfig
-                              .onResetPasswordCodeSent;
+                          final onCodeSent = config
+                              ?.authentificationConfig.onResetPasswordCodeSent;
                           if (onCodeSent != null) {
                             Navigator.of(ctx).pop(true);
                             onCodeSent(context, resetEmail!);
@@ -666,10 +660,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         region: config?.cloudRegion ?? "us-central1",
                       );
                       await emailExist.fold((l) {
-                        PopupAlert.toast(context, FToast().init(context),
-                            title: "utils.error".tr(),
-                            subtitle: l.toString(),
-                            type: AlertType.error);
+                        _showLoginErrorDialog(context, l.toString());
                         return;
                       }, (r) async {
                         if (!r) {
@@ -683,14 +674,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         final res = await KosmosAuth.resetPassword(resetEmail!,
                             region: config?.cloudRegion ?? "us-central1");
                         res.fold((l) {
-                          PopupAlert.toast(context, FToast().init(context),
-                              title: "utils.error".tr(),
-                              subtitle: l.toString(),
-                              type: AlertType.error);
+                          _showLoginErrorDialog(context, l.toString());
                           Navigator.of(ctx).pop();
                         }, (r) {
-                          final onCodeSent = config?.authentificationConfig
-                              .onResetPasswordCodeSent;
+                          final onCodeSent = config
+                              ?.authentificationConfig.onResetPasswordCodeSent;
                           if (onCodeSent != null) {
                             Navigator.of(ctx).pop(true);
                             onCodeSent(context, resetEmail!);
@@ -760,10 +748,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (authType == LoginType.id && savedEmail == null) {
       final res = await KosmosAuth.getEmailFromIdentifier(emailOrId!);
       final canContinue = res.fold<bool>((l) {
-        PopupAlert.toast(context, FToast().init(context),
-            title: "utils.error".tr(),
-            subtitle: l.toString(),
-            type: AlertType.error);
+        _showLoginErrorDialog(context, l.toString());
         return false;
       }, (r) {
         email = r!;
@@ -775,10 +760,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     /// Login with email
     final res = await KosmosAuth.signInWithEmail(email, pass);
     final canContinue = res.fold<bool>((l) {
-      PopupAlert.toast(context, FToast().init(context),
-          title: "utils.error".tr(),
-          subtitle: l.toString(),
-          type: AlertType.error);
+      _showLoginErrorDialog(context, l.toString());
       return false;
     }, (r) {
       /// Login success
@@ -1009,4 +991,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       return;
     }
   }
+}
+
+/// Échec de connexion : fenêtre avec le motif de l'erreur (identifiants faux, réseau, compte désactivé…),
+/// plutôt qu'un message rouge qui disparaît.
+void _showLoginErrorDialog(BuildContext context, String message) {
+  PopupAlert.dialogBox(
+    context,
+    title: "package.kosmos-auth.login-failed-title".tr(),
+    subtitle: message,
+    actionsBuilder: [
+      (ctx) => Center(
+            child: Button(
+              text: "utils.close".tr(),
+              buttonType: ButtonType.primary,
+              width: formatWidth(140),
+              onTap: () => Navigator.of(ctx).pop(),
+            ),
+          ),
+    ],
+  );
 }

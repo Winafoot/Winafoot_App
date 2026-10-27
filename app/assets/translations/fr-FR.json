@@ -153,7 +153,11 @@
       "cant-be-same-phone": "Le nouveau numéro doit être différent de l'ancien.",
       "code-is-expired": "Le code de vérification a expiré.",
       "code-sent": "Un code de vérification vous a été envoyé par SMS.",
-      "too-many-requests": "Trop de tentatives de connexion. Veuillez réessayer plus tard."
+      "too-many-requests": "Trop de tentatives de connexion. Veuillez réessayer plus tard.",
+      "wrong-credentials": "Identifiant ou mot de passe incorrect. Vérifiez vos informations et réessayez.",
+      "network-request-failed": "Impossible de joindre le serveur. Vérifiez votre connexion internet puis réessayez.",
+      "error-with-code": "Une erreur est survenue (code : {}). Réessayez ; si le problème continue, contactez le support en indiquant ce code.",
+      "login-failed-title": "Connexion impossible"
     },
     "skeleton": {
       "auth": {
@@ -495,6 +499,8 @@
     "settings-extra": {
       "my-teams": "Mes équipes",
       "my-teams-sub": "Équipes supplémentaires de votre abonnement",
+      "change-plan": "Changer de formule",
+      "change-plan-sub": "Passer à plus d'équipes, ou en retirer pour le mois prochain",
       "manage-subscription": "Gérer mon abonnement",
       "manage-subscription-sub": "Résiliation et moyens de paiement dans le store",
       "restore": "Restaurer mes achats"
@@ -514,6 +520,9 @@
       "save-second": "ÉCONOMISEZ 50 % SUR LA 2E ÉQUIPE",
       "save-yearly": "ÉCONOMISEZ 15 %",
       "yearly-title": "Abonnement annuel",
+      "short-yearly": "Annuel",
+      "short-monthly": "Mensuel",
+      "see-offer": "Voir l'offre",
       "per-year": "/ an",
       "per-month-equiv": "soit {} par mois",
       "yearly-1": "Un seul paiement, toute la saison couverte",
@@ -530,6 +539,16 @@
       "monthly-2": "Idéal pour tester sur une partie de saison",
       "monthly-3": "Toutes les fonctionnalités incluses",
       "subscribe-month": "S'abonner au mois",
+      "change-title": "Changer de formule",
+      "change-current": "Formule actuelle : {} équipe(s), renouvelée le {}",
+      "change-current-nodate": "Formule actuelle : {} équipe(s)",
+      "change-note": "Une formule supérieure s'applique tout de suite (au prorata). Une formule inférieure prend effet au prochain renouvellement, sans remboursement.",
+      "change-same": "C'est déjà votre formule actuelle.",
+      "change-done": "Votre formule a été mise à jour.",
+      "change-done-later": "Changement enregistré : il prendra effet au prochain renouvellement.",
+      "trial-then": "7 jours gratuits, puis {}",
+      "no-trial-line": "Sans engagement · Paiement via l'App Store ou Google Play",
+      "legal-no-trial": "Abonnement à renouvellement automatique. Le montant de la formule choisie est prélevé sur votre compte App Store ou Google Play à chaque période, sauf résiliation au moins 24 h avant la fin de la période en cours. Gérez ou résiliez votre abonnement dans les réglages de votre compte.",
       "trial-line": "Testez WINA gratuitement pendant 7 jours · Sans engagement · Paiement via l'App Store ou Google Play",
       "restore": "Restaurer mes achats",
       "legal": "Abonnement à renouvellement automatique. À la fin des 7 jours d'essai, le montant de la formule choisie est prélevé sur votre compte App Store ou Google Play, puis à chaque période, sauf résiliation au moins 24 h avant la fin de la période en cours. Gérez ou résiliez votre abonnement dans les réglages de votre compte.",

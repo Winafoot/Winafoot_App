@@ -6,12 +6,15 @@ import 'package:wina/config/skeleton_config.dart' show kCloudRegion;
 import 'package:wina/config/theme.dart';
 import 'package:wina/view/widget/confirm_dialog.dart';
 import 'package:wina/providers/billing_providers.dart';
+import 'package:wina/view/page/abonnement_screen.dart';
 import 'package:wina/view/page/check_profil_step1_screen.dart';
 import 'package:wina/view/page/mes_equipes_screen.dart';
 import 'package:wina/view/page/mon_adjoint_screen.dart';
 import 'package:wina/view/page/settings/settings_node.dart';
 import 'package:wina/view/widget/custom_back_button.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:skeleton/skeleton.dart';
@@ -181,61 +184,11 @@ class SettingsWebPage extends ConsumerWidget {
                                   ),
                               title:
                                   'package.settings.node.security.title'.tr(),
-                              paneTitle:
-                                  'package.settings.node.security.title'.tr(),
                               subtitle:
                                   'package.settings.node.security.subtitle'
                                       .tr(),
-                              children: [
-                                SettingsNode(
-                                  title:
-                                      'package.settings.node.change-email.title'
-                                          .tr(),
-                                  paneTitle:
-                                      'package.settings.node.change-email.title'
-                                          .tr(),
-                                  subtitle:
-                                      ref.watch(userProvider).user?.email ?? "",
-                                  contentBuilder: (context) {
-                                    return _EditEmailForm(
-                                      initialEmail:
-                                          ref.watch(userProvider).user?.email ??
-                                          '',
-                                    );
-                                  },
-                                ),
-                                SettingsNode(
-                                  title:
-                                      'package.settings.node.change-password.title'
-                                          .tr(),
-                                  paneTitle:
-                                      'package.settings.node.change-password.title'
-                                          .tr(),
-                                  subtitle:
-                                      ref
-                                                  .watch(userProvider)
-                                                  .securityMetadata
-                                                  ?.lastPasswordUpdate !=
-                                              null
-                                          ? 'package.settings.node.change-password.subtitle'.tr(
-                                            namedArgs: {
-                                              "timeAgo":
-                                                  DateTime.now()
-                                                      .difference(
-                                                        ref
-                                                            .watch(userProvider)
-                                                            .securityMetadata!
-                                                            .lastPasswordUpdate!,
-                                                      )
-                                                      .formatTimeAgo(),
-                                            },
-                                          )
-                                          : "utils.by-default".tr(),
-                                  contentBuilder: (context) {
-                                    return const ChangePasswordForm();
-                                  },
-                                ),
-                              ],
+                              onTap: () => _showSecurityDialog(context, ref),
+                              children: [],
                             ),
                           ],
                         ),
@@ -288,6 +241,40 @@ class SettingsWebPage extends ConsumerWidget {
                             title: 'app.subscription.title'.tr(),
                             children: [
                               SettingsNode(
+                                title: 'app.settings-extra.change-plan'.tr(),
+                                subtitle:
+                                    'app.settings-extra.change-plan-sub'.tr(),
+                                onTap:
+                                    () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder:
+                                            (_) => const AbonnementScreen(
+                                              changePlan: true,
+                                            ),
+                                      ),
+                                    ),
+                                children: [],
+                              ),
+                              SettingsNode(
+                                title:
+                                    'app.settings-extra.manage-subscription'
+                                        .tr(),
+                                subtitle:
+                                    'app.settings-extra.manage-subscription-sub'
+                                        .tr(),
+                                onTap:
+                                    () => launchUrl(
+                                      Uri.parse(
+                                        defaultTargetPlatform ==
+                                                TargetPlatform.iOS
+                                            ? 'https://apps.apple.com/account/subscriptions'
+                                            : 'https://play.google.com/store/account/subscriptions',
+                                      ),
+                                      mode: LaunchMode.externalApplication,
+                                    ),
+                                children: [],
+                              ),
+                              SettingsNode(
                                 title: 'app.settings-extra.my-teams'.tr(),
                                 subtitle:
                                     'app.settings-extra.my-teams-sub'.tr(),
@@ -306,7 +293,8 @@ class SettingsWebPage extends ConsumerWidget {
                                 onTap:
                                     () => Navigator.of(context).push(
                                       MaterialPageRoute<void>(
-                                        builder: (_) => const MonAdjointScreen(),
+                                        builder:
+                                            (_) => const MonAdjointScreen(),
                                       ),
                                     ),
                                 children: [],
@@ -376,23 +364,37 @@ class SettingsWebPage extends ConsumerWidget {
                               title:
                                   'package.settings.node.link.privacy-policy'
                                       .tr(),
-                              contentBuilder:
-                                  (context) => legalPaneContent(
-                                    config?.confidentialityPolicy,
+                              onTap:
+                                  () => _showSettingsDialog(
+                                    context,
+                                    'package.settings.node.link.privacy-policy'
+                                        .tr(),
+                                    (_) => legalPaneContent(
+                                      config?.confidentialityPolicy,
+                                    ),
                                   ),
                             ),
                             SettingsNode(
                               title: 'package.settings.node.link.cgvu'.tr(),
-                              contentBuilder:
-                                  (context) => legalPaneContent(config?.cgvu),
+                              onTap:
+                                  () => _showSettingsDialog(
+                                    context,
+                                    'package.settings.node.link.cgvu'.tr(),
+                                    (_) => legalPaneContent(config?.cgvu),
+                                  ),
                             ),
                             SettingsNode(
                               title:
                                   'package.settings.node.link.legal-notice'
                                       .tr(),
-                              contentBuilder:
-                                  (context) =>
-                                      legalPaneContent(config?.legalNotice),
+                              onTap:
+                                  () => _showSettingsDialog(
+                                    context,
+                                    'package.settings.node.link.legal-notice'
+                                        .tr(),
+                                    (_) =>
+                                        legalPaneContent(config?.legalNotice),
+                                  ),
                             ),
                           ],
                         ),
@@ -691,9 +693,12 @@ Future<void> _confirmAndDeleteAccount(
 /// Widget dédié afin de posséder ses [TextEditingController] et de les libérer
 /// (`dispose()`) à la fermeture du volet.
 class _EditEmailForm extends StatefulWidget {
-  const _EditEmailForm({required this.initialEmail});
+  const _EditEmailForm({required this.initialEmail, this.onDone});
 
   final String initialEmail;
+
+  /// Appelé après l'envoi réussi du lien de confirmation (ferme la fenêtre).
+  final VoidCallback? onDone;
 
   @override
   State<_EditEmailForm> createState() => _EditEmailFormState();
@@ -791,6 +796,7 @@ class _EditEmailFormState extends State<_EditEmailForm> {
         'package.kosmos-auth.success-change-email',
         type: AlertType.success,
       );
+      widget.onDone?.call();
     } on FirebaseAuthException catch (e) {
       if (!context.mounted) return;
       final messageKey =
@@ -820,4 +826,131 @@ class _EditEmailFormState extends State<_EditEmailForm> {
       type: type,
     );
   }
+}
+
+/// Fenêtre de réglage : carte arrondie, titre, croix de fermeture et contenu défilable.
+Future<void> _showSettingsDialog(
+  BuildContext context,
+  String title,
+  Widget Function(BuildContext dialogContext) content,
+) {
+  return showDialog<void>(
+    context: context,
+    builder:
+        (BuildContext ctx) => Dialog(
+          backgroundColor: AppColor.surface,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(22, 18, 22, 22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: AppThemeStyle.semiBStyle(
+                            20,
+                            AppColor.primaryLabels,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        icon: const Icon(Icons.close),
+                        color: AppColor.primaryLabels,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  content(ctx),
+                ],
+              ),
+            ),
+          ),
+        ),
+  );
+}
+
+/// Changement de mot de passe : mot de passe actuel (ré-authentification), nouveau, confirmation.
+Future<void> _showChangePasswordDialog(BuildContext context) {
+  return _showSettingsDialog(
+    context,
+    'package.settings.node.change-password.title'.tr(),
+    (BuildContext ctx) =>
+        ChangePasswordForm(onSuccess: () => Navigator.of(ctx).pop()),
+  );
+}
+
+/// Changement d'adresse e-mail : nouvelle adresse et mot de passe actuel.
+Future<void> _showChangeEmailDialog(BuildContext context, String currentEmail) {
+  return _showSettingsDialog(
+    context,
+    'package.settings.node.change-email.title'.tr(),
+    (BuildContext ctx) => _EditEmailForm(
+      initialEmail: currentEmail,
+      onDone: () => Navigator.of(ctx).pop(),
+    ),
+  );
+}
+
+/// Sécurité : choix entre l'adresse e-mail et le mot de passe, chacun dans sa propre fenêtre.
+Future<void> _showSecurityDialog(BuildContext context, WidgetRef ref) {
+  final String email = ref.read(userProvider).user?.email ?? '';
+  Widget choice(
+    BuildContext ctx,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) => ListTile(
+    contentPadding: EdgeInsets.zero,
+    title: Text(
+      title,
+      style: AppThemeStyle.semiBStyle(16, AppColor.primaryLabels),
+    ),
+    subtitle:
+        subtitle.isEmpty
+            ? null
+            : Text(
+              subtitle,
+              style: AppThemeStyle.regularStyle(13, AppColor.secondaryLabels),
+            ),
+    trailing: const Icon(Icons.chevron_right),
+    onTap: () {
+      Navigator.of(ctx).pop();
+      onTap();
+    },
+  );
+  return _showSettingsDialog(
+    context,
+    'package.settings.node.security.title'.tr(),
+    (BuildContext ctx) => Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        choice(
+          ctx,
+          'package.settings.node.change-email.title'.tr(),
+          email,
+          () => _showChangeEmailDialog(context, email),
+        ),
+        const Divider(height: 1),
+        choice(
+          ctx,
+          'package.settings.node.change-password.title'.tr(),
+          '',
+          () => _showChangePasswordDialog(context),
+        ),
+      ],
+    ),
+  );
 }

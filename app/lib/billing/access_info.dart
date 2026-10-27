@@ -10,6 +10,8 @@ class AccessInfo {
     this.teamIndex,
     this.teamsAllowed,
     this.expiresAt,
+    this.productId,
+    this.period,
   });
 
   factory AccessInfo.fromUserData(Map<String, dynamic>? data) {
@@ -29,6 +31,8 @@ class AccessInfo {
       ownerUid: data['ownerUid'] is String ? data['ownerUid'] as String : null,
       teamIndex: teamIndex is int ? teamIndex : null,
       teamsAllowed: teamsAllowed is int ? teamsAllowed : null,
+      productId: s?['productId'] is String ? s!['productId'] as String : null,
+      period: s?['period'] is String ? s!['period'] as String : null,
       expiresAt:
           s?['expiresAt'] is Timestamp
               ? (s!['expiresAt'] as Timestamp).toDate()
@@ -42,6 +46,11 @@ class AccessInfo {
   final int? teamIndex;
   final int? teamsAllowed;
   final DateTime? expiresAt;
+
+  /// Produit et période de l'abonnement en cours (`subscription.productId` / `period`), pour proposer un
+  /// changement de formule.
+  final String? productId;
+  final String? period;
 
   /// Compte d'équipe lié : il hérite de l'abonnement de son propriétaire.
   bool get isLinked => ownerUid != null;

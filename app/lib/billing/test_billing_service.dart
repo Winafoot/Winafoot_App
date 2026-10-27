@@ -75,10 +75,15 @@ class TestBillingService implements BillingService {
     price: price,
     currencyCode: 'EUR',
     priceString: formatMoney(price, 'EUR'),
+    trialEligible: true,
   );
 
   @override
-  Future<PurchaseResult> purchase(String productId) async {
+  Future<PurchaseResult> purchase(
+    String productId, {
+    String? replacingProductId,
+    bool deferred = false,
+  }) async {
     if (!_on) throw const BillingUnavailable();
     try {
       await FirebaseFunctions.instanceFor(region: kCloudRegion)

@@ -436,7 +436,7 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Expanded(
-                          flex: isPhoneLayout ? 5 : 7,
+                          flex: isPhoneLayout ? 7 : 7,
                           child: _LivePitch(
                             live: live,
                             onSubstitute:
@@ -462,7 +462,7 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                             onSwapSides: notifier.toggleSwapSides,
                           ),
                         ),
-                        cSw(isPhoneLayout ? 12 : 20),
+                        cSw(isPhoneLayout ? 6 : 20),
                         Expanded(
                           flex: isPhoneLayout ? 6 : 9,
                           child: _CenterStats(
@@ -572,7 +572,7 @@ class _LivePitch extends StatelessWidget {
         Expanded(
           child: Center(
             child: AspectRatio(
-              aspectRatio: 2388 / 1668,
+              aspectRatio: 1.2,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(cR(16)),
                 child: LayoutBuilder(

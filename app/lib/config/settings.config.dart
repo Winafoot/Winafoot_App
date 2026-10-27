@@ -70,6 +70,7 @@ import 'package:skeleton/skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wina/billing/access_info.dart';
 import 'package:wina/providers/billing_providers.dart';
+import 'package:wina/view/page/abonnement_screen.dart';
 import 'package:wina/view/page/mes_equipes_screen.dart';
 import 'package:wina/view/widget/app_notif.dart';
 
@@ -405,6 +406,23 @@ KosmosSettingsConfig initKosmosSettingsConfig() {
                   tileBuilder: (_, __) => "app.settings-extra.my-teams".tr(),
                   subTitleBuilder:
                       (_, __) => "app.settings-extra.my-teams-sub".tr(),
+                ),
+
+                /// Node "Changer de formule" : plus ou moins d'équipes, effet immédiat (hausse) ou au renouvellement (baisse)
+                CelluleModel(
+                  tag: "change-plan",
+                  onTap: (context, __) async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder:
+                            (_) => const AbonnementScreen(changePlan: true),
+                      ),
+                    );
+                    return null;
+                  },
+                  tileBuilder: (_, __) => "app.settings-extra.change-plan".tr(),
+                  subTitleBuilder:
+                      (_, __) => "app.settings-extra.change-plan-sub".tr(),
                 ),
 
                 /// Node "Gérer mon abonnement" (page de gestion du store)

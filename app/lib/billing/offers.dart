@@ -10,6 +10,7 @@ class PlanOffer {
     required this.price,
     required this.currencyCode,
     required this.priceString,
+    this.trialEligible = false,
   });
 
   final String productId;
@@ -20,6 +21,10 @@ class PlanOffer {
 
   /// Prix tel que le store l'affiche (devise et séparateurs de l'utilisateur).
   final String priceString;
+
+  /// Vrai si l'essai gratuit s'applique à CET utilisateur (un seul essai par compte, géré par le store) :
+  /// la promesse « jours gratuits » ne s'affiche que dans ce cas.
+  final bool trialEligible;
 }
 
 /// Les deux périodes d'une formule à N équipes.
@@ -29,6 +34,10 @@ class TeamsOffer {
   final int teams;
   final PlanOffer? monthly;
   final PlanOffer? yearly;
+
+  /// Au moins une des deux formules offre l'essai gratuit à cet utilisateur.
+  bool get hasTrial =>
+      (monthly?.trialEligible ?? false) || (yearly?.trialEligible ?? false);
 
   /// Prix barré de l'annuel : douze mensualités. `null` sans offre mensuelle.
   double? get yearlyFullPrice => monthly == null ? null : monthly!.price * 12;
