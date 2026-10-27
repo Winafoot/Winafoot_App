@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:skeleton/skeleton.dart';
 import 'package:wina/config/theme.dart';
+import 'package:wina/config/legal_links.dart';
 import 'package:wina/routes/app_router.gr.dart';
 import 'package:wina/services/coach_registration.dart';
 import 'package:wina/services/register_validation.dart';
@@ -42,8 +43,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     super.initState();
     _cguTap =
         TapGestureRecognizer()
-          ..onTap =
-              () => AutoRouter.of(context).pushNamed('legal-information/cgvu');
+          ..onTap = () => openLegalLink(context, kCguUri);
   }
 
   @override

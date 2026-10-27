@@ -69,6 +69,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:skeleton/skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wina/billing/access_info.dart';
+import 'package:wina/config/legal_links.dart';
 import 'package:wina/providers/billing_providers.dart';
 import 'package:wina/view/page/abonnement_screen.dart';
 import 'package:wina/view/page/mes_equipes_screen.dart';
@@ -573,10 +574,8 @@ KosmosSettingsConfig initKosmosSettingsConfig() {
               /// Node "Politique de confidentialité"
               CelluleModel(
                 tag: "link-policy",
-                onTap: (context, __) {
-                  AutoRouter.of(
-                    context,
-                  ).pushNamed("legal-information/privacy-policy");
+                onTap: (context, __) async {
+                  await openLegalLink(context, kPrivacyUri);
                   return null;
                 },
                 tileBuilder:
@@ -586,8 +585,8 @@ KosmosSettingsConfig initKosmosSettingsConfig() {
               /// Node "CGVU"
               CelluleModel(
                 tag: "link-cgvu",
-                onTap: (context, __) {
-                  AutoRouter.of(context).pushNamed("legal-information/cgvu");
+                onTap: (context, __) async {
+                  await openLegalLink(context, kCguUri);
                   return null;
                 },
                 tileBuilder: (_, __) => "package.settings.node.link.cgvu".tr(),
@@ -596,10 +595,8 @@ KosmosSettingsConfig initKosmosSettingsConfig() {
               /// Node "Mentions légales"
               CelluleModel(
                 tag: "link-legale-mention",
-                onTap: (context, __) {
-                  AutoRouter.of(
-                    context,
-                  ).pushNamed("legal-information/legal-notice");
+                onTap: (context, __) async {
+                  await openLegalLink(context, kLegalNoticeUri);
                   return null;
                 },
                 tileBuilder:

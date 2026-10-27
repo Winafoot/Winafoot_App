@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:skeleton/controller/user_controller.dart';
 import 'package:skeleton/skeleton.dart';
 import 'package:wina/billing/access_info.dart';
+import 'package:wina/config/legal_links.dart';
 import 'package:wina/billing/billing_service.dart';
 import 'package:wina/billing/offers.dart';
 import 'package:wina/billing/plan.dart';
@@ -1256,11 +1257,7 @@ class _Footer extends StatelessWidget {
             children: <Widget>[
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                // Même chemin que « link-cgvu » dans settings.config.dart.
-                onTap:
-                    () => AutoRouter.of(
-                      context,
-                    ).pushNamed('legal-information/cgvu'),
+                onTap: () => openLegalLink(context, kCguUri),
                 child: Text('app.subscription.terms'.tr(), style: _link),
               ),
               Text(
@@ -1269,11 +1266,7 @@ class _Footer extends StatelessWidget {
               ),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                // Même chemin que « link-policy » dans settings.config.dart.
-                onTap:
-                    () => AutoRouter.of(
-                      context,
-                    ).pushNamed('legal-information/privacy-policy'),
+                onTap: () => openLegalLink(context, kPrivacyUri),
                 child: Text('app.subscription.privacy'.tr(), style: _link),
               ),
             ],

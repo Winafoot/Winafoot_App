@@ -31,77 +31,67 @@ void main() {
         suivies(defaultEnabledStatKeys()),
       );
 
-      // 31 colonnes par défaut (27 saisies + 4 totaux calculés) : passes 4 +
-      // efficacité 2 + tirs 4 = 10 ; offensives 3 + coups de pied arrêtés 4 +
-      // fautes 3 = 10 ; gardien 4 + technique 3 = 7, et les duels (4) ne
-      // rentrent pas dans les 3 places restantes : ils ouvrent la 4e page
-      // au lieu d'être coupés.
+      // 23 colonnes par défaut (19 saisies + 4 totaux calculés) : passes 4 +
+      // efficacité 1 + tirs 3 = 8 ; les offensives (3) ne rentrent pas dans les
+      // 2 places restantes et ouvrent la 2e page : offensives 3 + coups de pied
+      // arrêtés 1 + fautes 3 + gardien 3 = 10 ; technique 3 + duels 2 = 5.
       expect(cles(pages), <List<String>>[
         <String>[
           'passesReussies',
           'passesManquees',
           'totalPasses',
           'passesProfondeur',
-          'interceptions',
           'recuperations',
           'tirsCadres',
           'tirsNonCadres',
-          'tirsBloques',
           'totalTirs',
         ],
         <String>[
           'centresReussis',
           'centresRates',
           'nombreCentres',
-          'coupsFrancsCrees',
-          'coupsFrancsSubis',
           'penaltysCrees',
-          'nombreTouches',
           'fautesCommises',
           'fautesSubies',
           'cartonsJaunes',
-        ],
-        <String>[
           'tirsSubisHors',
           'tirsSubisDans',
           'totalTirsSubis',
-          'degagements',
+        ],
+        <String>[
           'controleReussi',
           'controleManque',
           'pertesBallons',
-        ],
-        <String>[
-          'duelsOffGagnes',
-          'duelsOffPerdus',
-          'duelsDefGagnes',
-          'duelsDefPerdus',
+          'duelsGagnes',
+          'duelsPerdus',
         ],
       ]);
     });
 
     test('une catégorie qui tient sur une page n\'est pas coupée', () {
-      // passes 4 + efficacité 2 = 6 ; « offensives » (5) ne rentre pas dans
-      // les 4 places restantes : elles ouvrent la page suivante au lieu de se
-      // scinder.
+      // passes 4 + efficacité 1 + tirs 3 = 8 ; « offensives » (5) ne rentre pas
+      // dans les 2 places restantes : elles ouvrent la page suivante au lieu de
+      // se scinder.
       final List<List<StatDef>> pages = splitStatsByPage(
         suivies(<String>[
           for (final StatDef s in kStatCatalog)
             if (<StatCategory>[
               StatCategory.passes,
               StatCategory.efficacite,
+              StatCategory.tirs,
               StatCategory.offensives,
             ].contains(s.category))
               s.key,
         ]),
       );
 
-      expect(pages.map((List<StatDef> p) => p.length), <int>[6, 5]);
+      expect(pages.map((List<StatDef> p) => p.length), <int>[8, 5]);
       expect(pages[1].map((StatDef s) => s.category).toSet(), <StatCategory>{
         StatCategory.offensives,
       });
     });
 
-    // Aucun thème du catalogue réel ne dépasse 10 stats (le plus gros en a 6) :
+    // Aucun thème du catalogue réel ne dépasse 10 stats (le plus gros en a 5) :
     // la branche « coupe un thème » se teste sur une liste synthétique.
     test('une catégorie de plus de 10 stats est coupée par tranches de 10', () {
       const int n = 12;
@@ -160,8 +150,8 @@ void main() {
       substituteIds: ids.skip(11).toList(),
       numbers: const <String, int>{'p1': 30, 'p12': 17},
     ),
-    // Défaut (31 colonnes suivies) + 2 stats activées après coup, en fin de
-    // liste comme le fait l'écran de paramétrage : 33 colonnes suivies.
+    // Défaut (23 colonnes suivies) + 2 stats activées après coup, en fin de
+    // liste comme le fait l'écran de paramétrage : 25 colonnes suivies.
     enabledStatKeys: <String>[
       ...defaultEnabledStatKeys(),
       'butsMarques',
@@ -169,7 +159,7 @@ void main() {
     ],
     playerStats: <String, Map<String, int>>{
       for (final String id in ids)
-        id: <String, int>{'butsMarques': 1, 'interceptions': 3},
+        id: <String, int>{'butsMarques': 1, 'recuperations': 3},
     },
   );
   final Map<String, Player> byId = <String, Player>{
@@ -200,10 +190,10 @@ void main() {
     expect(rows[15].number, isNull);
   });
 
-  test('34 stats × 16 joueurs : le PDF fait plusieurs pages', () async {
-    // 33 colonnes de saisie ou de total + « Réussite de passes » (en %, qui a
+  test('26 stats × 16 joueurs : le PDF fait plusieurs pages', () async {
+    // 25 colonnes de saisie ou de total + « Réussite de passes » (en %, qui a
     // sa colonne depuis que le bilan individuel l'affiche).
-    expect(enabledStatsInCatalogOrder(match.enabledStatKeys), hasLength(34));
+    expect(enabledStatsInCatalogOrder(match.enabledStatKeys), hasLength(26));
     final doc = buildBilanIndividuelDocument(
       match: match,
       byId: byId,
@@ -212,9 +202,10 @@ void main() {
     final List<int> bytes = await doc.save();
 
     expect(String.fromCharCodes(bytes.take(4)), '%PDF');
-    // 34 colonnes ⇒ 5 tranches de 10 au plus, thèmes entiers : avec le %,
-    // passes + efficacité + tirs (11 colonnes) ne tiennent plus sur une page.
-    expect(doc.document.pdfPageList.pages, hasLength(5));
+    // 26 colonnes ⇒ 3 tranches de 10 au plus, thèmes entiers : passes (avec le %)
+    // + efficacité + tirs = 9 ; offensives + coups de pied arrêtés + fautes = 9 ;
+    // gardien + technique + duels = 8.
+    expect(doc.document.pdfPageList.pages, hasLength(3));
   });
 
   // Poppins est plus large que le Helvetica sur lequel les colonnes avaient été

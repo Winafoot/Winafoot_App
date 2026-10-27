@@ -7,16 +7,16 @@ import 'package:wina/models/player.dart';
 import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/live_match_providers.dart';
 
-/// Catalogue des 42 statistiques (9 thèmes du client) et calcul unique des 5
+/// Catalogue des 33 statistiques (9 thèmes du client) et calcul unique des 5
 /// statistiques calculées (`readStat`, `formatPercent`, visibilité).
 void main() {
   // « X % » avec l'espace insécable du format.
   String pct(String v) => '$v %';
 
   group('catalogue', () {
-    test('42 statistiques : 37 saisies (bascules) + 5 calculées', () {
-      expect(kStatCatalog, hasLength(42));
-      expect(kStatToggles, hasLength(37));
+    test('33 statistiques : 28 saisies (bascules) + 5 calculées', () {
+      expect(kStatCatalog, hasLength(33));
+      expect(kStatToggles, hasLength(28));
       expect(
         kStatCatalog.where((StatDef s) => s.isCalculated).map((s) => s.key),
         <String>[
@@ -29,15 +29,14 @@ void main() {
       );
     });
 
-    test('clés uniques ; les 41 clés historiques sont conservées', () {
+    test('clés uniques ; les 30 clés historiques encore au catalogue sont conservées', () {
       final List<String> keys = <String>[
         for (final StatDef s in kStatCatalog) s.key,
       ];
-      expect(keys.toSet(), hasLength(42));
+      expect(keys.toSet(), hasLength(33));
       // Clés persistées dans `playerStats` / `enabledStatKeys` : n'en renommer
       // aucune (les libellés, eux, changent librement).
       const List<String> historiques = <String>[
-        'interceptions',
         'recuperations',
         'passesReussies',
         'passesManquees',
@@ -46,7 +45,6 @@ void main() {
         'pertesBallons',
         'tirsCadres',
         'tirsNonCadres',
-        'tirsBloques',
         'passesDecisives',
         'butsMarques',
         'butsSubis',
@@ -59,19 +57,10 @@ void main() {
         'horsJeu',
         'duelsAeriens',
         'duelsAeriensPerdus',
-        'corners',
         'penaltysSubis',
-        'coupsFrancsSubis',
         'penaltysCrees',
-        'coupsFrancsCrees',
-        'nombreTouches',
         'nombreCentres',
         'passesProfondeur',
-        'duelsDefGagnes',
-        'duelsDefPerdus',
-        'duelsOffGagnes',
-        'duelsOffPerdus',
-        'degagements',
         'centresReussis',
         'centresRates',
         'fautesCommises',
@@ -79,10 +68,12 @@ void main() {
         'cartonsJaunes',
         'cartonsRouges',
       ];
-      expect(historiques, hasLength(41));
+      expect(historiques, hasLength(30));
       expect(keys, containsAll(historiques));
       expect(keys.toSet().difference(historiques.toSet()), <String>{
         'totalTirs',
+        'duelsGagnes',
+        'duelsPerdus',
       });
     });
 
@@ -114,43 +105,34 @@ void main() {
         'Total passes',
         'Réussite de passes',
         'Passes en profondeur',
-        'Interception de ballons',
-        'Récupération de ballons',
+        'Récupérations de ballons',
         'Tirs cadrés',
         'Tirs non cadrés',
-        'Tirs bloqués',
         'Total tirs',
         'Passes décisives',
         'Buts marqués',
         'Centres réussis',
         'Centres manqués',
         'Nombre de centres',
-        'Corners obtenus',
-        'Coups francs obtenus',
-        'Coups francs subis',
         'Penaltys obtenus',
         'Penaltys subis',
-        'Nombre de touches',
         'Fautes commises',
         'Fautes subies',
         'Cartons jaunes',
         'Cartons rouges',
-        'Hors-jeux',
+        'Hors-jeu',
         'Buts subis',
         'Arrêts du gardien',
-        'Tirs subis hors surface',
+        'Tirs subis hors de la surface',
         'Tirs subis dans la surface',
         'Total tirs subis',
-        'Dégagements',
-        'Contrôles de balle réussis',
-        'Contrôles de balle manqués',
+        'Contrôles réussis',
+        'Contrôles manqués',
         'Pertes de ballons',
         'Duels aériens gagnés',
         'Duels aériens perdus',
-        'Duels offensifs gagnés',
-        'Duels offensifs perdus',
-        'Duels défensifs gagnés',
-        'Duels défensifs perdus',
+        'Duels gagnés',
+        'Duels perdus',
       ]);
     });
 
@@ -188,7 +170,6 @@ void main() {
       'passesManquees': 23,
       'tirsCadres': 5,
       'tirsNonCadres': 2,
-      'tirsBloques': 0,
       'centresReussis': 3,
       'centresRates': 4,
       'tirsSubisHors': 2,
@@ -199,7 +180,6 @@ void main() {
       'passesManquees': 31,
       'tirsCadres': 1,
       'tirsNonCadres': 6,
-      'tirsBloques': 3,
     };
     final Map<String, int> total = <String, int>{
       for (final String k in <String>{...mt1.keys, ...mt2.keys})
@@ -212,10 +192,10 @@ void main() {
       expect(readStat(total, 'totalPasses'), 188);
     });
 
-    test('Total tirs = cadrés + non cadrés + bloqués', () {
+    test('Total tirs = cadrés + non cadrés', () {
       expect(readStat(mt1, 'totalTirs'), 7);
-      expect(readStat(mt2, 'totalTirs'), 10);
-      expect(readStat(total, 'totalTirs'), 17);
+      expect(readStat(mt2, 'totalTirs'), 7);
+      expect(readStat(total, 'totalTirs'), 14);
     });
 
     test('Nombre de centres = réussis + manqués', () {
@@ -231,7 +211,7 @@ void main() {
       'une stat saisie est lue telle quelle, 0 si absente ou sans données',
       () {
         expect(readStat(mt1, 'passesReussies'), 69);
-        expect(readStat(mt1, 'corners'), 0);
+        expect(readStat(mt1, 'butsMarques'), 0);
         expect(readStat(null, 'passesReussies'), 0);
         expect(readStat(null, 'totalPasses'), 0);
         expect(readStat(mt1, 'cle-inconnue'), 0);
@@ -329,13 +309,10 @@ void main() {
       },
     );
 
-    test('Total tirs : 2 composantes sur 3 ne suffisent pas', () {
-      expect(suivies(<String>['tirsCadres', 'tirsNonCadres']), <String>[
-        'tirsCadres',
-        'tirsNonCadres',
-      ]);
+    test('Total tirs : une seule composante ne suffit pas', () {
+      expect(suivies(<String>['tirsCadres']), <String>['tirsCadres']);
       expect(
-        suivies(<String>['tirsCadres', 'tirsNonCadres', 'tirsBloques']),
+        suivies(<String>['tirsCadres', 'tirsNonCadres']),
         contains('totalTirs'),
       );
     });
@@ -376,7 +353,6 @@ void main() {
           'passesManquees',
           'tirsCadres',
           'tirsNonCadres',
-          'tirsBloques',
           'centresReussis',
           'centresRates',
           'tirsSubisHors',
@@ -384,8 +360,8 @@ void main() {
         ]),
       );
       // Défauts d'avant, hors calculées, toujours activés.
-      expect(defauts, containsAll(<String>['interceptions', 'fautesCommises']));
-      expect(defauts, hasLength(27));
+      expect(defauts, containsAll(<String>['recuperations', 'fautesCommises']));
+      expect(defauts, hasLength(19));
     });
 
     test('avec les défauts, les 5 calculées sont visibles', () {
@@ -463,13 +439,13 @@ void main() {
 
     bump('passesReussies', 3);
     bump('passesManquees', 1);
-    bump('tirsBloques', 2);
+    bump('tirsCadres', 2);
 
     // Ni total ni % n'ont été saisis…
     expect(n.state!.playerStats['p1']!.keys, <String>{
       'passesReussies',
       'passesManquees',
-      'tirsBloques',
+      'tirsCadres',
     });
     // …mais tous les lecteurs les dérivent.
     expect(n.state!.statValue('p1', 'totalPasses'), 4);

@@ -9,9 +9,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/parametrer_stats_screen.dart';
+import 'package:wina/view/widget/stat_tone.dart';
 
 /// Vrais libellés fr-FR (lus sur disque) : sans eux `.tr()` rend la clé brute
-/// et le compteur « X / 37 sélectionnées » n'est pas vérifiable.
+/// et le compteur « X / 28 sélectionnées » n'est pas vérifiable.
 class _DiskAssetLoader extends AssetLoader {
   const _DiskAssetLoader();
 
@@ -21,9 +22,9 @@ class _DiskAssetLoader extends AssetLoader {
           as Map<String, dynamic>;
 }
 
-/// Écran « Paramétrez les statistiques » : 37 bascules (les 5 stats calculées
-/// n'en sont pas), un titre par thème, chaque thème entier dans une seule des 3
-/// colonnes, et un compteur qui ne compte que les bascules.
+/// Écran « Paramétrez les statistiques » : 28 bascules (les 5 stats calculées
+/// n'en sont pas) en 2 colonnes, « Perdus » et « Gagnés », et un compteur qui ne
+/// compte que les bascules.
 void main() {
   /// Ouvre l'écran par-dessus une page vide (« Valider » fait un `pop`) avec un
   /// brouillon dont `enabledStatKeys` vaut [keys]. Rend le conteneur pour lire
@@ -79,7 +80,7 @@ void main() {
     return container;
   }
 
-  String compteur(int n) => '$n / 37 sélectionnées';
+  String compteur(int n) => '$n / 28 sélectionnées';
 
   int allumees(WidgetTester tester) =>
       tester
@@ -87,12 +88,12 @@ void main() {
           .where((Switch s) => s.value)
           .length;
 
-  testWidgets('37 bascules : les 5 stats calculées n\'y figurent pas', (
+  testWidgets('28 bascules : les 5 stats calculées n\'y figurent pas', (
     WidgetTester tester,
   ) async {
     await open(tester);
 
-    expect(find.byType(Switch), findsNWidgets(37));
+    expect(find.byType(Switch), findsNWidgets(28));
     for (final StatDef s in kStatCatalog) {
       expect(
         find.text(s.label),
@@ -102,52 +103,42 @@ void main() {
     }
   });
 
-  testWidgets('chaque thème reste entier dans une colonne, sous son titre', (
+  testWidgets('deux colonnes « Perdus » et « Gagnés » : chaque bascule dans celle de sa nature', (
     WidgetTester tester,
   ) async {
     await open(tester);
 
-    final Map<StatCategory, Offset> titre = <StatCategory, Offset>{
-      for (final StatCategory c in StatCategory.values)
-        c: tester.getTopLeft(find.text(c.label)),
-    };
+    final Offset perdus = tester.getTopLeft(find.text('Perdus'));
+    final Offset gagnes = tester.getTopLeft(find.text('Gagnés'));
+    expect(perdus.dx, lessThan(gagnes.dx));
 
-    // 3 colonnes ; les titres lus colonne par colonne, de haut en bas, suivent
-    // l'ordre des thèmes du client.
-    expect(<int>{
-      for (final Offset o in titre.values) o.dx.round(),
-    }, hasLength(3));
-    final List<StatCategory> lecture =
-        StatCategory.values.toList()..sort((StatCategory a, StatCategory b) {
-          final int parColonne = titre[a]!.dx.compareTo(titre[b]!.dx);
-          return parColonne != 0
-              ? parColonne
-              : titre[a]!.dy.compareTo(titre[b]!.dy);
-        });
-    expect(lecture, StatCategory.values);
-
-    // Chaque bascule a, pour titre le plus proche au-dessus dans sa colonne,
-    // celui de son propre thème : aucun thème coupé ni entrelacé.
-    for (final StatDef s in kStatToggles) {
-      final Offset label = tester.getTopLeft(find.text(s.label));
-      final StatCategory? titreAuDessus =
-          (titre.entries
-                  .where(
-                    (MapEntry<StatCategory, Offset> e) =>
-                        (e.value.dx - label.dx).abs() < 60 &&
-                        e.value.dy < label.dy,
-                  )
-                  .toList()
-                ..sort(
-                  (
-                    MapEntry<StatCategory, Offset> a,
-                    MapEntry<StatCategory, Offset> b,
-                  ) => b.value.dy.compareTo(a.value.dy),
-                ))
-              .firstOrNull
-              ?.key;
-      expect(titreAuDessus, s.category, reason: s.label);
+    for (final StatSide side in <StatSide>[StatSide.bad, StatSide.good]) {
+      final Offset titre = side == StatSide.bad ? perdus : gagnes;
+      final Offset autre = side == StatSide.bad ? gagnes : perdus;
+      double? dernierY;
+      for (final StatDef s in statsOfSide(kStatToggles, side)) {
+        final Offset label = tester.getTopLeft(find.text(s.label));
+        // Dans la colonne de son titre…
+        expect(
+          (label.dx - titre.dx).abs(),
+          lessThan((label.dx - autre.dx).abs()),
+          reason: s.label,
+        );
+        // …sous ce titre, dans l'ordre de priorité de la colonne.
+        expect(label.dy, greaterThan(titre.dy), reason: s.label);
+        if (dernierY != null) {
+          expect(label.dy, greaterThan(dernierY), reason: s.label);
+        }
+        dernierY = label.dy;
+      }
     }
+
+    // Toutes les bascules sont rangées dans l'une des deux colonnes.
+    expect(
+      statsOfSide(kStatToggles, StatSide.bad).length +
+          statsOfSide(kStatToggles, StatSide.good).length,
+      kStatToggles.length,
+    );
   });
 
   testWidgets('le compteur suit les bascules : défauts, puis un décochage', (
@@ -183,7 +174,7 @@ void main() {
         ],
       );
 
-      expect(find.byType(Switch), findsNWidgets(37));
+      expect(find.byType(Switch), findsNWidgets(28));
       expect(find.text(compteur(2)), findsOneWidget);
       expect(allumees(tester), 2);
 

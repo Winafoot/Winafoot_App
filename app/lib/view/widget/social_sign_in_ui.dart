@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:skeleton/skeleton.dart';
 import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
+import 'package:wina/config/legal_links.dart';
 import 'package:wina/services/social_sign_in.dart';
 import 'package:wina/view/widget/app_notif.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
@@ -86,8 +87,7 @@ class _CguSheetState extends State<_CguSheet> {
     super.initState();
     _cguTap =
         TapGestureRecognizer()
-          ..onTap =
-              () => AutoRouter.of(context).pushNamed('legal-information/cgvu');
+          ..onTap = () => openLegalLink(context, kCguUri);
   }
 
   @override
