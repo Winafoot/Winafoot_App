@@ -47,10 +47,9 @@ class MesEquipesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
               child: Column(

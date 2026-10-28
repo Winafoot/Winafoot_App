@@ -98,11 +98,11 @@ class _MonEquipeScreenState extends ConsumerState<MonEquipeScreen> {
     // de navigation basse et bouton « Coup d'envoi » persistants.
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      // Fond plein écran (sous l'encoche et la barre système, sans bordures) ; contenu centré dans la zone sûre.
+      body: AppBackdrop(
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const AppBackground(),
             // Corps plein écran : les onglets passent derrière la barre de
             // navigation flottante (translucide + flou), qui les recouvre.
             IndexedStack(
@@ -221,14 +221,9 @@ class _MonEquipeScreenState extends ConsumerState<MonEquipeScreen> {
                       subtitle: 'app.mon-equipe.aucun-resultat-sous-titre'.tr(),
                       padding: EdgeInsets.only(bottom: cH(kBottomNavClearance)),
                     )
-                    : isPhoneLayout
-                    // Téléphone : 4 colonnes de postes qui défilent chacune
-                    // dans leur colonne, pas de long défilement de page.
-                    ? Padding(
-                      padding: EdgeInsets.only(bottom: cH(kBottomNavClearance)),
-                      child: _PositionGrid(roster: visible),
-                    )
-                    : SingleChildScrollView(
+                    // 4 colonnes de postes qui défilent chacune dans leur colonne (tablette
+                    // comme téléphone), pas de long défilement de page.
+                    : Padding(
                       padding: EdgeInsets.only(bottom: cH(kBottomNavClearance)),
                       child: _PositionGrid(roster: visible),
                     ),
@@ -470,46 +465,25 @@ class _PositionGrid extends StatelessWidget {
   List<Player> _of(PlayerPosition p) =>
       roster.where((Player e) => e.position == p).toList();
 
-  /// Une ligne de la grille : deux cartes de même hauteur, alignées en haut.
-  Widget _row(PlayerPosition left, PlayerPosition right) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: _PositionCard(position: left, players: _of(left))),
-          cSw(40),
-          Expanded(child: _PositionCard(position: right, players: _of(right))),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (isPhoneLayout) {
-      const List<PlayerPosition> order = <PlayerPosition>[
-        PlayerPosition.gardien,
-        PlayerPosition.defenseur,
-        PlayerPosition.milieu,
-        PlayerPosition.attaquant,
-      ];
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (int i = 0; i < order.length; i++) ...[
-            if (i > 0) const SizedBox(width: 8),
-            Expanded(
-              child: _PositionCard(position: order[i], players: _of(order[i])),
-            ),
-          ],
-        ],
-      );
-    }
-    return Column(
+    // Même présentation sur tablette et téléphone : 4 colonnes, gardiens à gauche puis défenseurs,
+    // milieux et attaquants à droite.
+    const List<PlayerPosition> order = <PlayerPosition>[
+      PlayerPosition.gardien,
+      PlayerPosition.defenseur,
+      PlayerPosition.milieu,
+      PlayerPosition.attaquant,
+    ];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _row(PlayerPosition.gardien, PlayerPosition.defenseur),
-        cSh(20),
-        _row(PlayerPosition.milieu, PlayerPosition.attaquant),
+        for (int i = 0; i < order.length; i++) ...[
+          if (i > 0) SizedBox(width: isPhoneLayout ? 8 : cW(14)),
+          Expanded(
+            child: _PositionCard(position: order[i], players: _of(order[i])),
+          ),
+        ],
       ],
     );
   }
@@ -522,67 +496,7 @@ class _PositionCard extends StatelessWidget {
   final List<Player> players;
 
   @override
-  Widget build(BuildContext context) {
-    if (isPhoneLayout) return _phoneColumn();
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Entête : pilule blanche (intitulé du poste + « Pied Fort »). Les
-          // lignes de joueurs reçoivent elles aussi un fond, en écart
-          // volontaire au Figma : posées nues elles tombaient sous 2:1 de
-          // contraste sur la pelouse d'`AppBackground`.
-          Container(
-            decoration: BoxDecoration(
-              color: AppColor.surface,
-              borderRadius: BorderRadius.circular(cR(12)),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(10)),
-            child: Row(
-              children: [
-                Text(
-                  position.label,
-                  style: AppThemeStyle.mediumStyle(
-                    cFs(15),
-                    AppColor.primaryLabels,
-                  ),
-                ),
-                const Spacer(),
-                SizedBox(
-                  width: cW(70),
-                  child: Text(
-                    'app.mon-equipe.pied-fort'.tr(),
-                    textAlign: TextAlign.right,
-                    style: AppThemeStyle.regularStyle(
-                      cFs(13),
-                      AppColor.primaryLabels,
-                    ),
-                  ),
-                ),
-                cSw(12),
-                SizedBox(width: cIc(16)),
-              ],
-            ),
-          ),
-          cSh(8),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: cW(16)),
-            // Sans fond, les noms en vert de marque deviennent illisibles sur
-            // la photo de pelouse du bas de page (AppBackground).
-            decoration: BoxDecoration(
-              color: AppColor.rosterRowSurface,
-              borderRadius: BorderRadius.circular(cR(12)),
-            ),
-            child: Column(
-              children: [
-                for (final Player player in players) _PlayerRow(player: player),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _phoneColumn();
 }
 
 extension on _PositionCard {
@@ -659,19 +573,7 @@ class _PlayerRow extends StatelessWidget {
               style: AppThemeStyle.mediumStyle(cFs(15), AppColor.rosterName),
             ),
           ),
-          // Téléphone : carte étroite, le pied fort est dans la fiche joueur.
-          if (!isPhoneLayout)
-            SizedBox(
-              width: cW(70),
-              child: Text(
-                player.strongFoot.label,
-                textAlign: TextAlign.right,
-                style: AppThemeStyle.mediumStyle(
-                  cFs(15),
-                  AppColor.primaryLabels,
-                ),
-              ),
-            ),
+          // Colonne étroite : le pied fort est dans la fiche joueur.
           cSw(12),
           // Œil : ouvre la fiche « Détail joueur » du joueur de la ligne.
           GestureDetector(

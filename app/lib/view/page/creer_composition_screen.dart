@@ -141,10 +141,9 @@ class _CreerCompositionScreenState
       // Le clavier ne sert qu'au dialogue d'enregistrement : sans cela, la page derrière se redimensionne
       // à chaque ouverture du clavier (l'aperçu du terrain « zoome »).
       resizeToAvoidBottomInset: false,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Column(
               children: <Widget>[
                 Padding(
@@ -578,6 +577,127 @@ class _SaveDialogState extends State<_SaveDialog> {
     // Clavier ouvert : le dialogue prend toute la hauteur restante au lieu de garder ses marges, et défile
     // si son contenu ne tient pas — le bouton « Enregistrer » reste atteignable.
     final bool keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final Widget nameField = _DialogField(
+      large: isPhoneLayout,
+      controller: _nameController,
+      hint: 'app.creer-composition.champ-nom-hint'.tr(),
+      onChanged: (_) => setState(() {}),
+      onSubmitted: (_) => _submit(),
+    );
+    // Un schéma ne contient que des chiffres : pavé numérique, et le formateur remet les tirets que ce
+    // clavier ne permet pas de taper (« 442 » → « 4-4-2 »), la valeur étant persistée telle quelle.
+    // Rien de tout ça sur le champ « Nom », texte libre.
+    final Widget formationField = _DialogField(
+      large: isPhoneLayout,
+      controller: _formationController,
+      hint: 'app.creer-composition.champ-formation-hint'.tr(),
+      keyboardType: TextInputType.number,
+      inputFormatters: <TextInputFormatter>[FormationSearchFormatter()],
+      onChanged: (_) => setState(() {}),
+      onSubmitted: (_) => _submit(),
+    );
+    final Widget title = Text(
+      widget.isEditing
+          ? 'app.creer-composition.dialogue-titre-modifier'.tr()
+          : 'app.creer-composition.cta-creer'.tr(),
+      textAlign: TextAlign.center,
+      style: AppThemeStyle.semiBStyle(cFs(18), AppColor.primaryLabels),
+    );
+    final Widget closeIcon = InkResponse(
+      onTap: () => Navigator.of(context).pop(),
+      radius: cIc(20),
+      child: Icon(
+        Iconsax.close_circle,
+        size: cIc(20),
+        color: AppColor.secondaryLabels,
+      ),
+    );
+    // Téléphone (paysage, ~360 dp de haut) : fenêtre FIXE — mêmes taille et position, clavier ouvert ou non.
+    // Collée en haut, assez basse (~160 dp) pour rester entièrement au-dessus du clavier : titre et croix
+    // sur une ligne, champs côte à côte, mention et « Enregistrer » sur une ligne. Les insets du clavier
+    // sont retirés pour que le Dialog ne se déplace pas.
+    if (isPhoneLayout) {
+      return MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: Dialog(
+          backgroundColor: AppColor.surface,
+          alignment: Alignment.topCenter,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(cR(20)),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 6),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      SizedBox(width: cIc(20)),
+                      Expanded(child: title),
+                      closeIcon,
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            _FieldLabel('app.creer-composition.champ-nom'.tr()),
+                            const SizedBox(height: 2),
+                            nameField,
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            _FieldLabel(
+                              'app.creer-composition.champ-formation'.tr(),
+                            ),
+                            const SizedBox(height: 2),
+                            formationField,
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'app.creer-composition.champs-obligatoires'.tr(),
+                          style: AppThemeStyle.regularStyle(
+                            cFs(12),
+                            AppColor.secondaryLabels,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 190,
+                        child: _SaveButton(enabled: _isValid, onTap: _submit),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Dialog(
       backgroundColor: AppColor.surface,
       shape: RoundedRectangleBorder(
@@ -691,8 +811,11 @@ class _DialogField extends StatelessWidget {
     required this.onSubmitted,
     this.keyboardType,
     this.inputFormatters,
+    this.large = false,
   });
 
+  /// Téléphone : texte 17 pt et champ plus haut, pour bien voir ce qu'on tape.
+  final bool large;
   final TextEditingController controller;
   final String hint;
   final ValueChanged<String> onChanged;
@@ -716,14 +839,17 @@ class _DialogField extends StatelessWidget {
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         textInputAction: TextInputAction.done,
-        style: AppThemeStyle.regularStyle(cFs(14), AppColor.primaryLabels),
+        style: AppThemeStyle.regularStyle(
+          large ? 17 / sp(1) : cFs(14),
+          AppColor.primaryLabels,
+        ),
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: EdgeInsets.symmetric(vertical: cH(14)),
+          contentPadding: EdgeInsets.symmetric(vertical: large ? 10 : cH(14)),
           border: InputBorder.none,
           hintText: hint,
           hintStyle: AppThemeStyle.regularStyle(
-            cFs(14),
+            large ? 17 / sp(1) : cFs(14),
             AppColor.secondaryLabels,
           ),
         ),
@@ -750,7 +876,7 @@ class _SaveButton extends StatelessWidget {
         onTap: enabled ? onTap : null,
         borderRadius: BorderRadius.circular(cR(14)),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: cH(15)),
+          padding: EdgeInsets.symmetric(vertical: isPhoneLayout ? 9 : cH(15)),
           child: Center(
             child: Text(
               'utils.save'.tr(),

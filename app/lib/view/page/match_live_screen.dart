@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:skeleton/controller/user_controller.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
@@ -280,11 +281,44 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
           : 'app.assistant.toast-pause'.tr();
     }
     if (prev.isPaused && next.isLive) return 'app.assistant.toast-resume'.tr();
-    if (!identical(prev.assignments, next.assignments) ||
-        !identical(prev.slots, next.slots)) {
+    // Par contenu : côté adjoint l'état est relu à chaque synchro, les listes sont alors toujours
+    // de nouvelles instances même quand la composition n'a pas changé.
+    if (!listEquals(prev.assignments, next.assignments) ||
+        !listEquals(prev.slots, next.slots)) {
       return 'app.assistant.toast-compo'.tr();
     }
     return null;
+  }
+
+  /// Maillot et nom du joueur sélectionné, au centre de l'entête (téléphone).
+  Widget? _headerPlayer(Player? player, String jerseyAsset) {
+    if (player == null) return null;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Image.asset(jerseyAsset, width: 26, height: 26),
+        const SizedBox(width: 8),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              player.fullName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppThemeStyle.semiBStyle(cFs(15), AppColor.primaryLabels),
+            ),
+            Text(
+              player.position.singular,
+              style: AppThemeStyle.regularStyle(
+                cFs(12),
+                AppColor.secondaryLabels,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   /// Ouvre l'éditeur de composition en cours de match (« Modifier
@@ -344,10 +378,9 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
 
     final Widget scaffold = Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Column(
               children: <Widget>[
                 Padding(
@@ -364,6 +397,14 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                         scoreThem: live.scoreThem,
                         onBack: widget.assistant ? null : _confirmQuit,
                         clockFontSize: 26,
+                        // Téléphone : le joueur sélectionné remonte dans l'entête (place gagnée pour les boutons).
+                        middle:
+                            isPhoneLayout && live.selectedPlayerId != null
+                                ? _headerPlayer(
+                                  byId[live.selectedPlayerId],
+                                  jerseyAsset,
+                                )
+                                : null,
                         // Historique : bouton encadré, comme « Remplacer ».
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -974,6 +1015,7 @@ void _openSubstituteDialog(
           outPlayer: outPlayer,
           outNumber: live.numbers[outId] ?? (slot >= 0 ? slot + 1 : null),
           bench: bench,
+          benchNumbers: live.numbers,
           jerseyAsset: jerseyAsset,
           onConfirm: (String inId) => notifier.substitute(outId, inId),
         ),
@@ -1015,8 +1057,11 @@ class _PhoneStatsPanelState extends State<_PhoneStatsPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
-        _playerBar(pid, player),
-        const SizedBox(height: 6),
+        // Joueur sélectionné : affiché dans l'entête. Sans sélection, le titre reste ici.
+        if (player == null) ...<Widget>[
+          _playerBar(pid, player),
+          const SizedBox(height: 6),
+        ],
         if (player == null)
           Expanded(
             child: Center(
@@ -1031,17 +1076,23 @@ class _PhoneStatsPanelState extends State<_PhoneStatsPanel> {
             ),
           )
         else ...<Widget>[
-          // Même présentation que sur tablette : cartes en lignes, perdus à gauche et gagnés à droite,
-          // sans sous-catégories ; ça défile si tout ne tient pas.
+          // Comme sur tablette : gros boutons (perdus à gauche, gagnés à droite), 6 stats (12 boutons)
+          // au plus sur le premier écran, le reste plus bas en défilement.
           Expanded(
-            child: SingleChildScrollView(
-              child: _StatGrid(
-                stats: stats,
-                live: widget.live,
-                pid: pid!,
-                player: player,
-                notifier: widget.notifier,
-              ),
+            child: LayoutBuilder(
+              builder:
+                  (BuildContext context, BoxConstraints box) =>
+                      SingleChildScrollView(
+                        child: TabletStatGrid(
+                          stats: stats,
+                          live: widget.live,
+                          pid: pid!,
+                          player: player,
+                          notifier: widget.notifier,
+                          viewportHeight: box.maxHeight,
+                          firstScreenStats: kPhoneFirstScreenStats,
+                        ),
+                      ),
             ),
           ),
         ],
@@ -1099,16 +1150,16 @@ class _PhoneStatsPanelState extends State<_PhoneStatsPanel> {
 
 }
 
-/// Nombre maximal de gros boutons sur le premier écran de saisie (tablette).
+/// Statistiques du premier écran de saisie (tablette), par colonne : 7 perdues à gauche + 7 gagnées à
+/// droite = 14 gros boutons.
 const int kFirstScreenStats = 7;
 
-/// Lignes de gros boutons qui remplissent exactement le premier écran.
-const int _kFirstScreenRows = 4;
+/// Idem sur téléphone : 6 par colonne, soit 12 boutons, pour des boutons plus grands.
+const int kPhoneFirstScreenStats = 6;
 
-/// Saisie des statistiques sur tablette : au plus [kFirstScreenStats] gros boutons sur le premier
-/// écran, pris en alternance gagné / perdu dans l'ordre de priorité de chaque colonne (perdus à gauche,
-/// gagnés à droite). Si le coach en a choisi 7 ou moins, elles y sont toutes, sans défilement ; au-delà,
-/// les autres suivent plus bas, en cartes (défilement vers le bas).
+/// Saisie des statistiques : au plus [firstScreenStats] gros boutons par colonne sur le premier écran
+/// (perdus à gauche, gagnés à droite), dans l'ordre de priorité. Si le coach en a choisi autant ou
+/// moins, elles y sont toutes, sans défilement ; au-delà, les autres suivent plus bas, même taille.
 @visibleForTesting
 class TabletStatGrid extends StatelessWidget {
   const TabletStatGrid({
@@ -1118,6 +1169,7 @@ class TabletStatGrid extends StatelessWidget {
     required this.player,
     required this.notifier,
     required this.viewportHeight,
+    this.firstScreenStats = kFirstScreenStats,
   });
 
   final List<StatDef> stats;
@@ -1126,48 +1178,35 @@ class TabletStatGrid extends StatelessWidget {
   final Player player;
   final LiveMatchNotifier notifier;
 
-  /// Hauteur visible du panneau : les gros boutons la remplissent sur 4 lignes.
+  /// Hauteur visible du panneau : les gros boutons la remplissent sur [firstScreenStats] lignes
+  /// (une par stat de chaque colonne).
   final double viewportHeight;
 
-  static const double _gap = 10;
+  /// Gros boutons par colonne sur le premier écran (7 tablette, 6 téléphone).
+  final int firstScreenStats;
+
+  // Téléphone : écran bas (~360 dp), il faut que les 6 lignes tiennent sans défiler.
+  static double get _gap => isPhoneLayout ? 6 : 10;
+  static double get _minRow => isPhoneLayout ? 34 : 64;
 
   @override
   Widget build(BuildContext context) {
     final List<StatDef> good = statsOfSide(stats, StatSide.good);
     final List<StatDef> bad = statsOfSide(stats, StatSide.bad);
-    final List<StatDef> topGood = <StatDef>[];
-    final List<StatDef> topBad = <StatDef>[];
-    for (
-      int i = 0;
-      topGood.length + topBad.length < kFirstScreenStats &&
-          (i < good.length || i < bad.length);
-      i++
-    ) {
-      if (i < good.length) topGood.add(good[i]);
-      if (topGood.length + topBad.length < kFirstScreenStats &&
-          i < bad.length) {
-        topBad.add(bad[i]);
-      }
-    }
-    final Set<String> shown = <String>{
-      for (final StatDef s in topGood) s.key,
-      for (final StatDef s in topBad) s.key,
-    };
-    final List<StatDef> rest = <StatDef>[
-      for (final StatDef s in stats)
-        if (!shown.contains(s.key)) s,
-    ];
+    // Toutes les stats en gros boutons de même taille : les [firstScreenStats] premières de chaque
+    // colonne remplissent le premier écran, les suivantes se découvrent en défilant.
 
+    final int rows = firstScreenStats;
     final double rowHeight = math.max(
-      64,
-      (viewportHeight - _gap * (_kFirstScreenRows - 1)) / _kFirstScreenRows,
+      _minRow,
+      (viewportHeight - _gap * (rows - 1)) / rows,
     );
 
     Widget column(List<StatDef> list) => Column(
       children: <Widget>[
         for (final StatDef s in list)
           Padding(
-            padding: const EdgeInsets.only(bottom: _gap),
+            padding: EdgeInsets.only(bottom: _gap),
             child: SizedBox(
               height: rowHeight,
               child: BigStatTile(
@@ -1195,19 +1234,11 @@ class TabletStatGrid extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            if (topBad.isNotEmpty) Expanded(child: column(topBad)),
-            if (topBad.isNotEmpty && topGood.isNotEmpty) cSw(12),
-            if (topGood.isNotEmpty) Expanded(child: column(topGood)),
+            if (bad.isNotEmpty) Expanded(child: column(bad)),
+            if (bad.isNotEmpty && good.isNotEmpty) cSw(12),
+            if (good.isNotEmpty) Expanded(child: column(good)),
           ],
         ),
-        if (rest.isNotEmpty)
-          _StatGrid(
-            stats: rest,
-            live: live,
-            pid: pid,
-            player: player,
-            notifier: notifier,
-          ),
       ],
     );
   }
@@ -1510,6 +1541,7 @@ class _SubstituteDialog extends StatefulWidget {
     required this.outPlayer,
     required this.outNumber,
     required this.bench,
+    required this.benchNumbers,
     required this.jerseyAsset,
     required this.onConfirm,
   });
@@ -1517,6 +1549,9 @@ class _SubstituteDialog extends StatefulWidget {
   final Player outPlayer;
   final int? outNumber;
   final List<Player> bench;
+
+  /// Numéros de maillot par joueur : ceux des remplaçants s'affichent sur leur tuile.
+  final Map<String, int> benchNumbers;
   final String jerseyAsset;
   final ValueChanged<String> onConfirm;
 
@@ -1626,6 +1661,7 @@ class _SubstituteDialogState extends State<_SubstituteDialog> {
                           PlayerPickTile(
                             player: p,
                             selected: _selectedId == p.id,
+                            number: widget.benchNumbers[p.id],
                             jerseyAsset: subJerseyAsset(widget.jerseyAsset),
                             onTap: () => setState(() => _selectedId = p.id),
                           ),

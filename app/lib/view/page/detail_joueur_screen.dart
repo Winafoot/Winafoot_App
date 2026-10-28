@@ -41,10 +41,9 @@ class DetailJoueurScreen extends ConsumerWidget {
     );
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: [
-            const AppBackground(),
             // La zone de contenu du design occupe x=41..1046 (marge droite 148).
             Padding(
               padding: EdgeInsets.only(

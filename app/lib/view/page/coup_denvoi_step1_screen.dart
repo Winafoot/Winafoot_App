@@ -8,6 +8,7 @@ import 'package:wina/models/game_match.dart';
 import 'package:wina/providers/coach_providers.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/coup_denvoi_step2_screen.dart';
+import 'package:wina/view/page/mon_adjoint_screen.dart';
 import 'package:wina/view/widget/match_wizard.dart';
 import 'package:wina/view/widget/team_crest.dart';
 
@@ -82,13 +83,25 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Expanded(child: _ownColumn(coach)),
+              // Centre : bouton « Mon adjoint » en haut (entre les deux noms d'équipe), « VS » dessous.
               Padding(
-                padding: EdgeInsets.only(
-                  top: isPhoneLayout ? 34 : cH(96),
-                  left: isPhoneLayout ? 12 : cW(24),
-                  right: isPhoneLayout ? 12 : cW(24),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isPhoneLayout ? 12 : cW(24),
                 ),
-                child: const VsBadge(),
+                child: Column(
+                  children: <Widget>[
+                    _AdjointButton(
+                      onTap:
+                          () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const MonAdjointScreen(),
+                            ),
+                          ),
+                    ),
+                    SizedBox(height: isPhoneLayout ? 10 : cH(40)),
+                    const VsBadge(),
+                  ],
+                ),
               ),
               Expanded(child: _opponentColumn(notifier, category, division)),
             ],
@@ -233,6 +246,46 @@ class _CoupDEnvoiStep1ScreenState extends ConsumerState<CoupDEnvoiStep1Screen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Bouton bien visible vers « Mon adjoint » : l'adjoint n'était accessible que depuis les paramètres.
+class _AdjointButton extends StatelessWidget {
+  const _AdjointButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColor.primaryColor,
+      borderRadius: BorderRadius.circular(cR(999)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(cR(999)),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isPhoneLayout ? 12 : cW(20),
+            vertical: isPhoneLayout ? 8 : cH(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(
+                Iconsax.profile_2user,
+                size: cIc(20),
+                color: Colors.white,
+              ),
+              cSw(8),
+              Text(
+                'app.assistant.title'.tr(),
+                style: AppThemeStyle.semiBStyle(cFs(17), Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
