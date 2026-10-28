@@ -44,7 +44,7 @@ class PlayerFormHeader extends StatelessWidget {
 }
 
 /// Ossature commune des écrans de formulaire joueur : entête + séparateur, puis
-/// le [form] centré et défilable.
+/// le [form] centré, réduit pour tenir sans défilement (le clavier fait défiler).
 class PlayerFormScaffold extends StatelessWidget {
   const PlayerFormScaffold({
     super.key,
@@ -84,13 +84,28 @@ class PlayerFormScaffold extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        vertical: isPhoneLayout ? 10 : cH(24),
-                      ),
-                      child: form,
-                    ),
+                  // Tient sur l'écran sans défilement : le formulaire est réduit si besoin. Le clavier
+                  // ouvert fait défiler au lieu de le réduire encore.
+                  child: LayoutBuilder(
+                    builder: (BuildContext context, BoxConstraints cons) {
+                      final double fullHeight =
+                          cons.maxHeight + keyboardInset(context);
+                      return SingleChildScrollView(
+                        child: SizedBox(
+                          width: cons.maxWidth,
+                          height: fullHeight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: isPhoneLayout ? 10 : cH(24),
+                              ),
+                              child: form,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

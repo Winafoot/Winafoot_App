@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +30,12 @@ abstract final class OrientationController {
   static int _portraitScopes = 0;
   static bool _portraitRoute = false;
   static bool? _applied;
+  static Timer? _settleTimer;
+
+  /// Délai pendant lequel l'orientation voulue doit rester la même avant d'être appliquée. Une connexion
+  /// enchaîne connexion (portrait) → accueil (paysage) → « Finalisez votre profil » (portrait) en quelques
+  /// centaines de millisecondes : sans ce délai l'écran pivote à chaque étape.
+  static const Duration _settleDelay = Duration(milliseconds: 500);
 
   static bool get isPhone {
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
@@ -57,10 +65,28 @@ abstract final class OrientationController {
     apply();
   }
 
-  /// Verrouille l'orientation voulue ; sans effet si elle est déjà appliquée.
+  static bool get _wantsPortrait =>
+      isPhone && (_portraitRoute || _portraitScopes > 0);
+
+  /// Verrouille l'orientation voulue ; sans effet si elle est déjà appliquée. Au démarrage elle l'est tout de
+  /// suite ; ensuite un changement n'est appliqué qu'une fois stable pendant [_settleDelay], pour ne pas faire
+  /// pivoter l'écran dans les transitions entre écrans.
   static void apply() {
-    final bool portrait = isPhone && (_portraitRoute || _portraitScopes > 0);
-    if (portrait == _applied) return;
+    _settleTimer?.cancel();
+    _settleTimer = null;
+    if (_wantsPortrait == _applied) return;
+    if (_applied == null) {
+      _commit();
+      return;
+    }
+    _settleTimer = Timer(_settleDelay, () {
+      _settleTimer = null;
+      if (_wantsPortrait != _applied) _commit();
+    });
+  }
+
+  static void _commit() {
+    final bool portrait = _wantsPortrait;
     _applied = portrait;
     SystemChrome.setPreferredOrientations(portrait ? _portrait : _landscape);
   }

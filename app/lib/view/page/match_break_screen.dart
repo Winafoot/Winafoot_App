@@ -72,9 +72,20 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
       Navigator.of(context).pop();
     }
 
+    // Retour (flèche d'entête ou retour système) : à la mi-temps il ANNULE la
+    // mi-temps et laisse le match en 1re mi-temps ; seul le bouton « Démarrer
+    // 2e mi-temps » (confirmé) lance la 2e. En pause, il reprend le match.
+    void goBack() {
+      if (isHalfTime) {
+        notifier.cancelHalfTime();
+        Navigator.of(context).pop();
+      } else {
+        resume();
+      }
+    }
+
     // Le bouton « Démarrer 2e mi-temps » est irréversible : on confirme pour
-    // éviter une erreur de sélection. La flèche et le retour système, eux,
-    // reprennent directement via `resume`.
+    // éviter une erreur de sélection.
     void confirmSecondHalf() {
       showDialog<void>(
         context: context,
@@ -116,7 +127,7 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
                         clock: live.clock,
                         scoreUs: live.scoreUs,
                         scoreThem: live.scoreThem,
-                        onBack: resume,
+                        onBack: goBack,
                       ),
                       sh(12),
                       Container(height: 1, color: AppColor.divider),
@@ -188,15 +199,14 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
     );
 
     // Le retour système Android passe par `Navigator.maybePop`, que
-    // `canPop: false` intercepte ; le `pop()` de `resume`, lui, n'est pas
-    // bloqué. Sans cette garde, un geste de bord dépile l'écran sans reprise :
-    // la 2e mi-temps ne démarre jamais (`half` reste à 1), tout le reste du
-    // match est compté en 1re mi-temps et la 2e passe « non jouée ». Le retour
-    // système fait donc comme la flèche d'entête : il reprend le match.
+    // `canPop: false` intercepte ; le `pop()` de `goBack`, lui, n'est pas
+    // bloqué. Sans cette garde, un geste de bord dépilerait l'écran sans
+    // remettre le match en cours : il resterait en pause. Le retour système
+    // fait donc comme la flèche d'entête (`goBack`).
     return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
-        if (!didPop) resume();
+        if (!didPop) goBack();
       },
       child: scaffold,
     );

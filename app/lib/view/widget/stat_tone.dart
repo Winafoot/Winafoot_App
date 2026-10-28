@@ -78,8 +78,8 @@ Color? statTint(String key) {
     return AppColor.jerseyYellow.withValues(alpha: 0.35);
   }
   return switch (statSide(key)) {
-    StatSide.bad => AppColor.destructive.withValues(alpha: 0.14),
-    StatSide.good => AppColor.primaryColor.withValues(alpha: 0.18),
+    StatSide.bad => AppColor.destructive.withValues(alpha: 0.24),
+    StatSide.good => AppColor.primaryColor.withValues(alpha: 0.30),
     StatSide.neutral => null,
   };
 }

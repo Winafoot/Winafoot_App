@@ -306,7 +306,7 @@ class _GererEquipePlacementScreenState
                       flex: 1,
                       width: 317,
                       child: _RosterColumn(
-                        header: SizedBox(height: isPhoneLayout ? 54 : cH(66)),
+                        header: SizedBox(height: _rosterHeaderHeight),
                         sections: rightSections,
                         numbers: draft.numbers,
                         captainId: draft.captainId,
@@ -595,6 +595,10 @@ class _RosterColumn extends StatelessWidget {
   }
 }
 
+/// Hauteur de l'en-tête des colonnes de joueurs : celle de la colonne gauche (titre + consigne en entier)
+/// et de l'espace équivalent à droite, pour que les deux listes restent alignées.
+double get _rosterHeaderHeight => isPhoneLayout ? 54 : cH(96);
+
 /// En-tête de la colonne gauche : titre « Joueurs à placer » + consigne.
 class _LeftRosterHeader extends StatelessWidget {
   const _LeftRosterHeader();
@@ -602,7 +606,7 @@ class _LeftRosterHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: isPhoneLayout ? 54 : cH(66),
+      height: _rosterHeaderHeight,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -614,7 +618,8 @@ class _LeftRosterHeader extends StatelessWidget {
           Flexible(
             child: Text(
               'app.gerer-equipe-placement.consigne'.tr(),
-              maxLines: isPhoneLayout ? 2 : 3,
+              // Tablette : la consigne s'affiche en entier (4 lignes au plus), sans « … ».
+              maxLines: isPhoneLayout ? 2 : 4,
               overflow: TextOverflow.ellipsis,
               style: AppThemeStyle.regularStyle(
                 cFs(12),

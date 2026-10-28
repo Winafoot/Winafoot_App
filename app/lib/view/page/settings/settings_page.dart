@@ -544,23 +544,25 @@ class _AccountActionButton extends StatelessWidget {
   }
 }
 
-/// Réseaux sociaux de l'app, dans l'ordre d'affichage : Instagram, TikTok, Facebook, LinkedIn.
+/// Réseaux sociaux de l'app, dans l'ordre d'affichage : Instagram, TikTok, YouTube, Facebook, LinkedIn.
 ///
-/// Les adresses viennent de `app_config/metadata` (champs `instagramUrl`, `tiktokUrl`, `facebookUrl`,
-/// `linkedinUrl`). Un réseau dont l'adresse est absente ou vide est omis : pas d'entrée sans destination.
+/// Les adresses viennent de `app_config/metadata` (champs `instagramUrl`, `tiktokUrl`, `youtubeUrl`,
+/// `facebookUrl`, `linkedinUrl`). Les cinq réseaux sont toujours listés ; tant que l'adresse d'un compte
+/// n'est pas renseignée, son entrée est affichée mais n'ouvre rien.
 List<SettingsNode> _socialNodes() {
   final AppMetadataConfig? config =
       GetIt.I.isRegistered<AppMetadataConfig>()
           ? GetIt.I<AppMetadataConfig>()
           : null;
 
-  SettingsNode? node(String key, String? url, Widget icon) {
+  SettingsNode node(String key, String? url, Widget icon) {
     final String? target = url?.trim();
-    if (target == null || target.isEmpty) return null;
     return SettingsNode(
       title: 'package.settings.node.social.$key'.tr(),
       icon: icon,
       onTap: () async {
+        // Compte pas encore renseigné : l'entrée est visible, sans destination.
+        if (target == null || target.isEmpty) return;
         try {
           await launchUrl(
             Uri.parse(target),
@@ -573,7 +575,7 @@ List<SettingsNode> _socialNodes() {
     );
   }
 
-  return <SettingsNode?>[
+  return <SettingsNode>[
     node(
       'instagram',
       config?.instagramUrl,
@@ -585,6 +587,11 @@ List<SettingsNode> _socialNodes() {
       SvgPicture.asset('assets/svg/tiktok.svg'),
     ),
     node(
+      'youtube',
+      config?.youtubeUrl,
+      SvgPicture.asset('assets/svg/youtube.svg'),
+    ),
+    node(
       'facebook',
       config?.facebookUrl,
       SvgPicture.asset('assets/svg/fb.svg'),
@@ -594,7 +601,7 @@ List<SettingsNode> _socialNodes() {
       config?.linkedinUrl,
       Image.asset('assets/images/img_linkedin.png', fit: BoxFit.cover),
     ),
-  ].whereType<SettingsNode>().toList();
+  ];
 }
 
 /// Suppression du compte depuis l'app, pour tous les types de connexion (e-mail,

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:wina/data/composition_repository.dart';
@@ -203,7 +205,11 @@ class CompositionDraftNotifier extends StateNotifier<CompositionDraft> {
   /// Recharge le brouillon depuis une composition déjà validée (ex. celle
   /// attachée au match courant, quand on rouvre « Gérer mon équipe » après un
   /// « Copier depuis un match précédent » — cf. `coup_denvoi_step3_screen.dart`).
-  void loadFromComposition(MatchComposition composition) {
+  ///
+  /// [maxSquad] : effectif maximum du format du club. La grille « Attribuer les numéros » propose tous les
+  /// maillots jusque-là (9 en foot à 5, 14 à 8, 20 à 11) : sans lui, un numéro de titulaire au-dessus de
+  /// `playerCount + kSubPoolSize` serait purgé au rechargement.
+  void loadFromComposition(MatchComposition composition, {int? maxSquad}) {
     // Numéros relus : on ne garde que ceux que les deux grilles réunies savent
     // encore offrir (1..playerCount + kSubPoolSize) et on fait tomber les
     // DOUBLONS — c'est le doublon qui pose problème, pas le pool d'origine.
@@ -218,7 +224,7 @@ class CompositionDraftNotifier extends StateNotifier<CompositionDraft> {
     // Firestore sans le champ — on ne filtre que les doublons.
     final int maxNumber =
         composition.playerCount > 0
-            ? composition.playerCount + kSubPoolSize
+            ? math.max(composition.playerCount + kSubPoolSize, maxSquad ?? 0)
             : 1 << 30;
     final Map<String, int> nextNumbers = <String, int>{};
     final Set<int> used = <int>{};

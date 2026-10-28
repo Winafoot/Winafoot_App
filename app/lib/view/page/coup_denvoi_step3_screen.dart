@@ -11,6 +11,7 @@ import 'package:wina/models/match_composition.dart';
 import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/coach_providers.dart';
 import 'package:wina/providers/composition_providers.dart';
+import 'package:wina/providers/player_providers.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/gerer_equipe_count_screen.dart';
 import 'package:wina/view/page/gerer_equipe_placement_screen.dart';
@@ -143,7 +144,10 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
                         compositionDraftProvider.notifier,
                       );
                       if (existing != null) {
-                        notifier.loadFromComposition(existing);
+                        notifier.loadFromComposition(
+                          existing,
+                          maxSquad: ref.read(maxSquadSizeProvider).valueOrNull,
+                        );
                         openGererScreen(
                           context,
                           kGererPlacementRoute,

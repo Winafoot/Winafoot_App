@@ -5,6 +5,7 @@ import 'package:wina/config/theme.dart';
 import 'package:wina/models/live_match.dart';
 import 'package:wina/models/match_composition.dart';
 import 'package:wina/providers/composition_providers.dart';
+import 'package:wina/providers/player_providers.dart';
 import 'package:wina/providers/live_match_providers.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/coup_denvoi_step3_screen.dart';
@@ -38,6 +39,7 @@ void openLiveCompositionEditor(BuildContext context, WidgetRef ref) {
           numbers: live.numbers,
           substituteIds: live.substituteIds,
         ),
+        maxSquad: ref.read(maxSquadSizeProvider).valueOrNull,
       );
   Navigator.of(context).push(
     MaterialPageRoute<void>(

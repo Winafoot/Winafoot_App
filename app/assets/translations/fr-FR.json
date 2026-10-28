@@ -348,6 +348,7 @@
           "facebook": "Notre page Facebook",
           "instagram": "Notre Instagram",
           "tiktok": "Notre TikTok",
+          "youtube": "Notre YouTube",
           "twitter": "Twitter",
           "linkedin": "Linkedin",
           "snapchat": "Snapchat"
@@ -741,6 +742,10 @@
       "reprendre": "Reprendre",
       "pause": "Pause",
       "mi-temps": "Mi-temps",
+      "titre-mi-temps": "Passer à la mi-temps ?",
+      "message-mi-temps": "Le match sera mis en pause et le chrono s’arrêtera. Un retour arrière vous ramènera en 1re mi-temps.",
+      "rester-1re-mi-temps": "Rester en 1re mi-temps",
+      "confirmer-mi-temps": "Passer à la mi-temps",
       "fin-du-match": "Fin du match",
       "modifier-composition": "Modifier composition",
       "statistiques-joueur": "Statistiques du joueur",

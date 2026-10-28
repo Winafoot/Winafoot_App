@@ -105,6 +105,16 @@ abstract class SocialSignIn {
         if (appleGivenName != null && appleGivenName.trim().isNotEmpty)
           'firstname': appleGivenName.trim(),
       });
+      // La lecture 'la fiche n'existe pas' faite plus haut est restée en cache : on la remplace par la fiche
+      // que le serveur vient d'écrire, pour que l'écoute de l'accueil ne s'appuie pas sur du périmé.
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get(const GetOptions(source: Source.server));
+      } catch (_) {
+        // Hors ligne : l'accueil attendra le serveur (voir UserProvider.init).
+      }
       return const SocialSignInResult(SocialSignInOutcome.created);
     } on FirebaseFunctionsException catch (e) {
       debugPrint('[SocialSignIn] ${e.code} ${e.message}');

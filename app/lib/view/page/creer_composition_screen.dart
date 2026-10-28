@@ -138,6 +138,9 @@ class _CreerCompositionScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.background,
+      // Le clavier ne sert qu'au dialogue d'enregistrement : sans cela, la page derrière se redimensionne
+      // à chaque ouverture du clavier (l'aperçu du terrain « zoome »).
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Stack(
           children: <Widget>[
@@ -572,6 +575,9 @@ class _SaveDialogState extends State<_SaveDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Clavier ouvert : le dialogue prend toute la hauteur restante au lieu de garder ses marges, et défile
+    // si son contenu ne tient pas — le bouton « Enregistrer » reste atteignable.
+    final bool keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Dialog(
       backgroundColor: AppColor.surface,
       shape: RoundedRectangleBorder(
@@ -579,76 +585,84 @@ class _SaveDialogState extends State<_SaveDialog> {
       ),
       insetPadding: EdgeInsets.symmetric(
         horizontal: cW(360),
-        vertical: cH(120),
+        vertical: keyboardOpen ? 8 : cH(120),
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(cW(28), cH(16), cW(28), cH(22)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Align(
-              alignment: Alignment.centerRight,
-              child: InkResponse(
-                onTap: () => Navigator.of(context).pop(),
-                radius: cIc(20),
-                child: Icon(
-                  Iconsax.close_circle,
-                  size: cIc(20),
-                  color: AppColor.secondaryLabels,
+      child: GestureDetector(
+        // Le pavé numérique du champ « schéma » n'a pas de touche « OK » sur iPhone / iPad : toucher
+        // à côté d'un champ ferme le clavier et laisse voir « Enregistrer ».
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(cW(28), cH(16), cW(28), cH(22)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Align(
+                alignment: Alignment.centerRight,
+                child: InkResponse(
+                  onTap: () => Navigator.of(context).pop(),
+                  radius: cIc(20),
+                  child: Icon(
+                    Iconsax.close_circle,
+                    size: cIc(20),
+                    color: AppColor.secondaryLabels,
+                  ),
                 ),
               ),
-            ),
-            Center(
-              child: Text(
-                widget.isEditing
-                    ? 'app.creer-composition.dialogue-titre-modifier'.tr()
-                    : 'app.creer-composition.cta-creer'.tr(),
-                style: AppThemeStyle.semiBStyle(
-                  cFs(18),
-                  AppColor.primaryLabels,
+              Center(
+                child: Text(
+                  widget.isEditing
+                      ? 'app.creer-composition.dialogue-titre-modifier'.tr()
+                      : 'app.creer-composition.cta-creer'.tr(),
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(18),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
-            ),
-            cSh(20),
-            _FieldLabel('app.creer-composition.champ-nom'.tr()),
-            cSh(8),
-            _DialogField(
-              controller: _nameController,
-              hint: 'app.creer-composition.champ-nom-hint'.tr(),
-              onChanged: (_) => setState(() {}),
-              onSubmitted: (_) => _submit(),
-            ),
-            cSh(16),
-            _FieldLabel('app.creer-composition.champ-formation'.tr()),
-            cSh(8),
-            _DialogField(
-              controller: _formationController,
-              hint: 'app.creer-composition.champ-formation-hint'.tr(),
-              // Un schéma ne contient que des chiffres : pavé numérique, et le
-              // formateur remet les tirets que ce clavier ne permet pas de
-              // taper (« 442 » → « 4-4-2 »), la valeur étant persistée telle
-              // quelle. Rien de tout ça sur le champ « Nom », texte libre.
-              keyboardType: TextInputType.number,
-              inputFormatters: <TextInputFormatter>[FormationSearchFormatter()],
-              onChanged: (_) => setState(() {}),
-              onSubmitted: (_) => _submit(),
-            ),
-            cSh(22),
-            // Motif « CTA grisé » assumé : ce dialogue n'affiche jamais de
-            // bannière, donc pas d'état rouge par champ.
-            _SaveButton(enabled: _isValid, onTap: _submit),
-            cSh(12),
-            Center(
-              child: Text(
-                'app.creer-composition.champs-obligatoires'.tr(),
-                style: AppThemeStyle.regularStyle(
-                  cFs(12),
-                  AppColor.secondaryLabels,
+              cSh(20),
+              _FieldLabel('app.creer-composition.champ-nom'.tr()),
+              cSh(8),
+              _DialogField(
+                controller: _nameController,
+                hint: 'app.creer-composition.champ-nom-hint'.tr(),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _submit(),
+              ),
+              cSh(16),
+              _FieldLabel('app.creer-composition.champ-formation'.tr()),
+              cSh(8),
+              _DialogField(
+                controller: _formationController,
+                hint: 'app.creer-composition.champ-formation-hint'.tr(),
+                // Un schéma ne contient que des chiffres : pavé numérique, et le
+                // formateur remet les tirets que ce clavier ne permet pas de
+                // taper (« 442 » → « 4-4-2 »), la valeur étant persistée telle
+                // quelle. Rien de tout ça sur le champ « Nom », texte libre.
+                keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FormationSearchFormatter(),
+                ],
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _submit(),
+              ),
+              cSh(22),
+              // Motif « CTA grisé » assumé : ce dialogue n'affiche jamais de
+              // bannière, donc pas d'état rouge par champ.
+              _SaveButton(enabled: _isValid, onTap: _submit),
+              cSh(12),
+              Center(
+                child: Text(
+                  'app.creer-composition.champs-obligatoires'.tr(),
+                  style: AppThemeStyle.regularStyle(
+                    cFs(12),
+                    AppColor.secondaryLabels,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:skeleton/controller/user_controller.dart';
 import 'package:skeleton/skeleton.dart';
@@ -435,10 +434,6 @@ class _Header extends StatelessWidget {
         if (onBack != null) ...<Widget>[
           CustomBackButton(onTap: onBack!),
           sw(14),
-        ],
-        if (!OrientationController.isPhone) ...<Widget>[
-          Icon(Iconsax.crown_1, size: sp(33), color: AppColor.primaryColor),
-          sw(12),
         ],
         Expanded(
           child: Text(
@@ -1069,18 +1064,27 @@ class _MonthlyCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: formatWidth(14),
-                  vertical: formatHeight(6),
-                ),
-                decoration: BoxDecoration(
-                  color: AppColor.background,
-                  borderRadius: BorderRadius.circular(r(14)),
-                ),
-                child: Text(
-                  'app.subscription.no-commitment'.tr(),
-                  style: AppThemeStyle.mediumStyle(_t(13), AppColor.grey5A6574),
+              // Mention lisible (17 au lieu de 13) ; elle rétrécit plutôt que de déborder sur une carte étroite.
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: formatWidth(16),
+                      vertical: formatHeight(8),
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColor.background,
+                      borderRadius: BorderRadius.circular(r(16)),
+                    ),
+                    child: Text(
+                      'app.subscription.no-commitment'.tr(),
+                      style: AppThemeStyle.semiBStyle(
+                        _t(17),
+                        AppColor.primaryLabels,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

@@ -10,9 +10,9 @@ import 'package:wina/providers/player_providers.dart';
 import 'package:wina/view/page/match_break_screen.dart';
 
 /// Le retour système Android (bouton ou geste de bord) doit faire sur l'écran
-/// de coupure ce que fait la flèche d'entête : reprendre le match. Sans la
-/// garde, l'écran est dépilé sans `startSecondHalf` : `half` reste à 1 et tout
-/// le reste du match est compté en 1re mi-temps.
+/// de coupure ce que fait la flèche d'entête. À la mi-temps, il ANNULE la
+/// mi-temps : le match reste en 1re mi-temps (seul « Démarrer 2e mi-temps »,
+/// confirmé, lance la 2e). En pause, il reprend le match.
 void main() {
   Future<ProviderContainer> pumpBreak(
     WidgetTester tester, {
@@ -81,7 +81,7 @@ void main() {
     return container;
   }
 
-  testWidgets('retour système à la mi-temps : la 2e mi-temps démarre', (
+  testWidgets('retour système à la mi-temps : le match reste en 1re mi-temps', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await pumpBreak(
@@ -94,8 +94,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final LiveMatch live = container.read(liveMatchProvider)!;
-    expect(live.half, 2);
+    expect(live.half, 1);
     expect(live.isLive, isTrue);
+    expect(live.halfTimeStatKeys, isNull);
     expect(find.byType(MatchBreakScreen), findsNothing);
   });
 

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:wina/view/page/gerer_equipe_nav.dart';
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +26,13 @@ int _starterPoolSize(CompositionDraft draft) {
   final int n = draft.playerCount ?? 0;
   return n > 0 ? n : kMaxSquadSize;
 }
+
+/// Numéros proposés aux titulaires (grille « Attribuer les numéros ») : tous les maillots de l'effectif
+/// maximum du format (1 à 9 en foot à 5, 1 à 14 à 8, 1 à 20 à 11), jamais moins que le nombre de joueurs de
+/// la composition. Les numéros choisis comme remplaçants y sont grisés et bloqués (voir [CompositionDraft.subNumbers]).
+List<int> starterNumbersOf(CompositionDraft draft, int maxSquad) => <int>[
+  for (int i = 1; i <= math.max(maxSquad, _starterPoolSize(draft)); i++) i,
+];
 
 /// Premier numéro de la grille « Numéros des remplaçants » (design 1:424) :
 /// elle enchaîne sur le pool titulaire (12 à 16 dans un 11 contre 11). Les
@@ -75,6 +84,8 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
         (ref.watch(playersStreamProvider).valueOrNull ?? const <Player>[])
             .where((Player p) => p.id != null)
             .toList(growable: false);
+    final int maxSquad =
+        ref.watch(maxSquadSizeProvider).valueOrNull ?? kMaxSquadSize;
 
     List<Player> ofPosition(PlayerPosition pos) =>
         players.where((Player p) => p.position == pos).toList(growable: false);
@@ -90,6 +101,7 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
             (BuildContext ctx) => _NumberPickerDialog(
               player: player,
               draft: draft,
+              maxSquad: maxSquad,
               onConfirm: (int number, bool isSub) {
                 notifier.setNumber(player.id!, number, isSubstitute: isSub);
                 Navigator.of(ctx).pop();
@@ -126,9 +138,6 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
       onOpenPicker: openNumberPicker,
       onAccept: assignFromDrag,
     );
-
-    final int maxSquad =
-        ref.watch(maxSquadSizeProvider).valueOrNull ?? kMaxSquadSize;
 
     // Téléphone : joueurs par catégorie à gauche (pastilles puis lignes), numéros
     // et brassard à droite. Plus de défilement de toute la page.
@@ -171,7 +180,9 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
           const SizedBox(width: 12),
           SizedBox(
             width: 230,
-            child: SingleChildScrollView(child: _RightRail(draft: draft)),
+            child: SingleChildScrollView(
+              child: _RightRail(draft: draft, maxSquad: maxSquad),
+            ),
           ),
         ],
       ),
@@ -245,7 +256,7 @@ class GererEquipeNumbersScreen extends ConsumerWidget {
                             cSw(24),
                             SizedBox(
                               width: isPhoneLayout ? 175 : cW(230),
-                              child: _RightRail(draft: draft),
+                              child: _RightRail(draft: draft, maxSquad: maxSquad),
                             ),
                           ],
                         ),
@@ -807,9 +818,12 @@ class _CaptainTag extends StatelessWidget {
 /// Colonne de droite : les 3 panneaux « Attribuer les numéros » / « Numéros
 /// des remplaçants » / « Brassard de capitaine » (design 1:421/1:424/1:427).
 class _RightRail extends StatelessWidget {
-  const _RightRail({required this.draft});
+  const _RightRail({required this.draft, required this.maxSquad});
 
   final CompositionDraft draft;
+
+  /// Effectif maximum du format : borne haute de la grille titulaires.
+  final int maxSquad;
 
   @override
   Widget build(BuildContext context) {
@@ -822,10 +836,10 @@ class _RightRail extends StatelessWidget {
         _RailPanel(
           title: 'app.gerer-equipe-numbers.attribuer-numeros'.tr(),
           child: _RailJerseyGrid(
-            numbers: <int>[
-              for (int i = 1; i <= _starterPoolSize(draft); i++) i,
-            ],
+            numbers: starterNumbersOf(draft, maxSquad),
             taken: taken,
+            // Numéros réservés aux remplaçants : grisés et impossibles à glisser.
+            blocked: draft.subNumbers,
             isSub: false,
           ),
         ),
@@ -937,6 +951,7 @@ class _RailJerseyGrid extends StatelessWidget {
     required this.numbers,
     required this.taken,
     required this.isSub,
+    this.blocked = const <int>{},
   });
 
   /// Numéros affichés, dans l'ordre. Une liste plutôt qu'un intervalle : les
@@ -944,6 +959,9 @@ class _RailJerseyGrid extends StatelessWidget {
   final List<int> numbers;
   final Set<int> taken;
   final bool isSub;
+
+  /// Numéros non attribuables dans cette grille (réservés aux remplaçants) : grisés, non glissables.
+  final Set<int> blocked;
 
   /// 4 puces par ligne quand la largeur le permet (design 1:421/1:424) ; un
   /// `Wrap` replie sur moins de colonnes dans un panneau étroit (téléphone)
@@ -959,6 +977,7 @@ class _RailJerseyGrid extends StatelessWidget {
             number: n,
             isSub: isSub,
             taken: taken.contains(n),
+            blocked: blocked.contains(n),
           ),
       ],
     );
@@ -970,11 +989,15 @@ class _DraggableJerseyTile extends StatelessWidget {
     required this.number,
     required this.isSub,
     required this.taken,
+    this.blocked = false,
   });
 
   final int number;
   final bool isSub;
   final bool taken;
+
+  /// Numéro réservé aux remplaçants : grisé, on ne peut pas le glisser sur un titulaire.
+  final bool blocked;
 
   @override
   Widget build(BuildContext context) {
@@ -982,8 +1005,9 @@ class _DraggableJerseyTile extends StatelessWidget {
       size: isPhoneLayout ? 40 : 44,
       isSub: isSub,
       number: number,
-      opacity: taken ? 0.36 : 1,
+      opacity: taken || blocked ? 0.36 : 1,
     );
+    if (blocked) return tile;
     // Téléphone : le panneau défile ; un glisser immédiat empêcherait de le
     // faire défiler. Appui bref avant de glisser.
     if (isPhoneLayout) {
@@ -1188,12 +1212,16 @@ class _NumberPickerDialog extends StatefulWidget {
   const _NumberPickerDialog({
     required this.player,
     required this.draft,
+    required this.maxSquad,
     required this.onConfirm,
     required this.onClear,
   });
 
   final Player player;
   final CompositionDraft draft;
+
+  /// Effectif maximum du format : borne haute de la grille titulaires.
+  final int maxSquad;
   final void Function(int number, bool isSub) onConfirm;
   final VoidCallback onClear;
 
@@ -1217,8 +1245,7 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
         sub
             ? subNumbersOf(widget.draft).contains(current)
             : (current != null &&
-                current >= 1 &&
-                current <= _starterPoolSize(widget.draft));
+                starterNumbersOf(widget.draft, widget.maxSquad).contains(current));
     if (current != null && inPool) {
       _selectedNumber = current;
       _selectedIsSub = sub;
@@ -1237,6 +1264,8 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
       for (final MapEntry<String, int> e in widget.draft.numbers.entries)
         if (e.key != playerId) e.value,
     };
+    // Numéros de la grille des remplaçants : grisés et bloqués côté titulaires.
+    final Set<int> reserved = subNumbersOf(widget.draft).toSet();
 
     return Dialog(
       backgroundColor: AppColor.surface,
@@ -1307,10 +1336,9 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
               else ...<Widget>[
                 _PickerJerseyGrid(
                   isSub: false,
-                  numbers: <int>[
-                    for (int i = 1; i <= _starterPoolSize(widget.draft); i++) i,
-                  ],
+                  numbers: starterNumbersOf(widget.draft, widget.maxSquad),
                   taken: taken,
+                  blocked: reserved,
                   isSelected:
                       (int n) => !_selectedIsSub && _selectedNumber == n,
                   onTap: (int n) => _select(n, false),
@@ -1354,6 +1382,7 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
   /// Téléphone : les deux grilles à gauche, l'action à droite — tient dans la
   /// hauteur du paysage sans défiler.
   Widget _phoneBody(String playerId, Set<int> taken) {
+    final Set<int> reserved = subNumbersOf(widget.draft).toSet();
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -1364,10 +1393,9 @@ class _NumberPickerDialogState extends State<_NumberPickerDialog> {
               _PickerJerseyGrid(
                 isSub: false,
                 perRow: 7,
-                numbers: <int>[
-                  for (int i = 1; i <= _starterPoolSize(widget.draft); i++) i,
-                ],
+                numbers: starterNumbersOf(widget.draft, widget.maxSquad),
                 taken: taken,
+                blocked: reserved,
                 isSelected: (int n) => !_selectedIsSub && _selectedNumber == n,
                 onTap: (int n) => _select(n, false),
               ),
@@ -1419,6 +1447,7 @@ class _PickerJerseyGrid extends StatelessWidget {
     required this.taken,
     required this.isSelected,
     required this.onTap,
+    this.blocked = const <int>{},
     this.subOnSelect = false,
     this.centered = false,
     this.perRow = 6,
@@ -1440,6 +1469,9 @@ class _PickerJerseyGrid extends StatelessWidget {
   /// Numéros affichés, dans l'ordre (choix libre côté remplaçants).
   final List<int> numbers;
   final Set<int> taken;
+
+  /// Numéros réservés (remplaçants) : grisés, non sélectionnables.
+  final Set<int> blocked;
 
   /// Permet la sélection simple (un seul numéro) comme multiple (la popup de
   /// choix des numéros remplaçants).
@@ -1472,6 +1504,7 @@ class _PickerJerseyGrid extends StatelessWidget {
                     number: numbers[i],
                     isSub: subOnSelect ? isSelected(numbers[i]) : isSub,
                     taken: taken.contains(numbers[i]),
+                    blocked: blocked.contains(numbers[i]),
                     selected: isSelected(numbers[i]),
                     onTap: () => onTap(numbers[i]),
                     showBorder: !subOnSelect,
@@ -1492,12 +1525,14 @@ class _SelectableJerseyTile extends StatelessWidget {
     required this.taken,
     required this.selected,
     required this.onTap,
+    this.blocked = false,
     this.showBorder = true,
   });
 
   final int number;
   final bool isSub;
   final bool taken;
+  final bool blocked;
   final bool selected;
   final VoidCallback onTap;
 
@@ -1511,8 +1546,9 @@ class _SelectableJerseyTile extends StatelessWidget {
       size: isPhoneLayout ? 40 : cIc(42),
       isSub: isSub,
       number: number,
-      opacity: taken ? 0.36 : 1,
+      opacity: taken || blocked ? 0.36 : 1,
     );
+    if (blocked) return tile;
     return InkResponse(
       onTap: onTap,
       radius: isPhoneLayout ? 26 : cIc(30),
