@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
+import 'package:wina/models/coach_profile.dart';
 import 'package:wina/models/player.dart';
 
 /// Tuile de joueur sélectionnable : maillot au-dessus, nom en dessous, bordure
@@ -17,9 +18,13 @@ class PlayerPickTile extends StatelessWidget {
     required this.selected,
     required this.jerseyAsset,
     required this.onTap,
+    this.number,
   });
 
   final Player player;
+
+  /// Numéro de maillot, écrit sur le maillot quand il est connu.
+  final int? number;
   final bool selected;
   final String jerseyAsset;
   final VoidCallback onTap;
@@ -43,7 +48,27 @@ class PlayerPickTile extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Image.asset(jerseyAsset, width: cIc(34), height: cIc(34)),
+            SizedBox(
+              width: cIc(34),
+              height: cIc(34),
+              child: Stack(
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Image.asset(jerseyAsset, width: cIc(34), height: cIc(34)),
+                  if (number != null)
+                    Padding(
+                      padding: EdgeInsets.only(top: cIc(3)),
+                      child: Text(
+                        '$number',
+                        style: AppThemeStyle.boldStyle(
+                          cFs(13),
+                          numberColorForJerseyAsset(jerseyAsset),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             cSh(6),
             Text(
               player.fullName,

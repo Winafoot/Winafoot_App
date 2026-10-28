@@ -108,10 +108,9 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
 
     final Widget scaffold = Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Column(
               children: <Widget>[
                 Padding(

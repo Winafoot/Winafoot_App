@@ -147,10 +147,9 @@ class CheckProfilScaffold extends StatelessWidget {
     final bool narrow = MediaQuery.sizeOf(context).width < 600;
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: [
-            const AppBackground(),
             Column(
               children: [
                 cSh(24),

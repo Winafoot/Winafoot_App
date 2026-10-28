@@ -255,6 +255,10 @@ class CompositionDraftNotifier extends StateNotifier<CompositionDraft> {
       },
       numbers: nextNumbers,
       captainId: composition.captainId,
+      subNumbers: <int>{
+        for (final MapEntry<String, int> e in nextNumbers.entries)
+          if (composition.substituteIds.contains(e.key)) e.value,
+      },
       // Le bloc « Remplaçants » est la liste des joueurs AYANT un numéro de
       // remplaçant : un remplaçant dont le numéro vient de tomber en sort, sans
       // quoi il réapparaîtrait maillot vide en match (même invariant que

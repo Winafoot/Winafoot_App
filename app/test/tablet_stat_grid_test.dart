@@ -10,9 +10,8 @@ import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/live_match_providers.dart';
 import 'package:wina/view/page/match_live_screen.dart';
 
-/// Saisie des statistiques sur tablette : 7 gros boutons au plus sur le premier
-/// écran, en alternance gagné / perdu dans l'ordre de priorité ; 7 stats ou
-/// moins : toutes, sans défilement ; au-delà, les autres sont plus bas.
+/// Saisie des statistiques : 7 gros boutons par colonne (14) sur le premier écran de la tablette, 6 sur
+/// téléphone, dans l'ordre de priorité ; 5 stats : toutes sans défilement ; au-delà, les autres sont plus bas.
 void main() {
   const double hauteur = 700;
   const Player joueur = Player(
@@ -23,7 +22,11 @@ void main() {
     position: PlayerPosition.gardien,
   );
 
-  Future<LiveMatchNotifier> pump(WidgetTester tester, List<String> keys) async {
+  Future<LiveMatchNotifier> pump(
+    WidgetTester tester,
+    List<String> keys, {
+    int premierEcran = kFirstScreenStats,
+  }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(1194, 834);
     addTearDown(tester.view.reset);
@@ -71,6 +74,7 @@ void main() {
                       player: joueur,
                       notifier: notifier,
                       viewportHeight: hauteur,
+                      firstScreenStats: premierEcran,
                     ),
                   ),
                 ),
@@ -87,40 +91,50 @@ void main() {
     matching: find.text(label),
   );
 
-  testWidgets('28 stats : 7 gros boutons, en alternance, le reste plus bas', (
+  testWidgets('28 stats : 14 gros boutons (7 par colonne), le reste plus bas', (
     WidgetTester tester,
   ) async {
     await pump(tester, <String>[for (final StatDef s in kStatToggles) s.key]);
 
-    expect(find.byType(BigStatTile), findsNWidgets(kFirstScreenStats));
-    // Gagnés (droite) 4 : passes réussies, récupérations, tirs cadrés, contrôles réussis.
+    // Tous en gros boutons de même taille ; seuls les 7 premiers de chaque colonne tiennent à l'écran.
+    final Iterable<Element> tuiles = find.byType(BigStatTile).evaluate();
+    expect(tuiles.length, greaterThan(2 * kFirstScreenStats));
+    final double h = tester.getSize(find.byType(BigStatTile).first).height;
+    for (int i = 0; i < tuiles.length; i++) {
+      expect(tester.getSize(find.byType(BigStatTile).at(i)).height, h);
+    }
+    final int surEcran =
+        find.byType(BigStatTile).evaluate().where((Element e) {
+          final RenderBox b = e.renderObject! as RenderBox;
+          return b.localToGlobal(Offset.zero).dy + b.size.height <= hauteur + 0.5;
+        }).length;
+    expect(surEcran, 2 * kFirstScreenStats);
+    // Les plus prioritaires de chaque colonne sont des gros boutons.
     for (final String l in <String>[
       'Passes réussies',
       'Récupérations de ballons',
-      'Tirs cadrés',
-      'Contrôles réussis',
-    ]) {
-      expect(tuile(l), findsOneWidget, reason: l);
-    }
-    // Perdus (gauche) 3 : passes manquées, pertes de ballons, tirs non cadrés.
-    for (final String l in <String>[
       'Passes manquées',
       'Pertes de ballons',
-      'Tirs non cadrés',
     ]) {
       expect(tuile(l), findsOneWidget, reason: l);
     }
-    // La 4e stat perdue n'est plus un gros bouton : elle est plus bas.
-    expect(tuile('Contrôles manqués'), findsNothing);
-    expect(find.text('Contrôles manqués'), findsOneWidget);
+  });
 
-    // Le premier écran ne montre que les 7 gros boutons.
-    final double basDernier = tester.getBottomLeft(find.byType(BigStatTile).last).dy;
-    expect(basDernier, lessThanOrEqualTo(hauteur));
-    expect(
-      tester.getTopLeft(find.text('Contrôles manqués')).dy,
-      greaterThanOrEqualTo(hauteur),
+  testWidgets('téléphone : 12 gros boutons (6 par colonne) au premier écran', (
+    WidgetTester tester,
+  ) async {
+    await pump(
+      tester,
+      <String>[for (final StatDef s in kStatToggles) s.key],
+      premierEcran: kPhoneFirstScreenStats,
     );
+
+    final int surEcran =
+        find.byType(BigStatTile).evaluate().where((Element e) {
+          final RenderBox b = e.renderObject! as RenderBox;
+          return b.localToGlobal(Offset.zero).dy + b.size.height <= hauteur + 0.5;
+        }).length;
+    expect(surEcran, 2 * kPhoneFirstScreenStats);
   });
 
   testWidgets('5 stats : toutes en gros boutons, rien en dessous', (

@@ -59,10 +59,9 @@ class PlayerFormScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: [
-            const AppBackground(),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

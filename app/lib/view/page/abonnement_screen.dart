@@ -178,10 +178,9 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
 
     final Widget screen = Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal:

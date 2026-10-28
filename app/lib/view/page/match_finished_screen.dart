@@ -81,10 +81,9 @@ class _MatchFinishedScreenState extends ConsumerState<MatchFinishedScreen> {
 
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Column(
               children: <Widget>[
                 Padding(

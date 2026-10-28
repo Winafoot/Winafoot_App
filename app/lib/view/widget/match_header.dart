@@ -25,6 +25,7 @@ class MatchHeader extends StatelessWidget {
     this.clockFontSize = 24,
     this.controls = const <Widget>[],
     this.trailing,
+    this.middle,
   });
 
   final String title;
@@ -45,6 +46,9 @@ class MatchHeader extends StatelessWidget {
   /// Bouton accolé au score. Sur téléphone (écran de direct) il remplace la
   /// signature Wina pour laisser la place aux contrôles agrandis.
   final Widget? trailing;
+
+  /// Contenu centré entre [trailing] et le logo (téléphone : joueur sélectionné).
+  final Widget? middle;
 
   @override
   Widget build(BuildContext context) {
@@ -92,8 +96,26 @@ class MatchHeader extends StatelessWidget {
           ),
         ),
         if (trailing != null) ...<Widget>[cSw(8), trailing!],
-        const Spacer(),
-        if (!(isPhoneLayout && trailing != null)) const WinaWordmark(size: 30),
+        // Le logo reste visible sur téléphone : il se réduit s'il manque de place.
+        if (middle != null) ...<Widget>[
+          cSw(8),
+          Expanded(
+            child: Center(
+              child: FittedBox(fit: BoxFit.scaleDown, child: middle),
+            ),
+          ),
+          cSw(8),
+          WinaWordmark(size: isPhoneLayout ? 24 : 30),
+        ] else
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: WinaWordmark(size: isPhoneLayout ? 24 : 30),
+              ),
+            ),
+          ),
       ],
     );
   }

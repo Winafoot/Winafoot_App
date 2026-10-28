@@ -59,12 +59,16 @@ class _GererEquipePlacementScreenState
     );
     final Formation? formation = draft.formation;
 
+    // Un joueur sans numéro ne joue pas ce match (titulaires et remplaçants ont tous un numéro) : il
+    // n'est pas proposé. Sans aucun numéro attribué (composition reprise sans numéros), on ne filtre pas.
+    final bool hasNumbers = draft.numbers.isNotEmpty;
     final List<Player> players =
         (ref.watch(playersStreamProvider).valueOrNull ?? const <Player>[])
             .where(
               (Player p) =>
                   p.id != null &&
-                  (allowedPlayerIds == null || allowedPlayerIds.contains(p.id)),
+                  (allowedPlayerIds == null || allowedPlayerIds.contains(p.id)) &&
+                  (!hasNumbers || draft.numbers.containsKey(p.id)),
             )
             .toList(growable: false);
     final Map<String, Player> byId = <String, Player>{
