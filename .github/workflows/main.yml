@@ -1,7 +1,8 @@
-   name: mac-test
-   on: workflow_dispatch
-   jobs:
-     t:
-       runs-on: macos-13
-       steps:
-         - run: echo ok
+name: mac-test
+on: workflow_dispatch
+
+jobs:
+  t:
+    runs-on: macos-latest
+    steps:
+      - run: echo ok
