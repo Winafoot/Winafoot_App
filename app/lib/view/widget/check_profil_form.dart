@@ -104,6 +104,15 @@ class WinaWordmark extends ConsumerWidget {
   }
 }
 
+/// Hauteur du clavier à l'écran, lue sur la vue elle-même.
+///
+/// Un `Scaffold` qui se redimensionne pour le clavier retire cette hauteur du `MediaQuery` de son corps :
+/// `MediaQuery.viewInsetsOf` y vaut alors 0 et ne permet pas de retrouver la hauteur d'écran complète.
+double keyboardInset(BuildContext context) {
+  final view = View.of(context);
+  return view.viewInsets.bottom / view.devicePixelRatio;
+}
+
 /// Ossature des écrans « Finalisez votre profil » : logo en haut, carte blanche
 /// centrée (bouton retour + titre), contenu défilable.
 class CheckProfilScaffold extends StatelessWidget {
@@ -154,9 +163,10 @@ class CheckProfilScaffold extends StatelessWidget {
                   // le clavier ouvert fait défiler au lieu de la réduire encore.
                   child: LayoutBuilder(
                     builder: (BuildContext context, BoxConstraints cons) {
+                      // Hauteur SANS le clavier : la carte garde sa taille, c'est le défilement qui laisse
+                      // la place au clavier (sinon elle rétrécirait à chaque ouverture).
                       final double fullHeight =
-                          cons.maxHeight +
-                          MediaQuery.viewInsetsOf(context).bottom;
+                          cons.maxHeight + keyboardInset(context);
                       final double gutter = narrow ? cW(16) : 0;
                       return SingleChildScrollView(
                         child: SizedBox(

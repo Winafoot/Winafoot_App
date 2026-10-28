@@ -207,6 +207,8 @@ class LiveMatch {
     List<MatchEvent>? events,
     String? selectedPlayerId,
     List<String>? halfTimeStatKeys,
+    // Efface l'instantané de la mi-temps (annulation de la mi-temps) : `null` ne suffit pas, il garde l'ancienne valeur.
+    bool clearHalfTimeStatKeys = false,
     bool? swapSides,
   }) {
     return LiveMatch(
@@ -224,7 +226,10 @@ class LiveMatch {
       status: status ?? this.status,
       events: events ?? this.events,
       selectedPlayerId: selectedPlayerId ?? this.selectedPlayerId,
-      halfTimeStatKeys: halfTimeStatKeys ?? this.halfTimeStatKeys,
+      halfTimeStatKeys:
+          clearHalfTimeStatKeys
+              ? null
+              : (halfTimeStatKeys ?? this.halfTimeStatKeys),
       swapSides: swapSides ?? this.swapSides,
     );
   }

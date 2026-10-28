@@ -155,6 +155,28 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
     );
   }
 
+  /// « Mi-temps » : confirmation avant d'ouvrir la coupure, pour qu'un appui par
+  /// erreur ne mette pas le match en pause.
+  void _confirmHalfTime() {
+    showDialog<void>(
+      context: context,
+      barrierColor: AppColor.scrim,
+      builder:
+          (BuildContext ctx) => AppConfirmDialog(
+            title: 'app.match-live.titre-mi-temps'.tr(),
+            message: 'app.match-live.message-mi-temps'.tr(),
+            primaryLabel: 'app.match-live.rester-1re-mi-temps'.tr(),
+            onPrimary: () => Navigator.of(ctx).pop(),
+            secondaryLabel: 'app.match-live.confirmer-mi-temps'.tr(),
+            onSecondary: () {
+              Navigator.of(ctx).pop();
+              _openBreak(isHalfTime: true);
+            },
+            secondaryAccent: AppColor.primaryColor,
+          ),
+    );
+  }
+
   /// Met le match en pause et ouvre l'écran de coupure (« Pause » / « Mi-temps »).
   void _openBreak({required bool isHalfTime}) {
     final LiveMatch? live = ref.read(liveMatchProvider);
@@ -342,20 +364,11 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                         scoreThem: live.scoreThem,
                         onBack: widget.assistant ? null : _confirmQuit,
                         clockFontSize: 26,
-                        // Historique : bouton « burger » en bout d entête.
+                        // Historique : bouton encadré, comme « Remplacer ».
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: <Widget>[
-                            IconButton(
-                              onPressed: _openHistory,
-                              tooltip: 'app.match-live.historique'.tr(),
-                              visualDensity: VisualDensity.compact,
-                              icon: const Icon(
-                                Icons.menu,
-                                size: 30,
-                                color: AppColor.primaryLabels,
-                              ),
-                            ),
+                            _HistoryButton(onTap: _openHistory),
                             // L'adjoint n'a pas d'autre écran où se déconnecter.
                             if (widget.assistant)
                               IconButton(
@@ -414,7 +427,7 @@ class _MatchLiveScreenState extends ConsumerState<MatchLiveScreen> {
                                                 .tr(),
                                     onTap:
                                         live.half == 1
-                                            ? () => _openBreak(isHalfTime: true)
+                                            ? _confirmHalfTime
                                             : _confirmEndMatch,
                                   ),
                                 ],
@@ -910,14 +923,19 @@ class _CenterStats extends StatelessWidget {
           )
         else
           Expanded(
-            child: SingleChildScrollView(
-              child: _StatGrid(
-                stats: stats,
-                live: live,
-                pid: pid!,
-                player: player,
-                notifier: notifier,
-              ),
+            child: LayoutBuilder(
+              builder:
+                  (BuildContext context, BoxConstraints box) =>
+                      SingleChildScrollView(
+                        child: TabletStatGrid(
+                          stats: stats,
+                          live: live,
+                          pid: pid!,
+                          player: player,
+                          notifier: notifier,
+                          viewportHeight: box.maxHeight,
+                        ),
+                      ),
             ),
           ),
       ],
@@ -1081,6 +1099,171 @@ class _PhoneStatsPanelState extends State<_PhoneStatsPanel> {
 
 }
 
+/// Nombre maximal de gros boutons sur le premier écran de saisie (tablette).
+const int kFirstScreenStats = 7;
+
+/// Lignes de gros boutons qui remplissent exactement le premier écran.
+const int _kFirstScreenRows = 4;
+
+/// Saisie des statistiques sur tablette : au plus [kFirstScreenStats] gros boutons sur le premier
+/// écran, pris en alternance gagné / perdu dans l'ordre de priorité de chaque colonne (perdus à gauche,
+/// gagnés à droite). Si le coach en a choisi 7 ou moins, elles y sont toutes, sans défilement ; au-delà,
+/// les autres suivent plus bas, en cartes (défilement vers le bas).
+@visibleForTesting
+class TabletStatGrid extends StatelessWidget {
+  const TabletStatGrid({
+    required this.stats,
+    required this.live,
+    required this.pid,
+    required this.player,
+    required this.notifier,
+    required this.viewportHeight,
+  });
+
+  final List<StatDef> stats;
+  final LiveMatch live;
+  final String pid;
+  final Player player;
+  final LiveMatchNotifier notifier;
+
+  /// Hauteur visible du panneau : les gros boutons la remplissent sur 4 lignes.
+  final double viewportHeight;
+
+  static const double _gap = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<StatDef> good = statsOfSide(stats, StatSide.good);
+    final List<StatDef> bad = statsOfSide(stats, StatSide.bad);
+    final List<StatDef> topGood = <StatDef>[];
+    final List<StatDef> topBad = <StatDef>[];
+    for (
+      int i = 0;
+      topGood.length + topBad.length < kFirstScreenStats &&
+          (i < good.length || i < bad.length);
+      i++
+    ) {
+      if (i < good.length) topGood.add(good[i]);
+      if (topGood.length + topBad.length < kFirstScreenStats &&
+          i < bad.length) {
+        topBad.add(bad[i]);
+      }
+    }
+    final Set<String> shown = <String>{
+      for (final StatDef s in topGood) s.key,
+      for (final StatDef s in topBad) s.key,
+    };
+    final List<StatDef> rest = <StatDef>[
+      for (final StatDef s in stats)
+        if (!shown.contains(s.key)) s,
+    ];
+
+    final double rowHeight = math.max(
+      64,
+      (viewportHeight - _gap * (_kFirstScreenRows - 1)) / _kFirstScreenRows,
+    );
+
+    Widget column(List<StatDef> list) => Column(
+      children: <Widget>[
+        for (final StatDef s in list)
+          Padding(
+            padding: const EdgeInsets.only(bottom: _gap),
+            child: SizedBox(
+              height: rowHeight,
+              child: BigStatTile(
+                label: s.label,
+                value: live.statValue(pid, s.key),
+                tint: statTint(s.key),
+                onTap:
+                    live.statValue(pid, s.key) >= maxStatValue(s.key)
+                        ? null
+                        : () => notifier.bump(
+                          statKey: s.key,
+                          statLabel: s.label,
+                          playerName: player.fullName,
+                          delta: 1,
+                        ),
+              ),
+            ),
+          ),
+      ],
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            if (topBad.isNotEmpty) Expanded(child: column(topBad)),
+            if (topBad.isNotEmpty && topGood.isNotEmpty) cSw(12),
+            if (topGood.isNotEmpty) Expanded(child: column(topGood)),
+          ],
+        ),
+        if (rest.isNotEmpty)
+          _StatGrid(
+            stats: rest,
+            live: live,
+            pid: pid,
+            player: player,
+            notifier: notifier,
+          ),
+      ],
+    );
+  }
+}
+
+/// Gros bouton de statistique (tablette) : libellé et valeur en grand, toute la tuile ajoute 1.
+@visibleForTesting
+class BigStatTile extends StatelessWidget {
+  const BigStatTile({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.tint,
+  });
+
+  final String label;
+  final int value;
+  final VoidCallback? onTap;
+  final Color? tint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Color.alphaBlend(tint ?? Colors.transparent, AppColor.surface),
+      borderRadius: BorderRadius.circular(cR(14)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: cW(16)),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(18),
+                    AppColor.primaryLabels,
+                  ),
+                ),
+              ),
+              cSw(8),
+              Text(
+                '$value',
+                style: AppThemeStyle.boldStyle(cFs(36), AppColor.primaryColor),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Grille des statistiques du joueur : cartes regroupées par catégorie
 /// (maquette « Match en cours »), réparties sur deux colonnes équilibrées.
 class _StatGrid extends StatelessWidget {
@@ -1236,6 +1419,39 @@ class _StatRow extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bouton « Historique » de l'entête, même style que « Remplacer » et « Modifier composition ».
+class _HistoryButton extends StatelessWidget {
+  const _HistoryButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColor.surface,
+      borderRadius: BorderRadius.circular(cR(999)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(cR(999)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(cR(999)),
+            border: Border.all(color: AppColor.divider),
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: isPhoneLayout ? 12 : 16,
+            vertical: isPhoneLayout ? 8 : 12,
+          ),
+          child: Text(
+            'app.match-live.historique'.tr(),
+            style: AppThemeStyle.mediumStyle(cFs(17), AppColor.primaryLabels),
           ),
         ),
       ),

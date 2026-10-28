@@ -264,6 +264,18 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
     );
   }
 
+  /// Annule la mi-temps (retour arrière sur l'écran de coupure) : le match reste
+  /// en 1re mi-temps et reprend, l'instantané des stats suivies est effacé (une
+  /// prochaine mi-temps en prendra un neuf). Ne touche ni au score ni aux stats.
+  void cancelHalfTime() {
+    final LiveMatch? s = state;
+    if (s == null || s.half != 1) return;
+    state = s.copyWith(
+      status: MatchStatus.live,
+      clearHalfTimeStatKeys: true,
+    );
+  }
+
   void startSecondHalf() {
     final LiveMatch? s = state;
     if (s == null) return;

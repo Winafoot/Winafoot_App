@@ -61,6 +61,20 @@ SkeletonAppConfig initSkeletonAppConfig() {
               width: sp(88),
             ),
           ),
+      // Téléphone (portrait) : même wordmark que l'inscription, au-dessus du titre.
+      // (Tablette : voir `webLoginPageTitleBuilder` ci-dessus.)
+      loginPageTitleBuilder:
+          (BuildContext context, WidgetRef ref) => Column(
+            children: <Widget>[
+              SvgPicture.asset("assets/svg/logo_inline.svg", width: sp(125)),
+              sh(24),
+              Text(
+                "package.skeleton.auth.login-title".tr(),
+                textAlign: TextAlign.center,
+                style: AppThemeStyle.semiBStyle(sp(23), AppColor.primaryLabels),
+              ),
+            ],
+          ),
       // Contenu du CTA « Connexion » : le `Button` Kosmos n'a pas d'emplacement
       // d'icône, seul ce crochet permet d'y poser la pastille fléchée de la
       // maquette. Le bouton garde sa pilule verte, son loader et son mutex.
