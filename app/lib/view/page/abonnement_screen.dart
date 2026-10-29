@@ -1041,52 +1041,16 @@ class _MonthlyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final PlanOffer monthly = offer.monthly!;
     return _PlanCard(
+      badge: _Pill(label: 'app.subscription.no-commitment'.tr().toUpperCase()),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           sh(8),
-          // « Sans engagement » sur le côté du titre : l'en-tête garde la hauteur de la carte annuelle,
-          // les deux prix sont donc sur la même ligne.
-          Row(
-            children: <Widget>[
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'app.subscription.monthly-title'.tr(),
-                    style: AppThemeStyle.semiBStyle(
-                      _t(24),
-                      AppColor.primaryLabels,
-                    ),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              // Mention lisible (17 au lieu de 13) ; elle rétrécit plutôt que de déborder sur une carte étroite.
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: formatWidth(16),
-                      vertical: formatHeight(8),
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColor.background,
-                      borderRadius: BorderRadius.circular(r(16)),
-                    ),
-                    child: Text(
-                      'app.subscription.no-commitment'.tr(),
-                      style: AppThemeStyle.semiBStyle(
-                        _t(17),
-                        AppColor.primaryLabels,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          // Même titre (24) et même pastille que la formule annuelle : « Sans engagement » en haut à gauche de
+          // la carte, comme « Économisez 15 % », au lieu d'être serré à côté du titre et rétréci.
+          Text(
+            'app.subscription.monthly-title'.tr(),
+            style: AppThemeStyle.semiBStyle(_t(24), AppColor.primaryLabels),
           ),
           sh(18),
           _PriceRow(

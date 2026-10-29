@@ -66,10 +66,14 @@ class LiveMatch {
     this.selectedPlayerId,
     this.halfTimeStatKeys,
     this.swapSides = false,
+    this.captainId,
   });
 
   final String formationLabel;
   final List<FormationSlot> slots;
+
+  /// Capitaine de la composition (brassard affiché sur son maillot pendant le match), `null` si aucun.
+  final String? captainId;
 
   /// playerId par emplacement (titulaires).
   final List<String?> assignments;
@@ -210,9 +214,12 @@ class LiveMatch {
     // Efface l'instantané de la mi-temps (annulation de la mi-temps) : `null` ne suffit pas, il garde l'ancienne valeur.
     bool clearHalfTimeStatKeys = false,
     bool? swapSides,
+    String? captainId,
+    bool clearCaptain = false,
   }) {
     return LiveMatch(
       formationLabel: formationLabel ?? this.formationLabel,
+      captainId: clearCaptain ? null : (captainId ?? this.captainId),
       slots: slots ?? this.slots,
       assignments: assignments ?? this.assignments,
       enabledStatKeys: enabledStatKeys ?? this.enabledStatKeys,
@@ -244,6 +251,7 @@ class LiveMatch {
       enabledStatKeys: match.enabledStatKeys,
       numbers: composition?.numbers ?? const <String, int>{},
       substituteIds: composition?.substituteIds ?? const <String>[],
+      captainId: composition?.captainId,
     );
   }
 
@@ -267,6 +275,7 @@ class LiveMatch {
               : stats.statKeys,
       numbers: composition?.numbers ?? const <String, int>{},
       substituteIds: composition?.substituteIds ?? const <String>[],
+      captainId: composition?.captainId,
       playerStats: stats.playerStats,
       scoreUs: match.scoreUs,
       scoreThem: match.scoreThem,

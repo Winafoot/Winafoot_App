@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/coach_profile.dart';
@@ -9,6 +10,7 @@ import 'package:wina/models/game_match.dart';
 import 'package:wina/providers/coach_providers.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/coup_denvoi_step3_screen.dart';
+import 'package:wina/view/page/gerer_maillots_screen.dart';
 import 'package:wina/view/widget/jersey_form.dart';
 import 'package:wina/view/widget/match_wizard.dart';
 
@@ -50,7 +52,7 @@ class CoupDEnvoiStep2Screen extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Expanded(child: _ownColumn(draft, notifier, jerseys)),
+              Expanded(child: _ownColumn(context, draft, notifier, jerseys)),
               Padding(
                 padding: EdgeInsets.only(
                   top: isPhoneLayout ? 80 : cH(200),
@@ -68,6 +70,7 @@ class CoupDEnvoiStep2Screen extends ConsumerWidget {
   }
 
   Widget _ownColumn(
+    BuildContext context,
     GameMatch draft,
     MatchDraftNotifier notifier,
     List<Jersey> jerseys,
@@ -77,15 +80,58 @@ class CoupDEnvoiStep2Screen extends ConsumerWidget {
         TeamLabelBadge('app.coup-denvoi-step2.mon-equipe'.tr()),
         cSh(20),
         if (jerseys.isEmpty)
+          // Aucun maillot (ignoré à l'inscription) : sans lui impossible de continuer, on propose de l'ajouter ici.
           Padding(
-            padding: EdgeInsets.symmetric(vertical: cH(30)),
-            child: Text(
-              'app.coup-denvoi-step2.aucun-maillot'.tr(),
-              textAlign: TextAlign.center,
-              style: AppThemeStyle.regularStyle(
-                cFs(13),
-                AppColor.secondaryLabels,
-              ),
+            padding: EdgeInsets.symmetric(vertical: isPhoneLayout ? 8 : cH(30)),
+            child: Column(
+              children: <Widget>[
+                Text(
+                  'app.coup-denvoi-step2.aucun-maillot'.tr(),
+                  textAlign: TextAlign.center,
+                  style: AppThemeStyle.regularStyle(
+                    cFs(13),
+                    AppColor.secondaryLabels,
+                  ),
+                ),
+                cSh(14),
+                Material(
+                  color: AppColor.primaryColor,
+                  borderRadius: BorderRadius.circular(cR(999)),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(cR(999)),
+                    onTap:
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const GererMaillotsScreen(),
+                          ),
+                        ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isPhoneLayout ? 16 : cW(24),
+                        vertical: isPhoneLayout ? 9 : cH(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(
+                            Iconsax.add_circle,
+                            size: cIc(20),
+                            color: Colors.white,
+                          ),
+                          cSw(8),
+                          Text(
+                            'app.coup-denvoi-step2.ajouter-maillot'.tr(),
+                            style: AppThemeStyle.semiBStyle(
+                              cFs(16),
+                              Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           )
         else

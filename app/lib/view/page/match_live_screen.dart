@@ -658,6 +658,7 @@ class _LivePitch extends StatelessWidget {
                             name: _short(byId[pid]),
                             size: m,
                             selected: live.selectedPlayerId == pid,
+                            isCaptain: live.captainId == pid,
                             jersey:
                                 live.selectedPlayerId == pid
                                     ? selectedJerseyAsset
@@ -813,12 +814,16 @@ class _PlayerMarker extends StatelessWidget {
     required this.selected,
     required this.jersey,
     required this.onTap,
+    this.isCaptain = false,
   });
 
   final int number;
   final String name;
   final double size;
   final bool selected;
+
+  /// Capitaine : le brassard (« Cap. ») s'affiche sur son maillot pendant tout le match.
+  final bool isCaptain;
   final String jersey;
   final VoidCallback onTap;
 
@@ -854,6 +859,14 @@ class _PlayerMarker extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (isCaptain)
+                  Positioned(
+                    bottom: size * 0.02,
+                    child: Image.asset(
+                      'assets/images/captain.png',
+                      width: size * 0.46,
+                    ),
+                  ),
               ],
             ),
           ),

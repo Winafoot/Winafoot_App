@@ -314,6 +314,9 @@ class LiveMatchNotifier extends StateNotifier<LiveMatch?> {
       assignments: comp.assignments,
       numbers: comp.numbers,
       substituteIds: comp.substituteIds,
+      // Le brassard suit la composition modifiée ; sans capitaine dans la nouvelle, on le retire.
+      captainId: comp.captainId,
+      clearCaptain: comp.captainId == null,
     );
   }
 

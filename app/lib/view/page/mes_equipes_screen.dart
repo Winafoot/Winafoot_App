@@ -1,5 +1,6 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
 import 'package:wina/billing/access_info.dart';
 import 'package:wina/config/theme.dart';
@@ -427,48 +428,72 @@ class _ResetPasswordDialogState extends State<_ResetPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColor.surface,
-      title: Text(
-        'app.teams.reset-title'.tr(args: <String>[widget.team.teamName]),
-        style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
-      ),
-      content: SizedBox(
-        width: formatWidth(400),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            KeyedSubtree(
-              key: const Key('reset-password-field'),
-              child: CpTextField(
-                controller: _password,
-                hint: 'app.teams.password'.tr(),
-                obscure: true,
-                error: _error != null,
+    // Fenêtre FIXE, collée en haut : le clavier ne la déplace pas, ne la réduit pas et ne la fait pas
+    // dézoomer, le champ reste visible pendant la saisie (les insets du clavier sont retirés pour le Dialog).
+    return MediaQuery.removeViewInsets(
+      context: context,
+      removeBottom: true,
+      child: Dialog(
+        backgroundColor: AppColor.surface,
+        alignment: Alignment.topCenter,
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: isPhoneLayout ? 72 : cW(300),
+          vertical: isPhoneLayout ? 8 : cH(40),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(cR(20))),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            isPhoneLayout ? 20 : cW(24),
+            isPhoneLayout ? 12 : cH(20),
+            isPhoneLayout ? 20 : cW(24),
+            isPhoneLayout ? 10 : cH(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                'app.teams.reset-title'.tr(args: <String>[widget.team.teamName]),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppThemeStyle.semiBStyle(cFs(18), AppColor.primaryLabels),
               ),
-            ),
-            if (_error != null)
-              Padding(
-                padding: EdgeInsets.only(top: formatHeight(6)),
-                child: Text(
-                  _error!,
-                  style: AppThemeStyle.regularStyle(12, DefaultColor.error),
+              SizedBox(height: isPhoneLayout ? 8 : cH(14)),
+              KeyedSubtree(
+                key: const Key('reset-password-field'),
+                child: CpTextField(
+                  controller: _password,
+                  hint: 'app.teams.password'.tr(),
+                  obscure: true,
+                  error: _error != null,
                 ),
               ),
-          ],
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _error!,
+                    style: AppThemeStyle.regularStyle(cFs(12), DefaultColor.error),
+                  ),
+                ),
+              SizedBox(height: isPhoneLayout ? 6 : cH(12)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  TextButton(
+                    onPressed: _busy ? null : () => Navigator.of(context).pop(false),
+                    child: Text('app.teams.cancel'.tr()),
+                  ),
+                  TextButton(
+                    onPressed: _busy ? null : _save,
+                    child: Text('app.teams.save'.tr()),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: _busy ? null : () => Navigator.of(context).pop(false),
-          child: Text('app.teams.cancel'.tr()),
-        ),
-        TextButton(
-          onPressed: _busy ? null : _save,
-          child: Text('app.teams.save'.tr()),
-        ),
-      ],
     );
   }
 }
