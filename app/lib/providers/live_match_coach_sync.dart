@@ -72,6 +72,7 @@ class LiveMatchCoachSync {
       identical(a.assignments, b.assignments) &&
       identical(a.substituteIds, b.substituteIds) &&
       identical(a.numbers, b.numbers) &&
+      a.captainId == b.captainId &&
       identical(a.enabledStatKeys, b.enabledStatKeys) &&
       identical(a.slots, b.slots) &&
       identical(a.halfTimeStatKeys, b.halfTimeStatKeys) &&

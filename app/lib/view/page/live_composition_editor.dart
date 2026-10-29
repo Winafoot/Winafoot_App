@@ -38,6 +38,8 @@ void openLiveCompositionEditor(BuildContext context, WidgetRef ref) {
           assignments: live.assignments,
           numbers: live.numbers,
           substituteIds: live.substituteIds,
+          // Sans lui, rouvrir « Modifier composition » puis valider retirerait le brassard du capitaine.
+          captainId: live.captainId,
         ),
         maxSquad: ref.read(maxSquadSizeProvider).valueOrNull,
       );

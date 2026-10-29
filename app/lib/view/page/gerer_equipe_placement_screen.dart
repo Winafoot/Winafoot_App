@@ -62,15 +62,17 @@ class _GererEquipePlacementScreenState
     // Un joueur sans numéro ne joue pas ce match (titulaires et remplaçants ont tous un numéro) : il
     // n'est pas proposé. Sans aucun numéro attribué (composition reprise sans numéros), on ne filtre pas.
     final bool hasNumbers = draft.numbers.isNotEmpty;
-    final List<Player> players =
-        (ref.watch(playersStreamProvider).valueOrNull ?? const <Player>[])
-            .where(
-              (Player p) =>
-                  p.id != null &&
-                  (allowedPlayerIds == null || allowedPlayerIds.contains(p.id)) &&
-                  (!hasNumbers || draft.numbers.containsKey(p.id)),
-            )
-            .toList(growable: false);
+    final List<Player> players = (ref
+                .watch(playersStreamProvider)
+                .valueOrNull ??
+            const <Player>[])
+        .where(
+          (Player p) =>
+              p.id != null &&
+              (allowedPlayerIds == null || allowedPlayerIds.contains(p.id)) &&
+              (!hasNumbers || draft.numbers.containsKey(p.id)),
+        )
+        .toList(growable: false);
     final Map<String, Player> byId = <String, Player>{
       for (final Player p in players) p.id!: p,
     };
@@ -148,28 +150,6 @@ class _GererEquipePlacementScreenState
         unplaced.where((Player p) => p.position == pos && !isSub(p)).toList();
     final List<Player> subs = unplaced.where(isSub).toList();
 
-    final List<_Section> leftSections = <_Section>[
-      _Section(
-        'app.gerer-equipe-placement.gardiens'.tr(),
-        atPos(PlayerPosition.gardien),
-      ),
-      _Section(
-        'app.gerer-equipe-placement.defenseurs'.tr(),
-        atPos(PlayerPosition.defenseur),
-      ),
-      _Section('app.gerer-equipe-placement.remplacants'.tr(), subs),
-    ];
-    final List<_Section> rightSections = <_Section>[
-      _Section(
-        'app.gerer-equipe-placement.milieux'.tr(),
-        atPos(PlayerPosition.milieu),
-      ),
-      _Section(
-        'app.gerer-equipe-placement.attaquants'.tr(),
-        atPos(PlayerPosition.attaquant),
-      ),
-    ];
-
     // Téléphone : terrain à gauche ; à droite, les catégories en une ligne de
     // pastilles et les joueurs de la catégorie choisie en dessous.
     final List<_Section> phoneSections = <_Section>[
@@ -227,113 +207,49 @@ class _GererEquipePlacementScreenState
         enabled: draft.allPlaced,
         onTap: validate,
       ),
-      child:
-          isPhoneLayout
-              ? Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _pitchCol(
-                      child: _CompositionCard(
-                        formationLabel: formation.label,
-                        child: _PlacementPitch(
-                          formation: formation,
-                          assignments: draft.assignments,
-                          numbers: draft.numbers,
-                          byId: byId,
-                          onAssign: notifier.assign,
-                          onRemove: notifier.unassign,
-                          onTapEmpty: tapEmpty,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _PhoneRoster(
-                        sections: phoneSections,
-                        category: _category,
-                        selectedId: selectedId,
-                        numbers: draft.numbers,
-                        captainId: draft.captainId,
-                        substituteIds: draft.substituteIds,
-                        onCategory: (int i) => setState(() => _category = i),
-                        onSelect:
-                            (Player p) => setState(
-                              () =>
-                                  _selectedId =
-                                      selectedId == p.id ? null : p.id,
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
-              )
-              : Padding(
-                padding: EdgeInsets.fromLTRB(
-                  isPhoneLayout ? 16 : cW(40),
-                  cH(8),
-                  isPhoneLayout ? 16 : cW(40),
-                  isPhoneLayout ? 8 : cH(12),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    _col(
-                      flex: 1,
-                      width: 305,
-                      child: _RosterColumn(
-                        header: _LeftRosterHeader(),
-                        sections: leftSections,
-                        numbers: draft.numbers,
-                        captainId: draft.captainId,
-                        substituteIds: draft.substituteIds,
-                      ),
-                    ),
-                    _gap(),
-                    _pitchCol(
-                      child: _CompositionCard(
-                        formationLabel: formation.label,
-                        child: _PlacementPitch(
-                          formation: formation,
-                          assignments: draft.assignments,
-                          numbers: draft.numbers,
-                          byId: byId,
-                          onAssign: notifier.assign,
-                          onRemove: notifier.unassign,
-                          onTapEmpty: tapEmpty,
-                        ),
-                      ),
-                    ),
-                    _gap(),
-                    _col(
-                      flex: 1,
-                      width: 317,
-                      child: _RosterColumn(
-                        header: SizedBox(height: _rosterHeaderHeight),
-                        sections: rightSections,
-                        numbers: draft.numbers,
-                        captainId: draft.captainId,
-                        substituteIds: draft.substituteIds,
-                      ),
-                    ),
-                  ],
+      // Même design sur tablette et téléphone : terrain à gauche, catégories et joueurs à droite.
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            _pitchCol(
+              child: _CompositionCard(
+                formationLabel: formation.label,
+                child: _PlacementPitch(
+                  formation: formation,
+                  assignments: draft.assignments,
+                  numbers: draft.numbers,
+                  byId: byId,
+                  onAssign: notifier.assign,
+                  onRemove: notifier.unassign,
+                  onTapEmpty: tapEmpty,
                 ),
               ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _PhoneRoster(
+                sections: phoneSections,
+                category: _category,
+                selectedId: selectedId,
+                numbers: draft.numbers,
+                captainId: draft.captainId,
+                substituteIds: draft.substituteIds,
+                onCategory: (int i) => setState(() => _category = i),
+                onSelect:
+                    (Player p) => setState(
+                      () => _selectedId = selectedId == p.id ? null : p.id,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
-/// Colonne à largeur fixe sur tablette, proportionnelle sur téléphone.
-Widget _col({required int flex, required double width, required Widget child}) {
-  return isPhoneLayout
-      ? Expanded(flex: flex, child: child)
-      : SizedBox(width: cW(width), child: child);
-}
-
-/// Colonne du terrain : largeur fixe sur tablette ; sur téléphone, largeur
-/// déduite de la hauteur disponible (ratio du terrain) pour que le terrain
-/// soit le plus grand possible et que les listes gardent le reste.
 Widget _pitchCol({required Widget child}) {
   if (!isPhoneLayout) return SizedBox(width: cW(360), child: child);
   return LayoutBuilder(
@@ -346,16 +262,6 @@ Widget _pitchCol({required Widget child}) {
     },
   );
 }
-
-/// Cellule « nom » d'une ligne de roster : largeur fixe sur tablette, souple
-/// sur téléphone (les colonnes de listes y sont plus larges que le contenu).
-Widget _nameCell({required Widget child}) =>
-    isPhoneLayout
-        ? Expanded(child: child)
-        : SizedBox(width: cW(135), child: child);
-
-/// Espace entre colonnes : extensible sur tablette, fixe sur téléphone.
-Widget _gap() => isPhoneLayout ? const SizedBox(width: 12) : const Spacer();
 
 /// Un groupe du roster : libellé de poste (ou « Remplaçants ») + joueurs.
 class _Section {
@@ -544,99 +450,6 @@ class _PhoneRosterRow extends ConsumerWidget {
   }
 }
 
-/// Colonne de roster : un en-tête libre puis les groupes non vides (barre
-/// blanche + lignes glissables). Partagée par les colonnes gauche et droite.
-class _RosterColumn extends StatelessWidget {
-  const _RosterColumn({
-    required this.header,
-    required this.sections,
-    required this.numbers,
-    required this.captainId,
-    required this.substituteIds,
-  });
-
-  final Widget header;
-  final List<_Section> sections;
-  final Map<String, int> numbers;
-  final String? captainId;
-
-  /// Joueurs remplaçants : rendus avec le maillot bleu (design « Placer 2 »).
-  final Set<String> substituteIds;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        header,
-        cSh(14),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                for (final _Section s in sections)
-                  if (s.players.isNotEmpty) ...<Widget>[
-                    _RosterBar(label: s.label),
-                    cSh(9),
-                    for (final Player p in s.players) ...<Widget>[
-                      _DraggableRosterRow(
-                        player: p,
-                        number: numbers[p.id],
-                        isCaptain: p.id != null && p.id == captainId,
-                        isSub: p.id != null && substituteIds.contains(p.id),
-                      ),
-                      cSh(5),
-                    ],
-                    cSh(15),
-                  ],
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Hauteur de l'en-tête des colonnes de joueurs : celle de la colonne gauche (titre + consigne en entier)
-/// et de l'espace équivalent à droite, pour que les deux listes restent alignées.
-double get _rosterHeaderHeight => isPhoneLayout ? 54 : cH(96);
-
-/// En-tête de la colonne gauche : titre « Joueurs à placer » + consigne.
-class _LeftRosterHeader extends StatelessWidget {
-  const _LeftRosterHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: _rosterHeaderHeight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            'app.gerer-equipe-placement.joueurs-a-placer'.tr(),
-            style: AppThemeStyle.semiBStyle(cFs(16), AppColor.primaryLabels),
-          ),
-          cSh(6),
-          Flexible(
-            child: Text(
-              'app.gerer-equipe-placement.consigne'.tr(),
-              // Tablette : la consigne s'affiche en entier (4 lignes au plus), sans « … ».
-              maxLines: isPhoneLayout ? 2 : 4,
-              overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.regularStyle(
-                cFs(12),
-                AppColor.secondaryLabels,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Bouton « Modifier numéros / composition » : pilule blanche, libellé sur
 /// deux lignes + pastille fléchée.
 class _ModifierButton extends StatelessWidget {
@@ -712,133 +525,6 @@ class _ModifierButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Barre d’en-tête d’un poste dans le roster : libellé + colonnes « Pied
-/// Fort » / « Numéro » (design « Placer 2 »).
-class _RosterBar extends StatelessWidget {
-  const _RosterBar({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: cH(35),
-      padding: EdgeInsets.symmetric(horizontal: cW(16)),
-      decoration: BoxDecoration(
-        color: AppColor.surface,
-        borderRadius: BorderRadius.circular(cR(12)),
-      ),
-      child: Row(
-        children: <Widget>[
-          _nameCell(
-            child: Text(
-              label,
-              style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
-            ),
-          ),
-          SizedBox(
-            width: isPhoneLayout ? 60 : cW(68),
-            child: Text(
-              'app.gerer-equipe-placement.pied-fort'.tr(),
-              style: AppThemeStyle.regularStyle(
-                cFs(13),
-                AppColor.primaryLabels,
-              ),
-            ),
-          ),
-          Text(
-            'app.gerer-equipe-placement.numero'.tr(),
-            style: AppThemeStyle.regularStyle(cFs(13), AppColor.primaryLabels),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Ligne joueur glissable : nom (vert) / pied fort / maillot numéroté. Se
-/// glisse sur un emplacement du terrain pour placer le joueur.
-class _DraggableRosterRow extends ConsumerWidget {
-  const _DraggableRosterRow({
-    required this.player,
-    required this.number,
-    this.isCaptain = false,
-    this.isSub = false,
-  });
-
-  final Player player;
-  final int? number;
-  final bool isCaptain;
-  final bool isSub;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final String jerseyAsset = jerseyAssetFor(
-      isSub: isSub,
-      own: ref.watch(matchDraftProvider).ownJersey?.color,
-    );
-
-    final Widget row = Padding(
-      padding: EdgeInsets.symmetric(horizontal: cW(16)),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: cW(6), vertical: cH(4)),
-        decoration: BoxDecoration(
-          color: AppColor.rosterRowSurface,
-          borderRadius: BorderRadius.circular(cR(10)),
-        ),
-        child: Row(
-          children: <Widget>[
-            _nameCell(
-              child: Text(
-                player.fullName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppThemeStyle.mediumStyle(cFs(15), AppColor.rosterName),
-              ),
-            ),
-            SizedBox(
-              width: isPhoneLayout ? 60 : cW(68),
-              child: Text(
-                player.strongFoot.label,
-                style: AppThemeStyle.mediumStyle(
-                  cFs(15),
-                  AppColor.primaryLabels,
-                ),
-              ),
-            ),
-            _NumberJersey(number: number, isCaptain: isCaptain, isSub: isSub),
-          ],
-        ),
-      ),
-    );
-    final Widget feedback = Image.asset(
-      jerseyAsset,
-      width: cIc(44),
-      height: cIc(44),
-    );
-    final Widget whenDragging = Opacity(opacity: 0.4, child: row);
-    // Téléphone : la liste défile ; un `Draggable` immédiat capterait le doigt
-    // et empêcherait de la faire défiler. Appui bref avant de glisser.
-    if (isPhoneLayout) {
-      return LongPressDraggable<Player>(
-        data: player,
-        delay: const Duration(milliseconds: 150),
-        dragAnchorStrategy: pointerDragAnchorStrategy,
-        feedback: feedback,
-        childWhenDragging: whenDragging,
-        child: row,
-      );
-    }
-    return Draggable<Player>(
-      data: player,
-      dragAnchorStrategy: pointerDragAnchorStrategy,
-      feedback: feedback,
-      childWhenDragging: whenDragging,
-      child: row,
     );
   }
 }

@@ -18,6 +18,7 @@ import 'package:wina/view/page/gerer_equipe_placement_screen.dart';
 import 'package:wina/view/page/match_live_screen.dart';
 import 'package:wina/view/page/parametrer_stats_screen.dart';
 import 'package:wina/view/widget/app_notif.dart';
+import 'package:wina/view/widget/adjoint_button.dart';
 import 'package:wina/view/widget/match_wizard.dart';
 import 'package:wina/view/widget/past_match_picker_sheet.dart';
 import 'package:wina/view/widget/team_crest.dart';
@@ -270,15 +271,18 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
   Widget _centerColumn(bool ready) {
     return Padding(
       padding: EdgeInsets.only(
-        top: isPhoneLayout ? 24 : cH(70),
+        top: isPhoneLayout ? 2 : cH(24),
         left: isPhoneLayout ? 12 : cW(24),
         right: isPhoneLayout ? 12 : cW(24),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          // « Mon adjoint » au milieu, entre les deux équipes, bien visible avant de lancer le match.
+          const AdjointButton(),
+          cSh(isPhoneLayout ? 8 : 18),
           const VsBadge(),
-          cSh(18),
+          cSh(isPhoneLayout ? 10 : 18),
           WizardCtaButton(
             label: 'app.coup-denvoi-step3.demarrer-match'.tr(),
             enabled: ready,
