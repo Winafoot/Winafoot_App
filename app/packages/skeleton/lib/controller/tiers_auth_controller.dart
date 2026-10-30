@@ -1,18 +1,17 @@
-// ignore_for_file: use_build_context_synchronously
+﻿// ignore_for_file: use_build_context_synchronously
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:kosmos_auth/controller/auth.dart';
 import 'package:skeleton/controller/user_controller.dart';
 import 'package:skeleton/skeleton.dart';
-import 'package:ui_kosmos_v4/checkbox/checkbox.dart';
 
 abstract class TiersAuthController {
   static Future<bool> signInWithTiers(
-      BuildContext context, WidgetRef ref, AuthTiers authTiers) async {
+      BuildContext context, WidgetRef ref, AuthTiers authTiers,
+      {bool cguAccepted = false}) async {
     try {
       SkeletonAppConfig? config = GetIt.instance<AppModel>()
           .getDependenciesFromName<SkeletonAppConfig>("skeleton_app_config");
@@ -79,7 +78,7 @@ abstract class TiersAuthController {
                   googleUser);
             });
           } else {
-            bool? accepted = await _showCguBottomSheet(context, ref);
+            bool? accepted = _checkCguAccepted(context, cguAccepted);
             if (accepted != true) {
               return false;
             }
@@ -159,7 +158,7 @@ abstract class TiersAuthController {
               );
               return false;
             }
-            bool? accepted = await _showCguBottomSheet(context, ref);
+            bool? accepted = _checkCguAccepted(context, cguAccepted);
             if (accepted != true) {
               return false;
             }
@@ -221,7 +220,7 @@ abstract class TiersAuthController {
                 appleUser, rawNonce);
           });
         }
-        bool? accepted = await _showCguBottomSheet(context, ref);
+        bool? accepted = _checkCguAccepted(context, cguAccepted);
         if (accepted != true) {
           return false;
         }
@@ -369,107 +368,14 @@ abstract class TiersAuthController {
     return null;
   }
 
-  static Future<bool?> _showCguBottomSheet(
-      BuildContext context, WidgetRef ref) async {
-    final ScrollController scrollController = ScrollController();
-    final future = AppMetadataController.getMetadataConfig();
-    bool cgvuAccepted = false;
-
-    final themeData = loadThemeData<AuthTemplateThemeData>(
-      null,
-      "authentication_theme",
-      () => const AuthTemplateThemeData(),
-      isDark: ref.read(isDarkModeProvider).isDarkMode,
-    );
-    return await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: themeData.popupBackgroundColor ??
-          Theme.of(context).scaffoldBackgroundColor,
-      shape: themeData.modalBottomSheetShapeBorder ??
-          RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(r(55)))),
-      builder: (ctx) {
-        return StatefulBuilder(builder: (_, newState) {
-          return Padding(
-            padding: themeData.formPadding ??
-                EdgeInsets.symmetric(horizontal: formatWidth(29)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                sh(16),
-                Center(
-                  child: Container(
-                    width: formatWidth(43),
-                    height: 4,
-                    decoration: BoxDecoration(
-                        color: themeData.dividerColor ?? DefaultColor.lightGrey,
-                        borderRadius: BorderRadius.circular(2)),
-                  ),
-                ),
-                sh(19.5),
-                Center(
-                  child: Text(
-                    "utils.cgvu-and-confidentiality".tr(),
-                    style: themeData.popupTitleStyle ??
-                        DefaultAppStyle.darkBlue(17),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                sh(19),
-                SizedBox(
-                  height: formatHeight(430),
-                  child: FutureBuilder<AppMetadataConfig?>(
-                    future: future,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState != ConnectionState.done) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final cgvu = snapshot.data?.cgvu;
-                      return Scrollbar(
-                        controller: scrollController,
-                        child: SingleChildScrollView(
-                          controller: scrollController,
-                          physics: const ClampingScrollPhysics(),
-                          child: HtmlWidget(
-                            cgvu ?? "",
-                            textStyle: themeData.htmlTextStyle,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                sh(16),
-                Selector(
-                  type: CheckboxType.square,
-                  sideText: "utils.accept-cgvu-and-confidentiality".tr(),
-                  onChanged: (val) {
-                    newState(() => cgvuAccepted = !cgvuAccepted);
-                  },
-                  isChecked: cgvuAccepted,
-                ),
-                sh(33),
-                Center(
-                  child: Button(
-                    text: "utils.continue".tr(),
-                    height: formatHeight(54),
-                    width: formatWidth(170),
-                    enabled: cgvuAccepted,
-                    onTap: () {
-                      Navigator.pop(context, true);
-                    },
-                  ),
-                ),
-                SizedBox(
-                    height: MediaQuery.of(context).padding.bottom +
-                        formatHeight(12)),
-              ],
-            ),
-          );
-        });
-      },
-    );
+  /// La case CGU de l'écran de connexion tient lieu d'acceptation : sans elle,
+  /// aucun compte n'est créé via un tiers.
+  static bool _checkCguAccepted(BuildContext context, bool cguAccepted) {
+    if (!cguAccepted) {
+      PopupAlert.toast(context, FToast().init(context),
+          title: "utils.error".tr(),
+          subtitle: "package.kosmos-auth.must-accept-cgu".tr());
+    }
+    return cguAccepted;
   }
 }
