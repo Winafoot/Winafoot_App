@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -39,17 +40,29 @@ abstract class CoachRegistration {
   }) async {
     final String address = email.trim().toLowerCase();
     try {
-      await FirebaseFunctions.instanceFor(region: kCloudRegion)
-          .httpsCallable('registerCoach')
-          .call(<String, dynamic>{
-            'email': address,
-            'password': password,
-            'firstname': firstname.trim(),
-            'acceptedCgu': acceptedCgu,
-          });
-    } on FirebaseFunctionsException catch (e) {
+      await FirebaseFunctions.instanceFor(
+        region: kCloudRegion,
+      ).httpsCallable('registerCoach').call(<String, dynamic>{
+        'email': address,
+        'password': password,
+        'firstname': firstname.trim(),
+        'acceptedCgu': acceptedCgu,
+      });
+    } on FirebaseFunctionsException catch (e, st) {
+      developer.log(
+        'registerCoach refusé : ${e.code} / ${e.message}',
+        name: 'Registration',
+        error: e,
+        stackTrace: st,
+      );
       throw RegistrationException(errorFromCode(e.code), e.message);
-    } catch (_) {
+    } catch (e, st) {
+      developer.log(
+        'registerCoach a échoué',
+        name: 'Registration',
+        error: e,
+        stackTrace: st,
+      );
       throw const RegistrationException(RegistrationError.network);
     }
 
@@ -59,7 +72,13 @@ abstract class CoachRegistration {
         email: address,
         password: password,
       );
-    } catch (_) {
+    } catch (e, st) {
+      developer.log(
+        'connexion après inscription échouée',
+        name: 'Registration',
+        error: e,
+        stackTrace: st,
+      );
       // Le compte existe : le coach peut se connecter à la main.
       throw const RegistrationException(RegistrationError.unknown);
     }
