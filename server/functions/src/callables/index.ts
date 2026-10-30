@@ -104,3 +104,13 @@ export const listAdmins = onCall(ADMIN, adminCallableAdapter("callables/admin/li
 export const createAdmin = onCall(ADMIN_MAILER, adminCallableAdapter("callables/admin/create_admin"));
 export const updateAdmin = onCall(ADMIN_MAILER, adminCallableAdapter("callables/admin/update_admin"));
 export const deleteAdmin = onCall(ADMIN, adminCallableAdapter("callables/admin/delete_admin"));
+
+// Tableau de bord et consultation des données de l'app : lecture seule, Admin SDK (les règles Firestore ferment
+// ces collections aux administrateurs côté client).
+export const getAdminStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_admin_stats"));
+export const getCoachData = onCall(ADMIN, adminCallableAdapter("callables/admin/get_coach_data"));
+export const listReports = onCall(ADMIN, adminCallableAdapter("callables/admin/list_reports"));
+
+// Messages aux coachs (notification interne et push) et mots de passe des comptes d'équipe liés, à la demande du propriétaire.
+export const sendAdminNotification = onCall(ADMIN, adminCallableAdapter("callables/admin/send_notification"));
+export const resetLinkedTeamPasswordByAdmin = onCall(ADMIN, adminCallableAdapter("callables/admin/reset_linked_team_password"));

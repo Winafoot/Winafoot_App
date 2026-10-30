@@ -66,6 +66,11 @@ describe("exposed surface", () => {
     "createAdmin",
     "updateAdmin",
     "deleteAdmin",
+    "getAdminStats",
+    "getCoachData",
+    "listReports",
+    "sendAdminNotification",
+    "resetLinkedTeamPasswordByAdmin",
     "createLinkedTeam",
     "resetLinkedTeamPassword",
     "grantTestSubscription",
@@ -75,8 +80,8 @@ describe("exposed surface", () => {
 
   // Le changement d'adresse passe par l'écran Paramètres de l'app (verifyBeforeUpdateEmail, côté client) :
   // les callables du socle sendChangeEmail et changeEmail n'avaient aucun appelant atteignable.
-  it("exposes exactly twenty-one callables", () => {
-    expect(Object.keys(callables)).toHaveLength(21);
+  it("exposes exactly twenty-six callables", () => {
+    expect(Object.keys(callables)).toHaveLength(26);
     expect(callables).not.toHaveProperty("sendChangeEmail");
     expect(callables).not.toHaveProperty("changeEmail");
   });
@@ -98,7 +103,7 @@ describe("wiring of the hardened callables", () => {
 
   // L'adaptateur admin refuse l'appel AVANT de charger le module du handler : un export recâblé sur
   // l'adaptateur authentifié ou public ouvrirait la gestion des comptes administrateurs à n'importe qui.
-  it.each(["listAdmins", "createAdmin", "updateAdmin", "deleteAdmin"])("%s rejects an anonymous caller", async (name) => {
+  it.each(["listAdmins", "createAdmin", "updateAdmin", "deleteAdmin", "getAdminStats", "getCoachData", "listReports", "sendAdminNotification", "resetLinkedTeamPasswordByAdmin"])("%s rejects an anonymous caller", async (name) => {
     const callable = (callables as Record<string, any>)[name];
 
     await expect(callable.run({ data: {}, rawRequest: {} })).rejects.toMatchObject({ code: "permission-denied" });
@@ -109,6 +114,11 @@ describe("wiring of the hardened callables", () => {
     ["createAdmin", "create_admin"],
     ["updateAdmin", "update_admin"],
     ["deleteAdmin", "delete_admin"],
+    ["getAdminStats", "get_admin_stats"],
+    ["getCoachData", "get_coach_data"],
+    ["listReports", "list_reports"],
+    ["sendAdminNotification", "send_notification"],
+    ["resetLinkedTeamPasswordByAdmin", "reset_linked_team_password"],
   ])("%s points at its admin handler through the admin adapter", (name, module) => {
     const adminSource = readFileSync(join(__dirname, "../src/callables/index.ts"), "utf8");
     expect(adminSource).toMatch(new RegExp(`export const ${name} = onCall\\([^;]*adminCallableAdapter\\("callables/admin/${module}"\\)`));

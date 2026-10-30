@@ -6,6 +6,11 @@ export type AdminAuditAction =
   | "disable"
   | "enable"
   | "delete"
+  // Consultation des données d'un coach (effectif, matchs, compositions) : tracée, elles concernent des joueurs.
+  | "view_coach_data"
+  // Message envoyé à un groupe de comptes (jamais le texte, seulement l'audience) et mot de passe d'une équipe liée redéfini.
+  | "send_notification"
+  | "linked_reset_password"
   // Comptes administrateurs (vue « Administrateurs » du back-office).
   | "admin_create"
   | "admin_update"
