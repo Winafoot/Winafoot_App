@@ -46,6 +46,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   String? password;
   bool _isEmailError = false;
   bool _isPassError = false;
+  bool _cguAccepted = false;
 
   @override
   void initState() {
@@ -270,7 +271,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 textAlign: TextAlign.center,
               ),
             ),
-            sh(28),
+            sh(20),
+            Selector(
+              type: CheckboxType.square,
+              sideText: "utils.accept-cgvu-and-confidentiality".tr(),
+              onChanged: (_) => setState(() => _cguAccepted = !_cguAccepted),
+              isChecked: _cguAccepted,
+            ),
+            sh(20),
             LayoutBuilder(
               builder: (_, c) {
                 return Row(
@@ -301,13 +309,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               final rep = await {
                                 AuthTiers.apple: () async =>
                                     await TiersAuthController.signInWithTiers(
-                                        context, ref, AuthTiers.apple),
+                                        context, ref, AuthTiers.apple,
+                                        cguAccepted: _cguAccepted),
                                 AuthTiers.google: () async =>
                                     await TiersAuthController.signInWithTiers(
-                                        context, ref, AuthTiers.google),
+                                        context, ref, AuthTiers.google,
+                                        cguAccepted: _cguAccepted),
                                 AuthTiers.facebook: () async =>
                                     await TiersAuthController.signInWithTiers(
-                                        context, ref, AuthTiers.facebook),
+                                        context, ref, AuthTiers.facebook,
+                                        cguAccepted: _cguAccepted),
                               }[e]!
                                   .call();
 
