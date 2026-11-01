@@ -8,7 +8,7 @@
   },
   "hosting": {
     "site": "wina-admin",
-    "public": "cms/build",
+    "public": "admin/out",
     "ignore": [
       "firebase.json",
       "**/.*",

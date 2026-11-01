@@ -51,7 +51,10 @@ describe("firebase.json, hosting of the back-office", () => {
     expect(csp).toContain("frame-ancestors 'none'");
   });
 
+  // Le back-office est l'export statique de admin/ : Next.js ne publie pas de source maps de production
+  // sauf si productionBrowserSourceMaps est activé.
   it("publishes no source maps", () => {
-    expect(readFileSync(join(__dirname, "../../cms/vite.config.ts"), "utf8")).toMatch(/sourcemap:\s*false/);
+    expect(config.hosting.public).toBe("admin/out");
+    expect(readFileSync(join(__dirname, "../../admin/next.config.ts"), "utf8")).not.toMatch(/productionBrowserSourceMaps\s*:\s*true/);
   });
 });

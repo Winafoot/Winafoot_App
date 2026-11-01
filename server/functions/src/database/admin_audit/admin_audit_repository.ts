@@ -6,6 +6,14 @@ export type AdminAuditAction =
   | "disable"
   | "enable"
   | "delete"
+  // Abonnement offert depuis le back-office (comptes de test) : `details` porte la formule et la durée.
+  | "grant_subscription"
+  | "revoke_subscription"
+  // Consultation des données d'un coach (effectif, matchs, compositions) : tracée, elles concernent des joueurs.
+  | "view_coach_data"
+  // Message envoyé à un groupe de comptes (jamais le texte, seulement l'audience) et mot de passe d'une équipe liée redéfini.
+  | "send_notification"
+  | "linked_reset_password"
   // Comptes administrateurs (vue « Administrateurs » du back-office).
   | "admin_create"
   | "admin_update"

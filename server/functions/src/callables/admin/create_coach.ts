@@ -1,5 +1,6 @@
 import { auth, firestore } from "firebase-admin";
 import { UserRecord } from "firebase-admin/auth";
+import { grantAccess, parseGrant } from "../../billing/admin_access";
 import { AdminAuditRepository } from "../../database/admin_audit/admin_audit_repository";
 import { HttpsError, logger } from "../../runtime/firebase";
 import { AdminCaller } from "../../runtime/v2_admin";
@@ -14,6 +15,8 @@ export interface CreateCoachData {
   teamName?: string;
   category?: string;
   division?: string;
+  /** Abonnement offert dès la création (compte de test) : le coach n'a pas à passer par les stores. */
+  subscription?: { teams?: number; days?: number };
 }
 
 export interface CreateCoachResult {
@@ -31,7 +34,7 @@ const TEAM_FORMATS: readonly number[] = [5, 8, 11];
 const TEAM_NAME_MAX_LENGTH = 40;
 
 // MIROIR de lib/models/coach_profile.dart (app : enums TeamCategory et
-// TeamDivision), à tenir synchronisé à la main avec cms/src/team_options.ts.
+// TeamDivision), à tenir synchronisé à la main avec admin/src/lib/team-options.ts.
 // Clés = `enum.name`, lues telles quelles par l'app (CoachProfile.fromJson).
 const TEAM_CATEGORIES: readonly string[] = [
   "u6", "u7", "u8", "u9", "u10", "u11", "u12", "u13", "u14", "u15", "u16", "u17", "u18", "u19",
@@ -77,6 +80,9 @@ export default async (data: CreateCoachData, caller: AdminCaller): Promise<Creat
   if (division !== undefined && !TEAM_DIVISIONS.includes(division)) {
     throw new HttpsError("invalid-argument", "Division invalide.");
   }
+
+  // Contrôlé avant de créer quoi que ce soit : une durée invalide ne doit pas laisser un compte sans abonnement.
+  const grant = data.subscription == null ? undefined : parseGrant(data.subscription);
 
   if (await emailExists(email)) {
     throw new HttpsError("already-exists", "Un compte existe déjà pour cette adresse.");
@@ -169,6 +175,9 @@ export default async (data: CreateCoachData, caller: AdminCaller): Promise<Creat
       enableEmailNotification: false,
       createdAt: now,
     });
+
+    // Dernière étape : en cas d'échec, la compensation ci-dessous retire le compte entier.
+    if (grant != null) await grantAccess(uid, grant);
   } catch (e: any) {
     logger.error(`[Error] createCoach: compensation en cours : ${describeError(e)}`);
     await clientMetadataRef.delete().catch(() => undefined);
@@ -196,6 +205,7 @@ export default async (data: CreateCoachData, caller: AdminCaller): Promise<Creat
     adminUid: caller.uid,
     adminEmail: caller.email,
     outcome: "success",
+    ...(grant != null ? { details: `abonnement offert : teams=${grant.teams}, days=${grant.days}` } : {}),
   });
 
   return { uid };

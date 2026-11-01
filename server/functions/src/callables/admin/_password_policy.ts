@@ -6,7 +6,7 @@ import { HttpsError } from "../../runtime/firebase";
  * liste autorisée par Firebase. Un compte créé avec l'Admin SDK n'y est pas soumis : sans ce
  * contrôle, un coach recevrait un mot de passe refusé à sa première connexion.
  *
- * Miroir côté back-office : cms/src/password_policy.ts (test/callables/password_policy.test.ts
+ * Miroir côté back-office : admin/src/lib/password-policy.ts (test/callables/password_policy.test.ts
  * vérifie que les deux restent identiques).
  */
 export const PASSWORD_MIN_LENGTH = 6;

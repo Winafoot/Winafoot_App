@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: oklch(0.985 0.003 140);
+  --foreground: oklch(0.21 0.02 150);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --muted: oklch(0.96 0.006 140);
+  --muted-foreground: oklch(0.5 0.02 150);
+  --border: oklch(0.92 0.008 140);
+  --input: oklch(0.9 0.01 140);
+  --primary: #518948;
+  --primary-foreground: #ffffff;
+  --accent: #ff5b79;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.58 0.22 27);
+  --warning: oklch(0.75 0.15 75);
+  --success: #518948;
+  --ring: #518948;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: oklch(0.17 0.012 150);
+  --foreground: oklch(0.96 0.005 140);
+  --card: oklch(0.21 0.014 150);
+  --card-foreground: var(--foreground);
+  --muted: oklch(0.26 0.014 150);
+  --muted-foreground: oklch(0.7 0.015 150);
+  --border: oklch(0.3 0.015 150);
+  --input: oklch(0.32 0.016 150);
+  --primary: #6aa860;
+  --primary-foreground: oklch(0.17 0.012 150);
+  --destructive: oklch(0.68 0.2 25);
+  --ring: #6aa860;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
