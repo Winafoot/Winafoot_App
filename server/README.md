@@ -8,7 +8,7 @@ tests. Région des fonctions : `europe-west9`.
 ```
 functions/              Cloud Functions (TypeScript, 2e génération)
 functions/scripts/      scripts d'administration (administrateurs, recherche, effectif)
-cms/                    back-office (FireCMS), publié sur le site Hosting wina-admin (voir cms/README.md)
+admin/                  back-office (Next.js), publié sur le site Hosting wina-admin (voir admin/README.md)
 tests/                  tests des règles, dans les émulateurs
 firestore.rules         règles Firestore
 firestore.indexes.json  index et durées de vie (TTL) Firestore
@@ -255,7 +255,7 @@ App Check fait accepter par Firebase les seules requêtes venues de l'app et du 
 
 - **Clients** : l'app active App Check au lancement (Play Integrity sur Android, App Attest sur iOS,
   fournisseur de débogage hors release) ; le back-office utilise reCAPTCHA Enterprise
-  (`cms/src/firebase_config.ts`, jeton de débogage sur `localhost`).
+  (`admin/src/lib/firebase.ts`, jeton de débogage sur `localhost`).
 - **Vérification** : Firestore et Storage sont en mode « appliqué » dans la console Firebase (App
   Check, onglet API). Les callables exigent le jeton dans leur code (`enforceAppCheck`) : sans jeton
   valide, elles répondent 401 avant toute exécution. Coupure d'urgence : passer la valeur à `false`
@@ -277,7 +277,7 @@ firebase deploy --only functions:createPlayer,deletePlayer,getSearchKey --projec
 firebase deploy --only firestore:rules --project wina-c4c4a
 firebase deploy --only firestore:indexes --project wina-c4c4a
 firebase deploy --only storage --project wina-c4c4a
-npm --prefix cms run build && firebase deploy --only hosting:wina-admin --project wina-c4c4a
+npm --prefix admin run build && firebase deploy --only hosting:wina-admin --project wina-c4c4a
 ```
 
 - **Une fonction ou un petit groupe à la fois** : le quota de CPU de Cloud Run en `europe-west9` est

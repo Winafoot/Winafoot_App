@@ -98,6 +98,8 @@ export const createCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/c
 export const resendInvite = onCall(ADMIN_MAILER, adminCallableAdapter("callables/admin/resend_invite"));
 export const setCoachDisabled = onCall(ADMIN, adminCallableAdapter("callables/admin/set_coach_disabled"));
 export const deleteCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/delete_coach"));
+// Abonnement offert (comptes de test) : attribué ou retiré à la main, sans passer par les stores.
+export const setCoachSubscription = onCall(ADMIN, adminCallableAdapter("callables/admin/set_coach_subscription"));
 
 // Comptes administrateurs (vue « Administrateurs » du back-office) : mêmes adaptateur et options que ci-dessus.
 export const listAdmins = onCall(ADMIN, adminCallableAdapter("callables/admin/list_admins"));

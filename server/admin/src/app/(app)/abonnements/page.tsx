@@ -25,7 +25,7 @@ export default function SubscriptionsPage() {
       active: data.filter((c) => c.subscription?.status === "active").length,
       trial: data.filter((c) => c.subscription?.status === "trial").length,
       grace: data.filter((c) => c.subscription?.status === "grace").length,
-      manual: data.filter((c) => c.manualGrant === true && c.subscription == null).length,
+      manual: data.filter((c) => c.testGrant === true || (c.manualGrant === true && c.subscription == null)).length,
       // Abonnements (essai ou payant) qui prennent fin dans les 14 jours : à surveiller avant qu'ils ne tombent.
       endingSoon: data.filter((c) => {
         const end = toDate(c.subscription?.expiresAt)?.getTime();
@@ -89,7 +89,7 @@ export default function SubscriptionsPage() {
         id: "store",
         header: "Boutique",
         accessorFn: (c) => c.subscription?.store ?? "",
-        cell: ({ row }) => (row.original.subscription?.store === "app_store" ? "App Store" : row.original.subscription?.store === "play_store" ? "Google Play" : "—"),
+        cell: ({ row }) => (row.original.testGrant ? "Offert" : row.original.subscription?.store === "app_store" ? "App Store" : row.original.subscription?.store === "play_store" ? "Google Play" : "—"),
       },
       {
         id: "expiresAt",
@@ -110,7 +110,7 @@ export default function SubscriptionsPage() {
         <StatCard label="Actifs" value={counts.active} icon={Wallet} loading={loading} />
         <StatCard label="En essai" value={counts.trial} icon={Gift} loading={loading} />
         <StatCard label="Paiement en attente" value={counts.grace} icon={CreditCard} loading={loading} tone={counts.grace > 0 ? "warning" : "default"} />
-        <StatCard label="Échéance sous 14 jours" value={counts.endingSoon} icon={CalendarClock} loading={loading} tone={counts.endingSoon > 0 ? "warning" : "default"} hint={counts.manual > 0 ? `${counts.manual} accès manuel(s)` : undefined} />
+        <StatCard label="Échéance sous 14 jours" value={counts.endingSoon} icon={CalendarClock} loading={loading} tone={counts.endingSoon > 0 ? "warning" : "default"} hint={counts.manual > 0 ? `${counts.manual} abonnement(s) offert(s)` : undefined} />
       </section>
 
       <DataTable

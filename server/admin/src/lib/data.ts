@@ -36,6 +36,8 @@ export interface Coach {
   subscription?: Subscription;
   access?: { active?: boolean; until?: Timestamp };
   manualGrant?: boolean;
+  /** Abonnement offert depuis le back-office (compte de test), par opposition à un achat sur un store. */
+  testGrant?: boolean;
 }
 
 export interface AsyncState<T> {
@@ -108,6 +110,8 @@ export const AUDIT_ACTIONS: Record<string, string> = {
   disable: "Désactivation",
   enable: "Réactivation",
   delete: "Suppression",
+  grant_subscription: "Abonnement offert",
+  revoke_subscription: "Abonnement retiré",
   view_coach_data: "Consultation des données",
   send_notification: "Notification envoyée",
   linked_reset_password: "Mot de passe d'équipe liée",

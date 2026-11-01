@@ -3,7 +3,7 @@
 ## set-admin
 
 Attribue le custom claim `admin` — la seule chose qui ouvre l'accès au
-back-office (`cms/`) et à la lecture des fiches coach dans `firestore.rules`.
+back-office (`admin/`) et à la lecture des fiches coach dans `firestore.rules`.
 
 Prérequis :
 

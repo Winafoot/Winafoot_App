@@ -5,12 +5,18 @@ const call = <In, Out>(name: string) => (data: In) => httpsCallable<In, Out>(fun
 
 // Coachs
 export const createCoach = call<
-  { email: string; password: string; firstname?: string; teamFormat: number; teamName?: string; category?: string; division?: string },
+  { email: string; password: string; firstname?: string; teamFormat: number; teamName?: string; category?: string; division?: string; subscription?: { teams: number; days: number } },
   { uid: string }
 >("createCoach");
 export const resendInvite = call<{ uid: string }, { sent: true }>("resendInvite");
 export const setCoachDisabled = call<{ uid: string; disabled: boolean }, { disabled: boolean }>("setCoachDisabled");
 export const deleteCoach = call<{ uid: string }, { deleted: true }>("deleteCoach");
+
+/** Abonnement offert (comptes de test) : attribué ou retiré à la main, sans passer par les stores. `untilMs` : fin de l'accès, null après un retrait. */
+export const setCoachSubscription = call<
+  { uid: string; action: "grant" | "revoke"; teams?: number; days?: number },
+  { action: "grant" | "revoke"; untilMs: number | null }
+>("setCoachSubscription");
 
 // Administrateurs : le serveur applique les garde-fous, la vue n'en affiche que le message.
 export interface AdminAccount {

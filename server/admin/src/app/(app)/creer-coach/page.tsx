@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createCoach, errorMessage } from "@/lib/callables";
+import { OFFER_DAYS, OFFER_TEAMS } from "@/lib/offer-options";
 import { PASSWORD_SPECIAL_CHARACTERS, passwordPolicyViolations } from "@/lib/password-policy";
 import { TEAM_CATEGORIES, TEAM_DIVISIONS, TEAM_FORMATS, TEAM_NAME_MAX_LENGTH } from "@/lib/team-options";
 
@@ -20,9 +21,11 @@ function OptionalSelect({
   value,
   onChange,
   disabled,
+  noneLabel = "Non renseigné",
 }: {
   id: string;
   label: string;
+  noneLabel?: string;
   options: Record<string, string>;
   value: string;
   onChange: (value: string) => void;
@@ -36,7 +39,7 @@ function OptionalSelect({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value={NONE}>Non renseigné</SelectItem>
+          <SelectItem value={NONE}>{noneLabel}</SelectItem>
           {Object.entries(options).map(([key, text]) => (
             <SelectItem key={key} value={key}>
               {text}
@@ -56,6 +59,9 @@ export default function CreateCoachPage() {
   const [teamName, setTeamName] = useState("");
   const [category, setCategory] = useState("");
   const [division, setDivision] = useState("");
+  // Abonnement offert (compte de test) : vide = le coach passe par l'abonnement habituel.
+  const [offerDays, setOfferDays] = useState("");
+  const [offerTeams, setOfferTeams] = useState("1");
   const [busy, setBusy] = useState(false);
 
   // Même règle que createCoach : le bouton reste inactif tant qu'elle n'est pas remplie.
@@ -72,6 +78,7 @@ export default function CreateCoachPage() {
         teamName: teamName.trim() || undefined,
         category: category || undefined,
         division: division || undefined,
+        subscription: offerDays ? { teams: Number(offerTeams), days: Number(offerDays) } : undefined,
       });
       toast.success(`Compte créé pour ${email}.`);
       setEmail("");
@@ -81,6 +88,8 @@ export default function CreateCoachPage() {
       setTeamName("");
       setCategory("");
       setDivision("");
+      setOfferDays("");
+      setOfferTeams("1");
     } catch (e) {
       toast.error(errorMessage(e, "La création a échoué."));
     } finally {
@@ -146,6 +155,16 @@ export default function CreateCoachPage() {
           </div>
           <OptionalSelect id="coach-category" label="Catégorie (optionnel)" options={TEAM_CATEGORIES} value={category} onChange={setCategory} disabled={busy} />
           <OptionalSelect id="coach-division" label="Division (optionnel)" options={TEAM_DIVISIONS} value={division} onChange={setDivision} disabled={busy} />
+          <OptionalSelect
+            id="coach-offer-days"
+            label="Abonnement offert (optionnel, pour un compte de test)"
+            options={OFFER_DAYS}
+            value={offerDays}
+            onChange={setOfferDays}
+            disabled={busy}
+            noneLabel="Aucun : abonnement habituel"
+          />
+          {offerDays && <OptionalSelect id="coach-offer-teams" label="Équipes incluses" options={OFFER_TEAMS} value={offerTeams} onChange={(v) => setOfferTeams(v || "1")} disabled={busy} noneLabel="1 équipe" />}
           <Button onClick={submit} loading={busy} disabled={email.trim().length === 0 || missing.length > 0 || teamFormat === ""}>
             Créer le compte
           </Button>

@@ -10,6 +10,8 @@ export function CoachStatusBadge({ coach }: { coach: Coach }) {
 export function SubscriptionBadge({ coach }: { coach: Coach }) {
   const status = coach.subscription?.status;
   if (status == null) return <span className="text-muted-foreground">—</span>;
+  // Abonnement offert depuis le back-office : on le distingue d'un achat réel.
+  if (coach.testGrant && status === "active") return <Badge variant="default">Offert</Badge>;
   const variant = status === "active" || status === "trial" ? "default" : status === "grace" ? "warning" : "secondary";
   return <Badge variant={variant}>{SUBSCRIPTION_LABELS[status]}</Badge>;
 }

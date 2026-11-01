@@ -3,10 +3,11 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { doc, onSnapshot } from "firebase/firestore";
-import { ArrowLeft, Ban, CheckCircle2, Mail, Trash2 } from "lucide-react";
+import { ArrowLeft, Ban, CheckCircle2, Gift, Mail, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { CoachDataTabs } from "@/components/coach-data-tabs";
+import { GrantSubscriptionDialog } from "@/components/grant-subscription-dialog";
 import { LinkedTeamsCard } from "@/components/linked-teams-card";
 import { CoachStatusBadge, SubscriptionBadge } from "@/components/coach-badges";
 import { PageHeader } from "@/components/page-header";
@@ -14,7 +15,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { deleteCoach, errorMessage, resendInvite, setCoachDisabled } from "@/lib/callables";
+import { deleteCoach, errorMessage, resendInvite, setCoachDisabled, setCoachSubscription } from "@/lib/callables";
 import type { Coach } from "@/lib/data";
 import { db } from "@/lib/firebase";
 import { TEAM_CATEGORIES, TEAM_DIVISIONS } from "@/lib/team-options";
@@ -33,7 +34,7 @@ function CoachDetail({ uid }: { uid: string }) {
   const router = useRouter();
   const [coach, setCoach] = useState<Coach | null | undefined>(undefined);
   const [error, setError] = useState<string>();
-  const [dialog, setDialog] = useState<"disable" | "delete" | null>(null);
+  const [dialog, setDialog] = useState<"disable" | "delete" | "grant" | "revoke" | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(
@@ -61,6 +62,8 @@ function CoachDetail({ uid }: { uid: string }) {
 
   const label = coach.teamName ?? coach.email ?? coach.id;
   const sub = coach.subscription;
+  // Un abonnement acheté sur un store ne se gère pas d'ici : le serveur refuse, on évite de proposer le bouton.
+  const storeSubscription = sub != null && coach.testGrant !== true && coach.access?.active === true;
 
   const resend = async () => {
     setBusy(true);
@@ -132,7 +135,9 @@ function CoachDetail({ uid }: { uid: string }) {
                   {sub.teamsAllowed ? `${sub.teamsAllowed} équipe${sub.teamsAllowed > 1 ? "s" : ""}` : null}
                   {sub.period ? ` · ${sub.period === "monthly" ? "mensuel" : "annuel"}` : null}
                 </Field>
-                <Field label="Boutique">{sub.store === "app_store" ? "App Store" : sub.store === "play_store" ? "Google Play" : null}</Field>
+                <Field label="Boutique">
+                  {coach.testGrant ? "Offert (back-office)" : sub.store === "app_store" ? "App Store" : sub.store === "play_store" ? "Google Play" : null}
+                </Field>
                 <Field label="Fin d'essai">{formatDate(sub.trialEnd)}</Field>
                 <Field label="Expire le">{formatDate(sub.expiresAt)}</Field>
                 <Field label="Accès">{coach.access ? (coach.access.active ? `Actif jusqu'au ${formatDate(coach.access.until)}` : "Inactif") : null}</Field>
@@ -142,6 +147,19 @@ function CoachDetail({ uid }: { uid: string }) {
               <p className="text-sm text-muted-foreground">
                 Aucun abonnement.{coach.manualGrant ? " Accès accordé manuellement." : ""}
               </p>
+            )}
+            {coach.ownerUid == null && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setDialog("grant")} disabled={storeSubscription}>
+                  <Gift /> {coach.testGrant && coach.access?.active ? "Prolonger l'abonnement offert" : "Offrir un abonnement"}
+                </Button>
+                {coach.testGrant && sub && (
+                  <Button variant="outline" onClick={() => setDialog("revoke")} disabled={coach.access?.active !== true}>
+                    <XCircle /> Retirer l&apos;abonnement
+                  </Button>
+                )}
+                {storeSubscription && <p className="w-full text-xs text-muted-foreground">Abonnement acheté sur un store : il se gère depuis le store.</p>}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -168,6 +186,25 @@ function CoachDetail({ uid }: { uid: string }) {
             toast.success(coach.disabled ? "Compte réactivé." : "Compte désactivé.");
           } catch (e) {
             toast.error(errorMessage(e, "Opération impossible."));
+          }
+        }}
+      />
+
+      <GrantSubscriptionDialog open={dialog === "grant"} onOpenChange={(open) => !open && setDialog(null)} uid={uid} label={label} />
+
+      <ConfirmDialog
+        open={dialog === "revoke"}
+        onOpenChange={(open) => !open && setDialog(null)}
+        title="Retirer l'abonnement offert ?"
+        description={`${label} perd l'accès à l'app tout de suite et repasse sur l'abonnement habituel. Ses données sont conservées. Vous pourrez le lui offrir de nouveau.`}
+        confirmLabel="Retirer l'abonnement"
+        destructive
+        onConfirm={async () => {
+          try {
+            await setCoachSubscription({ uid, action: "revoke" });
+            toast.success("Abonnement retiré.");
+          } catch (e) {
+            toast.error(errorMessage(e, "Retrait impossible."));
           }
         }}
       />

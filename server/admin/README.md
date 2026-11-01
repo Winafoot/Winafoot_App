@@ -1,6 +1,6 @@
 # Wina — back-office (Next.js)
 
-Nouveau back-office, en remplacement de `../cms` (FireCMS). Next.js 15 (App Router) en **export statique**,
+Back-office de Wina (il remplace l'ancien FireCMS). Next.js 15 (App Router) en **export statique**,
 React 19, TypeScript, Tailwind 4 et composants shadcn/ui. Il est servi par Firebase Hosting, sans serveur Next.js :
 toutes les données passent par le SDK Firebase (règles Firestore) et les callables d'administration.
 
@@ -64,5 +64,4 @@ renommer en `Content-Security-Policy`.
 
 ## Bascule
 
-Quand le nouveau site couvre tout l'usage : pointer le site `wina-admin` vers `admin/out` dans `firebase.json`, déployer,
-puis supprimer `../cms`, `src/third_party_guard.ts` côté ancien projet et les mentions de FireCMS dans le README du serveur.
+Le site `wina-admin` sert `admin/out` (`../firebase.json`) ; l'ancien back-office FireCMS (`cms/`) est supprimé.
