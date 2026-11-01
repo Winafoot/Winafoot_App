@@ -27,16 +27,13 @@ abstract class CoachProfileRepository {
     required TeamDivision division,
     PlayerCount? teamFormat,
   }) async {
-    await _userDoc().set(
-      <String, dynamic>{
-        'coachName': coachName,
-        'teamName': teamName,
-        'category': category.name,
-        'division': division.name,
-        if (teamFormat != null) 'teamFormat': teamFormat.value,
-      },
-      SetOptions(merge: true),
-    );
+    await _userDoc().set(<String, dynamic>{
+      'coachName': coachName,
+      'teamName': teamName,
+      'category': category.name,
+      'division': division.name,
+      if (teamFormat != null) 'teamFormat': teamFormat.value,
+    }, SetOptions(merge: true));
   }
 
   /// Nom pré-rempli à l'étape 1 « Finalisez votre profil » : le `coachName`
@@ -55,14 +52,18 @@ abstract class CoachProfileRepository {
   /// Flux temps réel du profil coach / équipe (entête de « Mon équipe »).
   static Stream<CoachProfile> watchCoachProfile() {
     return _userDoc().snapshots().map(
-          (DocumentSnapshot<Map<String, dynamic>> doc) =>
-              CoachProfile.fromJson(doc.data() ?? const <String, dynamic>{}),
-        );
+      (DocumentSnapshot<Map<String, dynamic>> doc) =>
+          CoachProfile.fromJson(doc.data() ?? const <String, dynamic>{}),
+    );
   }
 
   /// Flux temps réel des maillots de l'équipe.
   static Stream<List<Jersey>> watchJerseys() {
-    return _userDoc().collection('jerseys').orderBy('order').snapshots().map(
+    return _userDoc()
+        .collection('jerseys')
+        .orderBy('order')
+        .snapshots()
+        .map(
           (QuerySnapshot<Map<String, dynamic>> snap) => snap.docs
               .map((doc) => Jersey.fromDoc(doc.data()))
               .toList(growable: false),
@@ -74,8 +75,9 @@ abstract class CoachProfileRepository {
   /// maillots »).
   static Future<void> addJerseys(List<Jersey> jerseys) async {
     if (jerseys.isEmpty) return;
-    final CollectionReference<Map<String, dynamic>> col =
-        _userDoc().collection('jerseys');
+    final CollectionReference<Map<String, dynamic>> col = _userDoc().collection(
+      'jerseys',
+    );
     final QuerySnapshot<Map<String, dynamic>> last =
         await col.orderBy('order', descending: true).limit(1).get();
     final int start =

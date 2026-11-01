@@ -30,11 +30,30 @@ export const sendResetPassword = onCall(
   limitedPublicCallableAdapter("callables/auth/send_reset_password_secured", { scope: "reset-password", perIp: LIMITS.resetPasswordIp }),
 );
 
+// Authentifié : échange le code à 6 chiffres reçu par sendEmailVerification contre la vérification de l'adresse.
+export const verifyEmailCode = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/auth/verify_email_code_secured", { scope: "verify-code", perUid: LIMITS.verifyCodeUid }),
+);
+// Public (avant connexion) : échange le code reçu par sendResetPassword contre un nouveau mot de passe.
+// Même réponse pour un compte inconnu et pour un mauvais code ; limité par IP ici, et par code (5 essais).
+export const confirmPasswordReset = onCall(
+  PUBLIC,
+  limitedPublicCallableAdapter("callables/auth/confirm_password_reset_secured", { scope: "confirm-reset", perIp: LIMITS.confirmResetIp }),
+);
+
 // Public (avant connexion) : inscription d'un coach depuis l'app. Limité par IP ; crée le compte Auth et ses
 // fiches avec l'Admin SDK (les règles Firestore interdisent la création côté client).
 export const registerCoach = onCall(
   PUBLIC,
   limitedPublicCallableAdapter("callables/auth/register_coach", { scope: "register-coach", perIp: LIMITS.registerIp }),
+);
+
+// Authentifié : première connexion Google / Apple. Crée la fiche coach du compte de l'appelant (les règles
+// Firestore interdisent au client de la créer) ; idempotent, et refuse un compte sans fournisseur Google / Apple.
+export const completeSocialSignup = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/auth/complete_social_signup_secured", { scope: "social-signup", perUid: LIMITS.socialSignupUid }),
 );
 
 // Authentifié : suppression du propre compte de l'appelant (ou admin) uniquement.
@@ -74,8 +93,22 @@ export const resetLinkedTeamPassword = onCall(
   limitedAuthedCallableAdapter("callables/billing/reset_linked_team_password", { scope: "reset-linked-team-password", perUid: LIMITS.resetLinkedTeamPasswordUid }),
 );
 
-// Authentifié : simule un achat pour l'appelant. Refusé tant que app_config/config.test_purchases_enabled n'est pas
-// `true` (champ posé par l'administrateur pour une bêta fermée, à retirer avant le lancement public).
+// Adjoint du coach (compte qui voit le match en cours et y saisit des statistiques) : créé, réinitialisé et supprimé par le coach seul.
+export const createAssistant = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/create_assistant", { scope: "create-assistant", perUid: LIMITS.assistantUid }),
+);
+export const resetAssistantPassword = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/reset_assistant_password", { scope: "reset-assistant-password", perUid: LIMITS.assistantUid }),
+);
+export const deleteAssistant = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/delete_assistant", { scope: "delete-assistant", perUid: LIMITS.assistantUid }),
+);
+
+// Authentifié : simule un achat pour l'appelant. Refusé tant que TEST_PURCHASES_ENABLED n'est pas "true" sur la
+// fonction (projet de test uniquement, jamais en production).
 export const grantTestSubscription = onCall(
   PUBLIC,
   limitedAuthedCallableAdapter("callables/billing/grant_test_subscription", { scope: "grant-test-subscription", perUid: LIMITS.grantTestSubscriptionUid }),

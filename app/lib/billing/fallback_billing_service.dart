@@ -8,7 +8,11 @@ import 'package:wina/billing/offers.dart';
 /// Le choix se refait à chaque [loadOffers] : dès que RevenueCat renvoie de vraies offres, elles prennent
 /// la place des prix de démonstration, sans nouveau build. Un achat suit la source des offres affichées.
 class FallbackBillingService implements BillingService {
-  FallbackBillingService({required this.primary, required this.fallback, required this.testEnabled});
+  FallbackBillingService({
+    required this.primary,
+    required this.fallback,
+    required this.testEnabled,
+  });
 
   final BillingService primary;
   final BillingService fallback;
@@ -59,10 +63,25 @@ class FallbackBillingService implements BillingService {
   }
 
   @override
-  Future<PurchaseResult> purchase(String productId) =>
-      _usingFallback ? fallback.purchase(productId) : primary.purchase(productId);
+  Future<PurchaseResult> purchase(
+    String productId, {
+    String? replacingProductId,
+    bool deferred = false,
+  }) =>
+      _usingFallback
+          ? fallback.purchase(
+            productId,
+            replacingProductId: replacingProductId,
+            deferred: deferred,
+          )
+          : primary.purchase(
+            productId,
+            replacingProductId: replacingProductId,
+            deferred: deferred,
+          );
 
   /// Rien à restaurer en mode simulé : l'abonnement de test vit déjà sur la fiche du compte.
   @override
-  Future<bool> restore() => _usingFallback ? fallback.restore() : primary.restore();
+  Future<bool> restore() =>
+      _usingFallback ? fallback.restore() : primary.restore();
 }

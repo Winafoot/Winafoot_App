@@ -54,3 +54,48 @@ class AppBackground extends StatelessWidget {
     );
   }
 }
+
+/// Fond plein écran + contenu dans la zone sûre : le visuel de terrain couvre tout l'écran (sous
+/// l'encoche et la barre système, sans bordures), seul le contenu [child] évite les zones système.
+///
+/// À utiliser à la place de `SafeArea` dans le `body` d'un `Scaffold`, sans `AppBackground` dans le contenu.
+class AppBackdrop extends StatelessWidget {
+  const AppBackdrop({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        const AppBackground(),
+        // Zone sûre SYMÉTRIQUE : en paysage l'encoche n'est que d'un côté, un SafeArea classique décalerait
+        // le contenu ; on réserve la plus grande marge latérale des deux côtés pour le garder centré.
+        // Plein cadre : le contenu garde la taille qu'il avait quand le fond était un de ses enfants.
+        Builder(
+          builder: (BuildContext context) {
+            final EdgeInsets p = MediaQuery.paddingOf(context);
+            // Les pages ont déjà ~16 dp de marge propre : on retire autant de la marge système pour que le contenu
+            // démarre juste après l'encoche / la caméra (et pas 16 dp plus loin), des deux côtés.
+            final double side =
+                (p.left > p.right ? p.left : p.right) - 16 > 0
+                    ? (p.left > p.right ? p.left : p.right) - 16
+                    : 0;
+            return Padding(
+              padding: EdgeInsets.fromLTRB(side, p.top, side, p.bottom),
+              child: MediaQuery.removePadding(
+                context: context,
+                removeLeft: true,
+                removeTop: true,
+                removeRight: true,
+                removeBottom: true,
+                child: SizedBox.expand(child: child),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}

@@ -23,7 +23,7 @@ describe("describeError", () => {
     expect(describeError(Object.assign(new Error("There is no user record"), { code: "auth/user-not-found" }))).toBe("auth/user-not-found : There is no user record");
   });
 
-  it("reads the reason of a MailerSend API rejection", () => {
+  it("reads the reason of a Resend API rejection", () => {
     expect(describeError({ statusCode: 422, body: { message: "domain must be verified" }, headers: { authorization: "Bearer x" } })).toBe("422 : domain must be verified");
   });
 

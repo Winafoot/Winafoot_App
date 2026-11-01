@@ -2,6 +2,7 @@ import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/data/composition_repository.dart';
 import 'package:wina/models/custom_composition.dart';
@@ -137,18 +138,22 @@ class _CreerCompositionScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      // Le clavier ne sert qu'au dialogue d'enregistrement : sans cela, la page derrière se redimensionne
+      // à chaque ouverture du clavier (l'aperçu du terrain « zoome »).
+      resizeToAvoidBottomInset: false,
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Column(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: formatWidth(40)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isPhoneLayout ? 16 : cW(40),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      sh(18),
+                      cSh(isPhoneLayout ? 8 : 18),
                       PageHeader(
                         icon: Iconsax.people,
                         title:
@@ -157,44 +162,70 @@ class _CreerCompositionScreenState
                                 : 'app.creer-composition.titre-creer'.tr(),
                         onBack: () => context.pop(),
                       ),
-                      sh(14),
+                      cSh(isPhoneLayout ? 6 : 14),
                       Container(height: 1, color: AppColor.divider),
-                      sh(20),
+                      cSh(isPhoneLayout ? 8 : 20),
                     ],
                   ),
                 ),
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
-                      formatWidth(40),
+                      isPhoneLayout ? 16 : cW(40),
                       0,
-                      formatWidth(40),
-                      formatHeight(20),
+                      isPhoneLayout ? 16 : cW(40),
+                      isPhoneLayout ? 8 : cH(20),
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        SizedBox(
-                          width: formatWidth(330),
-                          child: _BuilderPreview(
-                            name: widget.existing?.name,
-                            slots: _slots,
-                            onMove: _moveSlot,
-                          ),
-                        ),
-                        sw(24),
-                        Expanded(
-                          child: _Actions(
-                            saving: _saving,
-                            label:
-                                _isEditing
-                                    ? 'app.creer-composition.cta-modifier'.tr()
-                                    : 'app.creer-composition.cta-creer'.tr(),
-                            onCreate: _openSaveModal,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child:
+                        isPhoneLayout
+                            // Téléphone : terrain à gauche (hauteur d'écran),
+                            // nom / consigne / bouton à droite, sans défiler
+                            // (le défilement gênerait le glisser des maillots).
+                            ? _BuilderPreview(
+                              name: widget.existing?.name,
+                              slots: _slots,
+                              onMove: _moveSlot,
+                              phoneCta: _CreatePill(
+                                saving: _saving,
+                                label:
+                                    _isEditing
+                                        ? 'app.creer-composition.cta-modifier'
+                                            .tr()
+                                        : 'app.creer-composition.cta-creer'
+                                            .tr(),
+                                onTap: _openSaveModal,
+                              ),
+                            )
+                            : Center(
+                              child: SingleChildScrollView(
+                                child: SizedBox(
+                                  width: cW(330),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: <Widget>[
+                                      _CreatePill(
+                                        saving: _saving,
+                                        label:
+                                            _isEditing
+                                                ? 'app.creer-composition.cta-modifier'
+                                                    .tr()
+                                                : 'app.creer-composition.cta-creer'
+                                                    .tr(),
+                                        onTap: _openSaveModal,
+                                      ),
+                                      cSh(12),
+                                      _BuilderPreview(
+                                        name: widget.existing?.name,
+                                        slots: _slots,
+                                        onMove: _moveSlot,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
                   ),
                 ),
               ],
@@ -214,7 +245,11 @@ class _BuilderPreview extends StatelessWidget {
     required this.name,
     required this.slots,
     required this.onMove,
+    this.phoneCta,
   });
+
+  /// Bouton de validation affiché à droite du terrain sur téléphone.
+  final Widget? phoneCta;
 
   /// Nom de la composition en cours d'édition (`null` en création → « Aucun nom »).
   final String? name;
@@ -224,11 +259,12 @@ class _BuilderPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasName = name != null && name!.trim().isNotEmpty;
+    if (isPhoneLayout) return _phoneCard(hasName);
     return Container(
-      padding: EdgeInsets.all(formatWidth(12)),
+      padding: EdgeInsets.all(cW(12)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(18)),
+        borderRadius: BorderRadius.circular(cR(18)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -245,37 +281,46 @@ class _BuilderPreview extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style:
                       hasName
-                          ? AppThemeStyle.semiBStyle(15, AppColor.primaryLabels)
+                          ? AppThemeStyle.semiBStyle(
+                            cFs(15),
+                            AppColor.primaryLabels,
+                          )
                           : AppThemeStyle.regularStyle(
-                            15,
+                            cFs(15),
                             AppColor.secondaryLabels,
                           ),
                 ),
               ),
-              sw(8),
+              cSw(8),
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: formatWidth(12),
-                  vertical: formatHeight(5),
+                  horizontal: cW(12),
+                  vertical: cH(5),
                 ),
                 decoration: BoxDecoration(
                   color: AppColor.chipBackground,
-                  borderRadius: BorderRadius.circular(r(12)),
+                  borderRadius: BorderRadius.circular(cR(12)),
                 ),
                 child: Text(
                   'app.creer-composition.personnalise'.tr(),
-                  style: AppThemeStyle.semiBStyle(12, AppColor.primaryLabels),
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(12),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
             ],
           ),
-          sh(12),
+          cSh(12),
           _BuilderPitch(slots: slots, onMove: onMove),
-          sh(10),
+          cSh(10),
           Text(
             'app.creer-composition.consigne'.tr(),
             textAlign: TextAlign.center,
-            style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+            style: AppThemeStyle.regularStyle(
+              cFs(12),
+              AppColor.secondaryLabels,
+            ),
           ),
         ],
       ),
@@ -284,6 +329,91 @@ class _BuilderPreview extends StatelessWidget {
 }
 
 /// Terrain portrait où chaque maillot peut être déplacé librement.
+extension on _BuilderPreview {
+  /// Carte téléphone : terrain pleine hauteur + colonne d'infos à droite.
+  Widget _phoneCard(bool hasName) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints c) {
+        const double pad = 8;
+        final double ph = c.maxHeight - pad * 2;
+        return Container(
+          padding: const EdgeInsets.all(pad),
+          decoration: BoxDecoration(
+            color: AppColor.surface,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: <Widget>[
+              SizedBox(
+                width: ph * 1668 / 2388,
+                height: ph,
+                child: _BuilderPitch(slots: slots, onMove: onMove),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Text(
+                      hasName
+                          ? name!.trim()
+                          : 'app.creer-composition.aucun-nom'.tr(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                          hasName
+                              ? AppThemeStyle.semiBStyle(
+                                cFs(15),
+                                AppColor.primaryLabels,
+                              )
+                              : AppThemeStyle.regularStyle(
+                                cFs(15),
+                                AppColor.secondaryLabels,
+                              ),
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: cW(12),
+                          vertical: cH(5),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColor.chipBackground,
+                          borderRadius: BorderRadius.circular(cR(12)),
+                        ),
+                        child: Text(
+                          'app.creer-composition.personnalise'.tr(),
+                          style: AppThemeStyle.semiBStyle(
+                            cFs(12),
+                            AppColor.primaryLabels,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'app.creer-composition.consigne'.tr(),
+                      style: AppThemeStyle.regularStyle(
+                        cFs(12),
+                        AppColor.secondaryLabels,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    if (phoneCta != null) phoneCta!,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _BuilderPitch extends StatelessWidget {
   const _BuilderPitch({required this.slots, required this.onMove});
 
@@ -293,7 +423,7 @@ class _BuilderPitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(r(14)),
+      borderRadius: BorderRadius.circular(cR(14)),
       child: AspectRatio(
         aspectRatio: 1668 / 2388,
         child: LayoutBuilder(
@@ -332,34 +462,6 @@ class _BuilderPitch extends StatelessWidget {
   }
 }
 
-/// Colonne d'actions à droite du terrain.
-class _Actions extends StatelessWidget {
-  const _Actions({
-    required this.saving,
-    required this.label,
-    required this.onCreate,
-  });
-
-  final bool saving;
-  final String label;
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          'app.creer-composition.actions'.tr(),
-          style: AppThemeStyle.semiBStyle(16, AppColor.primaryLabels),
-        ),
-        sh(14),
-        _CreatePill(saving: saving, label: label, onTap: onCreate),
-      ],
-    );
-  }
-}
-
 /// Pilule verte d'enregistrement (création ou modification).
 class _CreatePill extends StatelessWidget {
   const _CreatePill({
@@ -374,33 +476,30 @@ class _CreatePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double badge = sp(22);
+    final double badge = cIc(22);
     return Material(
       color: AppColor.primaryColor,
-      borderRadius: BorderRadius.circular(r(28)),
+      borderRadius: BorderRadius.circular(cR(28)),
       child: InkWell(
         onTap: saving ? null : onTap,
-        borderRadius: BorderRadius.circular(r(28)),
+        borderRadius: BorderRadius.circular(cR(28)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(24),
-            vertical: formatHeight(15),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(24), vertical: cH(15)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
                 label,
-                style: AppThemeStyle.semiBStyle(15, AppColor.textLight),
+                style: AppThemeStyle.semiBStyle(cFs(15), AppColor.textLight),
               ),
-              sw(10),
+              cSw(10),
               SizedBox(
                 width: badge,
                 height: badge,
                 child:
                     saving
                         ? Padding(
-                          padding: EdgeInsets.all(sp(4)),
+                          padding: EdgeInsets.all(cIc(4)),
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -415,7 +514,7 @@ class _CreatePill extends StatelessWidget {
                           ),
                           child: Icon(
                             Iconsax.arrow_circle_right,
-                            size: sp(13),
+                            size: cIc(13),
                             color: AppColor.primaryColor,
                           ),
                         ),
@@ -475,80 +574,215 @@ class _SaveDialogState extends State<_SaveDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Clavier ouvert : le dialogue prend toute la hauteur restante au lieu de garder ses marges, et défile
+    // si son contenu ne tient pas — le bouton « Enregistrer » reste atteignable.
+    final bool keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final Widget nameField = _DialogField(
+      large: isPhoneLayout,
+      controller: _nameController,
+      hint: 'app.creer-composition.champ-nom-hint'.tr(),
+      onChanged: (_) => setState(() {}),
+      onSubmitted: (_) => _submit(),
+    );
+    // Un schéma ne contient que des chiffres : pavé numérique, et le formateur remet les tirets que ce
+    // clavier ne permet pas de taper (« 442 » → « 4-4-2 »), la valeur étant persistée telle quelle.
+    // Rien de tout ça sur le champ « Nom », texte libre.
+    final Widget formationField = _DialogField(
+      large: isPhoneLayout,
+      controller: _formationController,
+      hint: 'app.creer-composition.champ-formation-hint'.tr(),
+      keyboardType: TextInputType.number,
+      inputFormatters: <TextInputFormatter>[FormationSearchFormatter()],
+      onChanged: (_) => setState(() {}),
+      onSubmitted: (_) => _submit(),
+    );
+    final Widget title = Text(
+      widget.isEditing
+          ? 'app.creer-composition.dialogue-titre-modifier'.tr()
+          : 'app.creer-composition.cta-creer'.tr(),
+      textAlign: TextAlign.center,
+      style: AppThemeStyle.semiBStyle(cFs(18), AppColor.primaryLabels),
+    );
+    final Widget closeIcon = InkResponse(
+      onTap: () => Navigator.of(context).pop(),
+      radius: cIc(20),
+      child: Icon(
+        Iconsax.close_circle,
+        size: cIc(20),
+        color: AppColor.secondaryLabels,
+      ),
+    );
+    // Téléphone (paysage, ~360 dp de haut) : fenêtre FIXE — mêmes taille et position, clavier ouvert ou non.
+    // Collée en haut, assez basse (~160 dp) pour rester entièrement au-dessus du clavier : titre et croix
+    // sur une ligne, champs côte à côte, mention et « Enregistrer » sur une ligne. Les insets du clavier
+    // sont retirés pour que le Dialog ne se déplace pas.
+    if (isPhoneLayout) {
+      return MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: Dialog(
+          backgroundColor: AppColor.surface,
+          alignment: Alignment.topCenter,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(cR(20)),
+          ),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 6),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      SizedBox(width: cIc(20)),
+                      Expanded(child: title),
+                      closeIcon,
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            _FieldLabel('app.creer-composition.champ-nom'.tr()),
+                            const SizedBox(height: 2),
+                            nameField,
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            _FieldLabel(
+                              'app.creer-composition.champ-formation'.tr(),
+                            ),
+                            const SizedBox(height: 2),
+                            formationField,
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'app.creer-composition.champs-obligatoires'.tr(),
+                          style: AppThemeStyle.regularStyle(
+                            cFs(12),
+                            AppColor.secondaryLabels,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 190,
+                        child: _SaveButton(enabled: _isValid, onTap: _submit),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Dialog(
       backgroundColor: AppColor.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(r(20))),
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: formatWidth(360),
-        vertical: formatHeight(120),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cR(20)),
       ),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          formatWidth(28),
-          formatHeight(16),
-          formatWidth(28),
-          formatHeight(22),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Align(
-              alignment: Alignment.centerRight,
-              child: InkResponse(
-                onTap: () => Navigator.of(context).pop(),
-                radius: sp(20),
-                child: Icon(
-                  Iconsax.close_circle,
-                  size: sp(20),
-                  color: AppColor.secondaryLabels,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: cW(360),
+        vertical: keyboardOpen ? 8 : cH(120),
+      ),
+      child: GestureDetector(
+        // Le pavé numérique du champ « schéma » n'a pas de touche « OK » sur iPhone / iPad : toucher
+        // à côté d'un champ ferme le clavier et laisse voir « Enregistrer ».
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(cW(28), cH(16), cW(28), cH(22)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Align(
+                alignment: Alignment.centerRight,
+                child: InkResponse(
+                  onTap: () => Navigator.of(context).pop(),
+                  radius: cIc(20),
+                  child: Icon(
+                    Iconsax.close_circle,
+                    size: cIc(20),
+                    color: AppColor.secondaryLabels,
+                  ),
                 ),
               ),
-            ),
-            Center(
-              child: Text(
-                widget.isEditing
-                    ? 'app.creer-composition.dialogue-titre-modifier'.tr()
-                    : 'app.creer-composition.cta-creer'.tr(),
-                style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
+              Center(
+                child: Text(
+                  widget.isEditing
+                      ? 'app.creer-composition.dialogue-titre-modifier'.tr()
+                      : 'app.creer-composition.cta-creer'.tr(),
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(18),
+                    AppColor.primaryLabels,
+                  ),
+                ),
               ),
-            ),
-            sh(20),
-            _FieldLabel('app.creer-composition.champ-nom'.tr()),
-            sh(8),
-            _DialogField(
-              controller: _nameController,
-              hint: 'app.creer-composition.champ-nom-hint'.tr(),
-              onChanged: (_) => setState(() {}),
-              onSubmitted: (_) => _submit(),
-            ),
-            sh(16),
-            _FieldLabel('app.creer-composition.champ-formation'.tr()),
-            sh(8),
-            _DialogField(
-              controller: _formationController,
-              hint: 'app.creer-composition.champ-formation-hint'.tr(),
-              // Un schéma ne contient que des chiffres : pavé numérique, et le
-              // formateur remet les tirets que ce clavier ne permet pas de
-              // taper (« 442 » → « 4-4-2 »), la valeur étant persistée telle
-              // quelle. Rien de tout ça sur le champ « Nom », texte libre.
-              keyboardType: TextInputType.number,
-              inputFormatters: <TextInputFormatter>[FormationSearchFormatter()],
-              onChanged: (_) => setState(() {}),
-              onSubmitted: (_) => _submit(),
-            ),
-            sh(22),
-            // Motif « CTA grisé » assumé : ce dialogue n'affiche jamais de
-            // bannière, donc pas d'état rouge par champ.
-            _SaveButton(enabled: _isValid, onTap: _submit),
-            sh(12),
-            Center(
-              child: Text(
-                'app.creer-composition.champs-obligatoires'.tr(),
-                style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+              cSh(20),
+              _FieldLabel('app.creer-composition.champ-nom'.tr()),
+              cSh(8),
+              _DialogField(
+                controller: _nameController,
+                hint: 'app.creer-composition.champ-nom-hint'.tr(),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _submit(),
               ),
-            ),
-          ],
+              cSh(16),
+              _FieldLabel('app.creer-composition.champ-formation'.tr()),
+              cSh(8),
+              _DialogField(
+                controller: _formationController,
+                hint: 'app.creer-composition.champ-formation-hint'.tr(),
+                // Un schéma ne contient que des chiffres : pavé numérique, et le
+                // formateur remet les tirets que ce clavier ne permet pas de
+                // taper (« 442 » → « 4-4-2 »), la valeur étant persistée telle
+                // quelle. Rien de tout ça sur le champ « Nom », texte libre.
+                keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  FormationSearchFormatter(),
+                ],
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _submit(),
+              ),
+              cSh(22),
+              // Motif « CTA grisé » assumé : ce dialogue n'affiche jamais de
+              // bannière, donc pas d'état rouge par champ.
+              _SaveButton(enabled: _isValid, onTap: _submit),
+              cSh(12),
+              Center(
+                child: Text(
+                  'app.creer-composition.champs-obligatoires'.tr(),
+                  style: AppThemeStyle.regularStyle(
+                    cFs(12),
+                    AppColor.secondaryLabels,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -564,7 +798,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: AppThemeStyle.mediumStyle(13, AppColor.primaryLabels),
+      style: AppThemeStyle.mediumStyle(cFs(13), AppColor.primaryLabels),
     );
   }
 }
@@ -577,8 +811,11 @@ class _DialogField extends StatelessWidget {
     required this.onSubmitted,
     this.keyboardType,
     this.inputFormatters,
+    this.large = false,
   });
 
+  /// Téléphone : texte 17 pt et champ plus haut, pour bien voir ce qu'on tape.
+  final bool large;
   final TextEditingController controller;
   final String hint;
   final ValueChanged<String> onChanged;
@@ -589,10 +826,10 @@ class _DialogField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(16)),
+      padding: EdgeInsets.symmetric(horizontal: cW(16)),
       decoration: BoxDecoration(
         color: AppColor.background,
-        borderRadius: BorderRadius.circular(r(14)),
+        borderRadius: BorderRadius.circular(cR(14)),
         border: Border.all(color: AppColor.divider),
       ),
       child: TextField(
@@ -602,13 +839,19 @@ class _DialogField extends StatelessWidget {
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
         textInputAction: TextInputAction.done,
-        style: AppThemeStyle.regularStyle(14, AppColor.primaryLabels),
+        style: AppThemeStyle.regularStyle(
+          large ? 17 / sp(1) : cFs(14),
+          AppColor.primaryLabels,
+        ),
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: EdgeInsets.symmetric(vertical: formatHeight(14)),
+          contentPadding: EdgeInsets.symmetric(vertical: large ? 10 : cH(14)),
           border: InputBorder.none,
           hintText: hint,
-          hintStyle: AppThemeStyle.regularStyle(14, AppColor.secondaryLabels),
+          hintStyle: AppThemeStyle.regularStyle(
+            large ? 17 / sp(1) : cFs(14),
+            AppColor.secondaryLabels,
+          ),
         ),
       ),
     );
@@ -628,16 +871,16 @@ class _SaveButton extends StatelessWidget {
           enabled
               ? AppColor.primaryColor
               : AppColor.primaryColor.withValues(alpha: 0.4),
-      borderRadius: BorderRadius.circular(r(14)),
+      borderRadius: BorderRadius.circular(cR(14)),
       child: InkWell(
         onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(r(14)),
+        borderRadius: BorderRadius.circular(cR(14)),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: formatHeight(15)),
+          padding: EdgeInsets.symmetric(vertical: isPhoneLayout ? 9 : cH(15)),
           child: Center(
             child: Text(
               'utils.save'.tr(),
-              style: AppThemeStyle.semiBStyle(15, AppColor.textLight),
+              style: AppThemeStyle.semiBStyle(cFs(15), AppColor.textLight),
             ),
           ),
         ),

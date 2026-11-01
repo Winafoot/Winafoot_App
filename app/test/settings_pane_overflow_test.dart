@@ -52,8 +52,10 @@ void main() {
     await tester.pumpWidget(_host(_tallColumn));
     await tester.pumpAndSettle();
 
-    // Ouvre le pane custom.
-    await tester.tap(find.text('Sécurité'));
+    // Le pane custom est ouvert d'office (première cellule à panneau) : on
+    // re-tape la cellule pour couvrir aussi l'ouverture à la main.
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Sécurité').first);
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
@@ -109,9 +111,8 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
+    // Le pane s'ouvre dès le premier affichage : l'erreur y est déjà levée.
     await tester.pumpWidget(_host((_) => const Expanded(child: Text('x'))));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Sécurité').first);
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNotNull);

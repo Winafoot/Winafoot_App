@@ -454,6 +454,50 @@ service cloud.firestore {
         allow delete: if isOwner(uid);
       }
 
+      // Adjoint du coach (callables createAssistant / resetAssistantPassword / deleteAssistant) : le
+      // coach lit seulement la liaison { uid, identifier }, le serveur l'écrit.
+      match /assistant/{doc} {
+        allow read: if isOwner(uid);
+        allow write: if false;
+      }
+
+      // Match en direct partagé avec l'adjoint. Le téléphone du coach publie l'état complet dans
+      // `liveMatch/current` ; l'adjoint (custom claim `assistantOf == uid`, posé par createAssistant seul)
+      // le lit en temps réel et dépose des commandes (+1 / retrait d'un événement) que le coach applique
+      // avec sa logique habituelle puis supprime. L'adjoint n'écrit jamais l'état.
+      function isAssistantOf(uid) {
+        return isSignedIn() && request.auth.token.get('assistantOf', null) == uid;
+      }
+
+      match /liveMatch/{doc} {
+        allow read: if isOwner(uid) || isAssistantOf(uid);
+        allow create, update: if isOwner(uid) && hasAccess(uid)
+          && request.resource.data.keys().hasOnly([
+            'matchId', 'status', 'half', 'elapsedSeconds', 'scoreUs', 'scoreThem', 'formationLabel',
+            'slots', 'assignments', 'numbers', 'substituteIds', 'enabledStatKeys', 'halfTimeStatKeys',
+            'playerStats', 'events', 'players', 'kit', 'opponentName', 'swapSides', 'updatedAt'
+          ])
+          && request.resource.data.status in ['live', 'paused', 'ended'];
+        allow delete: if isOwner(uid);
+
+        match /commands/{commandId} {
+          allow read, delete: if isOwner(uid);
+          allow create: if isAssistantOf(uid)
+            && request.resource.data.keys().hasOnly([
+              'type', 'playerId', 'playerName', 'statKey', 'statLabel', 'delta', 'eventId', 'createdAt'
+            ])
+            && request.resource.data.type in ['bump', 'remove', 'swap']
+            && isStr(request.resource.data.eventId, 64)
+            && isStrOrNull(request.resource.data.get('playerId', null), 128)
+            && isStrOrNull(request.resource.data.get('playerName', null), 200)
+            && isStrOrNull(request.resource.data.get('statKey', null), 64)
+            && isStrOrNull(request.resource.data.get('statLabel', null), 200)
+            && request.resource.data.get('delta', 1) in [-1, 1]
+            && request.resource.data.createdAt == request.time;
+          allow update: if false;
+        }
+      }
+
       // Contenu créé et géré par le coach lui-même.
       // ATTENTION : les règles Firestore ne cascadent PAS du document parent
       // vers ses sous-collections — chaque sous-collection écrite par l'app doit

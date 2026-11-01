@@ -1,10 +1,10 @@
 /**
  * Module du socle commun des projets.
  */
-import { MAILER_API_KEY, readSecret } from "../config/secrets";
+import { RESEND_API_KEY, readSecret } from "../config/secrets";
 import { logger } from "../runtime/firebase";
 
-export interface MailerSendConfig {
+export interface ResendConfig {
   apiKey?: string;
 }
 
@@ -32,9 +32,9 @@ export class EnvProvider {
     return EnvProvider._instance;
   }
 
-  get mailerSendConfig(): MailerSendConfig {
-    const mailerConfig: MailerSendConfig = {
-      apiKey: readSecret(MAILER_API_KEY),
+  get resendConfig(): ResendConfig {
+    const mailerConfig: ResendConfig = {
+      apiKey: readSecret(RESEND_API_KEY),
     };
 
     if (mailerConfig.apiKey == null) {

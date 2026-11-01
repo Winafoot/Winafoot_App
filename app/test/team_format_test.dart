@@ -146,10 +146,8 @@ void main() {
   });
 
   group('« Gérer mon équipe » : le format du club remplace le choix', () {
-    // Remplaçants : la popup de choix des numéros n'est ouverte que depuis
-    // `continueWithPlayerCount`, historiquement appelé par l'écran de choix.
-    // Sauter cet écran ne doit pas la faire disparaître, sans quoi les
-    // remplaçants retombent en silence sur l'intervalle contigu.
+    // Plus d'écran de choix ni de popup préalable : le bouton « Ajouter les
+    // remplaçants » de l'écran des numéros ouvre le choix de leurs numéros.
     const String popupTitle =
         'app.gerer-equipe-numbers.selectionner-numeros-remplacants';
     const String countTitle = 'app.gerer-equipe-count.titre';
@@ -174,9 +172,8 @@ void main() {
         overrides: <Override>[
           authUidProvider.overrideWith((ref) => Stream<String?>.value(null)),
           coachProfileProvider.overrideWith(
-            (ref) => Stream<CoachProfile>.value(
-              CoachProfile(teamFormat: format),
-            ),
+            (ref) =>
+                Stream<CoachProfile>.value(CoachProfile(teamFormat: format)),
           ),
           playersStreamProvider.overrideWith(
             (ref) => Stream<List<Player>>.value(const <Player>[]),
@@ -198,20 +195,24 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('format 5 : pas d\'écran de choix, mais la popup des '
-        'remplaçants puis l\'écran des numéros', (WidgetTester tester) async {
+    testWidgets("format 5 : directement l'écran des numéros, sans popup", (
+      WidgetTester tester,
+    ) async {
       await pumpHub(tester, PlayerCount.five);
       await tester.tap(find.text(hubButton));
       await tester.pumpAndSettle();
 
       expect(find.text(countTitle), findsNothing);
-      expect(find.text(popupTitle), findsOneWidget);
+      expect(find.text(popupTitle), findsNothing);
+      expect(find.byType(GererEquipeNumbersScreen), findsOneWidget);
       expect(container.read(compositionDraftProvider).playerCount, 5);
 
-      // Valider la popup mène à l'écran d'attribution des numéros.
-      await tester.tap(find.text('app.gerer-equipe-numbers.valider'));
+      // Les remplaçants s'ajoutent depuis l'écran lui-même.
+      await tester.tap(
+        find.text('app.gerer-equipe-numbers.ajouter-remplacants'),
+      );
       await tester.pumpAndSettle();
-      expect(find.byType(GererEquipeNumbersScreen), findsOneWidget);
+      expect(find.text(popupTitle), findsOneWidget);
     });
 
     testWidgets('format 8 : imposé au brouillon', (WidgetTester tester) async {
@@ -219,36 +220,20 @@ void main() {
       await tester.tap(find.text(hubButton));
       await tester.pumpAndSettle();
 
-      expect(find.text(popupTitle), findsOneWidget);
+      expect(find.byType(GererEquipeNumbersScreen), findsOneWidget);
       expect(container.read(compositionDraftProvider).playerCount, 8);
     });
 
-    testWidgets('sans format : l\'écran de choix reste, puis la popup', (
+    testWidgets("sans format : plus d'écran de choix, foot à 11 par défaut", (
       WidgetTester tester,
     ) async {
       await pumpHub(tester, null);
       await tester.tap(find.text(hubButton));
       await tester.pumpAndSettle();
 
-      expect(find.text(countTitle), findsOneWidget);
-      expect(find.text(popupTitle), findsNothing);
-      expect(container.read(compositionDraftProvider).playerCount, isNull);
-
-      // Choisir la 2e carte (PlayerCount.eight) enchaîne sur la popup, comme
-      // avant.
-      // (onTap appelé directement : la mise en page du harnais fait chevaucher
-      // les cartes, un tap géométrique viserait la mauvaise.)
-      tester
-          .widget<InkWell>(
-            find.ancestor(
-              of: find.text('app.gerer-equipe-count.choisir').at(1),
-              matching: find.byType(InkWell),
-            ),
-          )
-          .onTap!();
-      await tester.pumpAndSettle();
-      expect(find.text(popupTitle), findsOneWidget);
-      expect(container.read(compositionDraftProvider).playerCount, 8);
+      expect(find.text(countTitle), findsNothing);
+      expect(find.byType(GererEquipeNumbersScreen), findsOneWidget);
+      expect(container.read(compositionDraftProvider).playerCount, 11);
     });
   });
 
@@ -272,9 +257,8 @@ void main() {
           overrides: <Override>[
             authUidProvider.overrideWith((ref) => Stream<String?>.value(null)),
             coachProfileProvider.overrideWith(
-              (ref) => Stream<CoachProfile>.value(
-                CoachProfile(teamFormat: format),
-              ),
+              (ref) =>
+                  Stream<CoachProfile>.value(CoachProfile(teamFormat: format)),
             ),
           ],
           child: ScreenUtilInit(
@@ -288,8 +272,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('format connu : pas de filtre, schémas du format',
-        (WidgetTester tester) async {
+    testWidgets('format connu : pas de filtre, schémas du format', (
+      WidgetTester tester,
+    ) async {
       await pumpTab(tester, PlayerCount.five);
       expect(find.text(filterLabel), findsNothing);
       // 2-2 n'existe qu'à 5 ; 4-4-2 n'existe qu'à 11.
@@ -297,8 +282,9 @@ void main() {
       expect(find.text('4-4-2'), findsNothing);
     });
 
-    testWidgets('sans format : le filtre reste, à 11 par défaut',
-        (WidgetTester tester) async {
+    testWidgets('sans format : le filtre reste, à 11 par défaut', (
+      WidgetTester tester,
+    ) async {
       await pumpTab(tester, null);
       expect(find.text(filterLabel), findsOneWidget);
       expect(find.text('4-4-2'), findsWidgets);

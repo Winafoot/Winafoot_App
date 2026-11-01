@@ -282,8 +282,7 @@ class GameMatch {
       compositions: <MatchComposition>[
         for (final dynamic c
             in (json['compositions'] as List<dynamic>?) ?? const <dynamic>[])
-          if (c is Map)
-            MatchComposition.fromJson(c.cast<String, dynamic>()),
+          if (c is Map) MatchComposition.fromJson(c.cast<String, dynamic>()),
       ],
       enabledStatKeys:
           ((json['enabledStatKeys'] as List<dynamic>?) ?? const <dynamic>[])

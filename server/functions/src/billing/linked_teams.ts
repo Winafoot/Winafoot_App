@@ -1,4 +1,5 @@
 import { auth, firestore } from "firebase-admin";
+import { removeAssistant } from "./assistant";
 
 /**
  * Comptes d'équipe liés : une formule à 2 ou 3 équipes donne un compte par équipe, rattaché au compte
@@ -36,7 +37,9 @@ export function slotRef(ownerUid: string, teamIndex: number): firestore.Document
 export async function detachFromTeams(uid: string): Promise<void> {
   const db = firestore();
 
-  const own = await db.collection("users").doc(uid).get();
+  await removeAssistant(uid);
+
+  const own =await db.collection("users").doc(uid).get();
   const ownerUid: unknown = own.get("ownerUid");
   const ownIndex: unknown = own.get("teamIndex");
   if (typeof ownerUid === "string" && typeof ownIndex === "number") {

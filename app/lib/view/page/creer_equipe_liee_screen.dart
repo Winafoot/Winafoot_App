@@ -20,7 +20,8 @@ class CreerEquipeLieeScreen extends ConsumerStatefulWidget {
   const CreerEquipeLieeScreen({super.key});
 
   @override
-  ConsumerState<CreerEquipeLieeScreen> createState() => _CreerEquipeLieeScreenState();
+  ConsumerState<CreerEquipeLieeScreen> createState() =>
+      _CreerEquipeLieeScreenState();
 }
 
 class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
@@ -51,14 +52,25 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
   /// Contrôles locaux, avant tout appel réseau. Renvoie vrai si tout est valide.
   bool _validate() {
     final String identifier = _identifier.text.trim().toLowerCase();
-    final List<String> missing = RegisterValidation.passwordViolations(_password.text);
+    final List<String> missing = RegisterValidation.passwordViolations(
+      _password.text,
+    );
     setState(() {
       _serverError = null;
-      _identifierError = _identifierPattern.hasMatch(identifier) ? null : 'app.teams.identifier-invalid'.tr();
-      _passwordError = missing.isEmpty ? null : 'Il manque : ${missing.join(', ')}.';
-      _nameError = _teamName.text.trim().isEmpty ? 'app.teams.field-required'.tr() : null;
+      _identifierError =
+          _identifierPattern.hasMatch(identifier)
+              ? null
+              : 'app.teams.identifier-invalid'.tr();
+      _passwordError =
+          missing.isEmpty ? null : 'Il manque : ${missing.join(', ')}.';
+      _nameError =
+          _teamName.text.trim().isEmpty
+              ? 'app.teams.field-required'.tr()
+              : null;
     });
-    return _identifierError == null && _passwordError == null && _nameError == null;
+    return _identifierError == null &&
+        _passwordError == null &&
+        _nameError == null;
   }
 
   String _messageFor(LinkedTeamError error) {
@@ -81,7 +93,11 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
     final AccessInfo? info = ref.read(accessInfoProvider).valueOrNull;
     if (info == null) return 1;
     final int linked = ref.read(linkedTeamsProvider).valueOrNull?.length ?? 0;
-    final int missing = missingTeams(info, linkedCount: linked, now: DateTime.now());
+    final int missing = missingTeams(
+      info,
+      linkedCount: linked,
+      now: DateTime.now(),
+    );
     return missing < 1 ? 1 : missing;
   }
 
@@ -131,7 +147,11 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
     final AccessInfo? info = ref.watch(accessInfoProvider).valueOrNull;
     if (info == null) return 1;
     final int linked = ref.watch(linkedTeamsProvider).valueOrNull?.length ?? 0;
-    final int missing = missingTeams(info, linkedCount: linked, now: DateTime.now());
+    final int missing = missingTeams(
+      info,
+      linkedCount: linked,
+      now: DateTime.now(),
+    );
     return missing < 1 ? 1 : missing;
   }
 
@@ -139,7 +159,10 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
     if (text == null) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.only(top: formatHeight(6)),
-      child: Text(text, style: AppThemeStyle.regularStyle(12, DefaultColor.error)),
+      child: Text(
+        text,
+        style: AppThemeStyle.regularStyle(12, DefaultColor.error),
+      ),
     );
   }
 
@@ -225,7 +248,13 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[_identifierField(), sh(14), _passwordField(), sh(14), _nameField()],
+                children: <Widget>[
+                  _identifierField(),
+                  sh(14),
+                  _passwordField(),
+                  sh(14),
+                  _nameField(),
+                ],
               ),
             ),
             sw(28),
@@ -239,7 +268,8 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
                     value: _category,
                     values: TeamCategory.values,
                     labelOf: (TeamCategory c) => c.label,
-                    onChanged: (TeamCategory c) => setState(() => _category = c),
+                    onChanged:
+                        (TeamCategory c) => setState(() => _category = c),
                   ),
                   sh(14),
                   CpLabel('app.teams.division'.tr()),
@@ -248,7 +278,8 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
                     value: _division,
                     values: TeamDivision.values,
                     labelOf: (TeamDivision d) => d.label,
-                    onChanged: (TeamDivision d) => setState(() => _division = d),
+                    onChanged:
+                        (TeamDivision d) => setState(() => _division = d),
                   ),
                   sh(14),
                   CpLabel('app.teams.format'.tr()),
@@ -269,7 +300,11 @@ class _CreerEquipeLieeScreenState extends ConsumerState<CreerEquipeLieeScreen> {
         Row(
           children: <Widget>[
             Expanded(
-              child: CpButton(label: 'app.teams.later'.tr(), soft: true, onTap: () => Navigator.of(context).maybePop()),
+              child: CpButton(
+                label: 'app.teams.later'.tr(),
+                soft: true,
+                onTap: () => Navigator.of(context).maybePop(),
+              ),
             ),
             sw(16),
             Expanded(

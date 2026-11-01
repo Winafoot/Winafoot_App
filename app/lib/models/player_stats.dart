@@ -17,20 +17,19 @@ class StatDef {
   final bool hasSpace;
 }
 
-/// Les 3 colonnes de statistiques de la page « Détail joueur », dans l'ordre
-/// EXACT du design Figma (14 / 14 / 13 lignes, 41 statistiques au total).
+/// Les 3 colonnes de statistiques de la page « Détail joueur » (12 / 10 / 10
+/// lignes, 32 statistiques : celles du catalogue, hors « Réussite de passes »,
+/// voir `stat_catalog.dart`). Le lien avec le catalogue se fait par le libellé.
 const List<List<StatDef>> kPlayerStatColumns = <List<StatDef>>[
   // ── Colonne 1 ──────────────────────────────────────────────────────────────
   <StatDef>[
-    StatDef('Interception de ballons'),
-    StatDef('Récupération de ballons'),
+    StatDef('Récupérations de ballons'),
     StatDef('Passes réussies'),
     StatDef('Passes manquées'),
     StatDef('Total passes'),
     StatDef('Pertes de ballons'),
     StatDef('Tirs cadrés', hasSpace: true),
     StatDef('Tirs non cadrés'),
-    StatDef('Tirs bloqués'),
     StatDef('Total tirs'),
     StatDef('Passes décisives', hasSpace: true),
     StatDef('Buts marqués'),
@@ -39,30 +38,23 @@ const List<List<StatDef>> kPlayerStatColumns = <List<StatDef>>[
   ],
   // ── Colonne 2 ──────────────────────────────────────────────────────────────
   <StatDef>[
-    StatDef('Tirs subis hors surface'),
+    StatDef('Tirs subis hors de la surface'),
     StatDef('Tirs subis dans la surface'),
     StatDef('Total tirs subis'),
-    StatDef('Contrôles de balle réussis', hasSpace: true),
-    StatDef('Contrôles de balle manqués'),
-    StatDef('Hors-jeux'),
+    StatDef('Contrôles réussis', hasSpace: true),
+    StatDef('Contrôles manqués'),
+    StatDef('Hors-jeu'),
     StatDef('Duels aériens gagnés', hasSpace: true),
     StatDef('Duels aériens perdus'),
-    StatDef('Corners obtenus'),
     StatDef('Penaltys subis'),
-    StatDef('Coups francs subis'),
     StatDef('Penaltys obtenus'),
-    StatDef('Coups francs obtenus'),
-    StatDef('Nombre de touches'),
   ],
   // ── Colonne 3 ──────────────────────────────────────────────────────────────
   <StatDef>[
     StatDef('Nombre de centres'),
     StatDef('Passes en profondeur'),
-    StatDef('Duels défensifs gagnés'),
-    StatDef('Duels défensifs perdus'),
-    StatDef('Duels offensifs gagnés'),
-    StatDef('Duels offensifs perdus'),
-    StatDef('Dégagements'),
+    StatDef('Duels gagnés'),
+    StatDef('Duels perdus'),
     StatDef('Centres réussis'),
     StatDef('Centres manqués'),
     StatDef('Fautes commises', hasSpace: true),

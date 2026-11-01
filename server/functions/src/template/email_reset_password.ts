@@ -2,19 +2,23 @@
  * Module du socle commun des projets.
  */
 import { escapeHtml } from "../utils/html";
-import { wrapEmailLayout, emailSupportParagraph, EMAIL_H1_STYLE, EMAIL_P_STYLE, EMAIL_LINK_STYLE } from "./_email_layout";
+import { OTP_TTL_MS } from "../utils/otp_code";
+import { DEFAULT_APP_NAME } from "../utils/mail_identity";
+import { wrapEmailLayout, emailSupportParagraph, emailCodeBlock, EMAIL_H1_STYLE, EMAIL_P_STYLE, EMAIL_SUPPORT_P_STYLE } from "./_email_layout";
 
-export function generateTemplateResetPasswordEmail(fullname: string, verifLink: string, contactEmail?: string, logoUrl: string = "", appName: string = ""): string {
-  const title = appName ? `R&#233;initialisation du mot de passe ${escapeHtml(appName)}` : `Bonjour ${escapeHtml(fullname)}`;
+export function generateTemplateResetPasswordEmail(fullname: string, code: string, contactEmail?: string, logoUrl: string = "", appName: string = DEFAULT_APP_NAME): string {
+  const minutes: number = OTP_TTL_MS / 60_000;
+  const greeting = fullname.trim().length > 0 ? `Bonjour ${escapeHtml(fullname)}` : "Bonjour";
   const content = `
-    <h1 class="h3" style="${EMAIL_H1_STYLE}" align="left">${title}</h1>
+    <h1 class="h3" style="${EMAIL_H1_STYLE}" align="left">${greeting}</h1>
     <br>
-    <p class="text-gray-700" style="${EMAIL_P_STYLE}" align="left">Vous avez fait la demande de r&#233;initialisation de mot de passe. Cliquez sur le lien ci-dessous pour d&#233;finir votre nouveau mot de passe.</p>
+    <p class="text-gray-700" style="${EMAIL_P_STYLE}" align="left">Vous avez demand&#233; &#224; r&#233;initialiser votre mot de passe. Saisissez ce code dans l&#8217;application pour en choisir un nouveau&#160;:</p>
     <br>
-    <a href="${verifLink}" style="${EMAIL_LINK_STYLE}">Changer mon mot de passe</a>
-    <p class="text-gray-700" style="${EMAIL_P_STYLE}" align="left"><br>Si vous n&#8217;&#234;tes pas &#224; l&#8217;origine de cette demande, merci d&#8217;ignorer ce message.</p>
+    ${emailCodeBlock(code)}
+    <br>
+    <p style="${EMAIL_SUPPORT_P_STYLE}" align="left">Ce code est valable ${minutes}&#160;minutes. Si vous n&#8217;&#234;tes pas &#224; l&#8217;origine de cette demande, ignorez ce message : votre mot de passe reste inchang&#233;.</p>
     <br>
     ${emailSupportParagraph(contactEmail)}
   `;
-  return wrapEmailLayout(logoUrl, content);
+  return wrapEmailLayout(logoUrl, content, appName);
 }

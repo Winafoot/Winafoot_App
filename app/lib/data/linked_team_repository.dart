@@ -28,7 +28,8 @@ class LinkedTeam {
       category: TeamCategory.values.asNameMap()[data['category']],
       division: TeamDivision.values.asNameMap()[data['division']],
       teamFormat: PlayerCount.fromValue(data['teamFormat']),
-      playerCount: data['playerCount'] is int ? data['playerCount'] as int : null,
+      playerCount:
+          data['playerCount'] is int ? data['playerCount'] as int : null,
     );
   }
 
@@ -50,7 +51,13 @@ class LinkedTeam {
 }
 
 /// Erreurs métier de createLinkedTeam (messages posés par le serveur).
-enum LinkedTeamError { identifierTaken, quotaReached, noSubscription, invalid, other }
+enum LinkedTeamError {
+  identifierTaken,
+  quotaReached,
+  noSubscription,
+  invalid,
+  other,
+}
 
 class LinkedTeamException implements Exception {
   const LinkedTeamException(this.error);
@@ -58,7 +65,8 @@ class LinkedTeamException implements Exception {
 }
 
 abstract class LinkedTeamRepository {
-  static HttpsCallable _callable(String name) => FirebaseFunctions.instanceFor(region: kCloudRegion).httpsCallable(name);
+  static HttpsCallable _callable(String name) =>
+      FirebaseFunctions.instanceFor(region: kCloudRegion).httpsCallable(name);
 
   /// Équipes liées du propriétaire connecté, en temps réel, par `teamIndex`
   /// (autorisé par la règle `ownerUid == request.auth.uid`, Task 1).
@@ -68,7 +76,8 @@ abstract class LinkedTeamRepository {
         .where('ownerUid', isEqualTo: ownerUid)
         .snapshots()
         .map((QuerySnapshot<Map<String, dynamic>> s) {
-          final List<LinkedTeam> teams = s.docs.map((d) => LinkedTeam.fromDoc(d.id, d.data())).toList();
+          final List<LinkedTeam> teams =
+              s.docs.map((d) => LinkedTeam.fromDoc(d.id, d.data())).toList();
           teams.sort((a, b) => a.teamIndex.compareTo(b.teamIndex));
           return teams;
         });
@@ -96,14 +105,21 @@ abstract class LinkedTeamRepository {
     }
   }
 
-  static Future<void> resetPassword({required String uid, required String password}) async {
-    await _callable('resetLinkedTeamPassword').call<dynamic>(<String, dynamic>{'uid': uid, 'password': password});
+  static Future<void> resetPassword({
+    required String uid,
+    required String password,
+  }) async {
+    await _callable(
+      'resetLinkedTeamPassword',
+    ).call<dynamic>(<String, dynamic>{'uid': uid, 'password': password});
   }
 
   static LinkedTeamError mapError(String code, String? message) {
     if (code == 'already-exists') return LinkedTeamError.identifierTaken;
-    if (code == 'failed-precondition' && message == 'team-quota-reached') return LinkedTeamError.quotaReached;
-    if (code == 'failed-precondition' && message == 'no-active-subscription') return LinkedTeamError.noSubscription;
+    if (code == 'failed-precondition' && message == 'team-quota-reached')
+      return LinkedTeamError.quotaReached;
+    if (code == 'failed-precondition' && message == 'no-active-subscription')
+      return LinkedTeamError.noSubscription;
     if (code == 'invalid-argument') return LinkedTeamError.invalid;
     return LinkedTeamError.other;
   }

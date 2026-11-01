@@ -41,10 +41,13 @@ class _AccessGuardState extends ConsumerState<AccessGuard> {
   /// Rattache les achats à l'uid du propriétaire, une seule fois par uid. Les erreurs sont avalées :
   /// un échec RevenueCat ne doit jamais faire échouer le build.
   void _syncPurchases(String? uid, AccessInfo? info) {
-    if (uid == null || info == null || info.isLinked || _loggedInUid == uid) return;
+    if (uid == null || info == null || info.isLinked || _loggedInUid == uid)
+      return;
     _loggedInUid = uid;
     try {
-      unawaited(ref.read(billingServiceProvider).logIn(uid).catchError((Object _) {}));
+      unawaited(
+        ref.read(billingServiceProvider).logIn(uid).catchError((Object _) {}),
+      );
     } catch (_) {
       // Erreur synchrone du service d'achats : ignorée.
     }
@@ -52,12 +55,18 @@ class _AccessGuardState extends ConsumerState<AccessGuard> {
 
   void _maybePromptTeams(AccessInfo info, List<LinkedTeam> linked) {
     if (_prompted) return;
-    final int missing = missingTeams(info, linkedCount: linked.length, now: DateTime.now());
+    final int missing = missingTeams(
+      info,
+      linkedCount: linked.length,
+      now: DateTime.now(),
+    );
     if (missing == 0) return;
     _prompted = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CreerEquipeLieeScreen()));
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const CreerEquipeLieeScreen()),
+      );
     });
   }
 
@@ -74,7 +83,10 @@ class _AccessGuardState extends ConsumerState<AccessGuard> {
     _syncPurchases(uid, access);
 
     // Chargement uniquement tant qu'une valeur est attendue : une erreur ne bloque pas sur le loader.
-    if (enforced.isLoading || info.isLoading || auth.isLoading || (uid != null && access == null && !info.hasError)) {
+    if (enforced.isLoading ||
+        info.isLoading ||
+        auth.isLoading ||
+        (uid != null && access == null && !info.hasError)) {
       return const AppLoader();
     }
 
@@ -92,7 +104,8 @@ class _AccessGuardState extends ConsumerState<AccessGuard> {
       case AccessDecision.open:
         // La liste des équipes liées n'est consultée que pour un propriétaire.
         if (access != null && !access.isLinked) {
-          final List<LinkedTeam>? linked = ref.watch(linkedTeamsProvider).valueOrNull;
+          final List<LinkedTeam>? linked =
+              ref.watch(linkedTeamsProvider).valueOrNull;
           if (linked != null) _maybePromptTeams(access, linked);
         }
         return widget.child;

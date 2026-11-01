@@ -158,6 +158,8 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
   @override
   Widget build(BuildContext context) {
     return CheckProfilScaffold(
+      // Portrait sur téléphone à l'onboarding seulement ; la modification reste en paysage.
+      portraitOnPhone: !widget.editMode,
       title:
           widget.editMode
               ? 'Modifier mon équipe'

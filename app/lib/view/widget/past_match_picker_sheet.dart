@@ -1,5 +1,6 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/game_match.dart';
 import 'package:wina/models/match_composition.dart';
@@ -39,7 +40,7 @@ Future<void> showPastMatchPickerSheet(
     context: context,
     backgroundColor: AppColor.surface,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(r(20))),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(cR(20))),
     ),
     builder: (_) => _PastMatchPickerSheet(onPick: onPick),
   );
@@ -57,19 +58,16 @@ class _PastMatchPickerSheet extends ConsumerWidget {
     );
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: formatWidth(24),
-          vertical: formatHeight(18),
-        ),
+        padding: EdgeInsets.symmetric(horizontal: cW(24), vertical: cH(18)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
               'app.past-match-picker-sheet.titre'.tr(),
-              style: AppThemeStyle.semiBStyle(16, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(cFs(16), AppColor.primaryLabels),
             ),
-            sh(12),
+            cSh(12),
             matchesAsync.when(
               data: (List<GameMatch> all) {
                 final List<GameMatch> matches = all
@@ -79,7 +77,7 @@ class _PastMatchPickerSheet extends ConsumerWidget {
                   return Text(
                     'app.past-match-picker-sheet.aucun-match'.tr(),
                     style: AppThemeStyle.regularStyle(
-                      13,
+                      cFs(13),
                       AppColor.secondaryLabels,
                     ),
                   );
@@ -88,7 +86,7 @@ class _PastMatchPickerSheet extends ConsumerWidget {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: matches.length,
-                    separatorBuilder: (_, _) => sh(10),
+                    separatorBuilder: (_, _) => cSh(10),
                     itemBuilder: (BuildContext context, int i) {
                       final GameMatch match = matches[i];
                       return _PastMatchTile(
@@ -104,13 +102,13 @@ class _PastMatchPickerSheet extends ConsumerWidget {
               },
               loading:
                   () => AppLoader(
-                    padding: EdgeInsets.symmetric(vertical: formatHeight(20)),
+                    padding: EdgeInsets.symmetric(vertical: cH(20)),
                   ),
               error:
                   (Object e, _) => Text(
                     'app.past-match-picker-sheet.erreur-chargement'.tr(),
                     style: AppThemeStyle.regularStyle(
-                      13,
+                      cFs(13),
                       AppColor.secondaryLabels,
                     ),
                   ),
@@ -142,15 +140,12 @@ class _PastMatchTile extends StatelessWidget {
             : match.opponent.name;
     return Material(
       color: AppColor.background,
-      borderRadius: BorderRadius.circular(r(14)),
+      borderRadius: BorderRadius.circular(cR(14)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(14)),
+        borderRadius: BorderRadius.circular(cR(14)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(16),
-            vertical: formatHeight(12),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(16), vertical: cH(12)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -164,25 +159,25 @@ class _PastMatchTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppThemeStyle.semiBStyle(
-                        14,
+                        cFs(14),
                         AppColor.primaryLabels,
                       ),
                     ),
                   ),
-                  sw(8),
+                  cSw(8),
                   Text(
                     _formatDate(match.finishedAt),
                     style: AppThemeStyle.regularStyle(
-                      12,
+                      cFs(12),
                       AppColor.secondaryLabels,
                     ),
                   ),
                 ],
               ),
-              sh(8),
+              cSh(8),
               Wrap(
-                spacing: formatWidth(8),
-                runSpacing: formatHeight(6),
+                spacing: cW(8),
+                runSpacing: cH(6),
                 children: <Widget>[
                   if (comp != null) InfoChip(comp.formationLabel),
                   if (comp != null)

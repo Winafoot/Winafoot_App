@@ -13,7 +13,44 @@
           "package_name": "fr.winafoot.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1074102338688-0tmcf8b4b8g6h0e2l838o9k7trdctdam.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fr.winafoot.app",
+            "certificate_hash": "f877b6332781734f7166a8dc79e3c127b212ec9f"
+          }
+        },
+        {
+          "client_id": "1074102338688-4niug3oopeaam67bg228ip6ccomph3le.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fr.winafoot.app",
+            "certificate_hash": "a036ec61f9f5cb99d9dccbec55fc3cc5dbebed3c"
+          }
+        },
+        {
+          "client_id": "1074102338688-qnkf22jp3entf17kf5ntp8pavploor2d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fr.winafoot.app",
+            "certificate_hash": "f712cab773acd1c8d29671a33c0b240c5e13cd52"
+          }
+        },
+        {
+          "client_id": "1074102338688-t146ipj3oohdr1mf9hvpd0klifqlf7np.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fr.winafoot.app",
+            "certificate_hash": "98f653c53d9eee0caf5f8cb2c153f3c7119f221f"
+          }
+        },
+        {
+          "client_id": "1074102338688-c035ef2fgv7a79sngp2l7rb0a3b22s1e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAB9iSZ-4kIsBwpdpcFVkqFJ9sDaAafTbA"
@@ -21,7 +58,20 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1074102338688-c035ef2fgv7a79sngp2l7rb0a3b22s1e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1074102338688-4vgn022p2691bsgjl4c5v8a0k52omngu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "fr.winafoot.app",
+                "app_store_id": "6825015285"
+              }
+            }
+          ]
         }
       }
     }

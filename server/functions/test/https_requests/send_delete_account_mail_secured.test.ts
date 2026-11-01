@@ -158,10 +158,10 @@ describe("onSendLandingPageMailDeleteAccount (secured)", () => {
   });
 
   // La réponse est la même 200 pour un compte connu et pour une adresse inconnue, y compris quand
-  // MailerSend refuse l'envoi (quota, domaine).
+  // Resend refuse l'envoi (quota, domaine).
   it("answers the same 200 when the mail cannot be sent, removes the token and leaks nothing", async () => {
     await seedCoach("coach@club.test");
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     const res = await call({ email: "coach@club.test" });
 
@@ -284,7 +284,7 @@ describe("landing endpoints — method and CORS", () => {
 });
 
 // Limitation de débit : sans elle, une seule adresse de coach connue suffit à inonder
-// sa boîte de vrais mails Wina et à épuiser le quota MailerSend partagé par tous les
+// sa boîte de vrais mails Wina et à épuiser le quota Resend partagé par tous les
 // mails transactionnels (invitations, réinitialisations).
 describe("onSendLandingPageMailDeleteAccount — rate limiting", () => {
   it(`refuses an IP after ${LIMITS.deleteMailIp.limit} requests with 429, doing nothing`, async () => {

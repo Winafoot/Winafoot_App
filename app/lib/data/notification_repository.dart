@@ -55,8 +55,9 @@ abstract class NotificationRepository {
     final QuerySnapshot<Map<String, dynamic>> all = await _collection().get();
     for (int i = 0; i < all.docs.length; i += _batchSize) {
       final WriteBatch batch = FirebaseFirestore.instance.batch();
-      for (final QueryDocumentSnapshot<Map<String, dynamic>> doc
-          in all.docs.skip(i).take(_batchSize)) {
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> doc in all.docs
+          .skip(i)
+          .take(_batchSize)) {
         batch.delete(doc.reference);
       }
       await batch.commit();

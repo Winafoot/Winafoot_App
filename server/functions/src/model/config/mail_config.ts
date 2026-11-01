@@ -7,6 +7,8 @@ class MailConfig {
   from?: string;
   fromName?: string;
   replyTo?: string;
+  /** Bandeau d'en-tête des e-mails (image https, 1200x420) ; absent : bandeau vert uni avec le nom de l'app. */
+  headerImageUrl?: string;
 
   static fromJson(json: Map<string, any>): MailConfig {
     let appdata: MailConfig = Object.assign(new MailConfig(), json);

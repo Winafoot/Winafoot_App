@@ -30,7 +30,10 @@ abstract class PlayerRepository {
 
   /// Flux temps réel de l'effectif, ordonné par `order` (ordre d'affichage).
   static Stream<List<Player>> watchPlayers() {
-    return _collection().orderBy('order').snapshots().map(
+    return _collection()
+        .orderBy('order')
+        .snapshots()
+        .map(
           (QuerySnapshot<Map<String, dynamic>> snap) => snap.docs
               .map((doc) => Player.fromDoc(doc.id, doc.data()))
               .toList(growable: false),

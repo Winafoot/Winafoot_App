@@ -1,16 +1,40 @@
-import { MailerSend, EmailParams, Sender, Recipient, APIResponse } from "mailer-send-ts";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { Resend } from "resend";
 import { UserModel } from "../model/user/user_model";
 import { AppMetadataConfig } from "../model/config/app_metadata_config";
 import { EnvProvider } from "../provider/env_provider";
 import { describeError } from "./describe_error";
 import { mailIdentity } from "./mail_identity";
+import { withHeaderImage } from "../template/_email_layout";
+
+/** Identifiant de l'image du bandeau jointe au mail (`<img src="cid:...">`). */
+const INLINE_HEADER_ID = "wina-header";
+let inlineHeader: Buffer | null | undefined;
 
 /**
- * Envoie un e-mail transactionnel via MailerSend.
+ * Bandeau des e-mails (functions/assets/mail/header.jpg), lu une fois puis gardé en mémoire. Absent ou illisible :
+ * `null`, et les e-mails partent avec le bandeau vert uni.
+ */
+function inlineHeaderImage(): Buffer | null {
+  if (inlineHeader === undefined) {
+    try {
+      inlineHeader = readFileSync(join(__dirname, "..", "..", "assets", "mail", "header.jpg"));
+    } catch {
+      inlineHeader = null;
+    }
+  }
+  return inlineHeader;
+}
+
+/**
+ * Envoie un e-mail transactionnel via Resend.
  *
  * `emailText` est la version texte brut, propre à chaque gabarit ; à défaut elle
  * est dérivée du sujet. Aucun repli ne doit décrire un « signalement » : tous les
  * e-mails passent par ici (bienvenue, vérification, mot de passe, invitation coach).
+ *
+ * Renvoie l'identifiant du message chez Resend.
  */
 export async function sendEmail(
   config: AppMetadataConfig,
@@ -18,17 +42,11 @@ export async function sendEmail(
   emailContent: string,
   emailSubject?: string,
   emailText?: string
-): Promise<APIResponse> {
-  const mailerSendConfig = EnvProvider.instance.mailerSendConfig;
-  if (mailerSendConfig.apiKey == null) {
-    throw new Error("No mailerSendConfig no apiKey found inside private key");
+): Promise<string> {
+  const resendConfig = EnvProvider.instance.resendConfig;
+  if (resendConfig.apiKey == null) {
+    throw new Error("No resendConfig no apiKey found inside private key");
   }
-
-  const mailersend = new MailerSend({
-    apiKey: mailerSendConfig.apiKey,
-  });
-
-  const recipients = [new Recipient(userModel.email ?? "", userModel.fullName ?? "")];
 
   const mailConfig = config?.mail;
   if (mailConfig === undefined) throw new Error("Mail config is undefined");
@@ -47,20 +65,34 @@ export async function sendEmail(
   const subject: string = emailSubject ?? "Notification";
   const text: string = emailText ?? `${subject}. Merci d'afficher cet e-mail au format HTML pour en voir le contenu.`;
 
-  const emailParams: EmailParams = new EmailParams()
-    .setFrom(new Sender(from, fromName))
-    .setTo(recipients)
-    .setReplyTo(new Sender(replyTo, fromName))
-    .setSubject(`${appName} - ${subject}`)
-    .setHtml(emailContent)
-    .setText(text);
+  const resend = new Resend(resendConfig.apiKey);
+
+  // Bandeau : adresse https saisie dans `mail.headerImageUrl`, sinon image jointe au mail (aucun hébergement).
+  const hostedUrl: string | undefined = mailConfig.headerImageUrl;
+  const inline: Buffer | null = hostedUrl ? null : inlineHeaderImage();
+  const html: string = withHeaderImage(emailContent, hostedUrl ?? (inline ? `cid:${INLINE_HEADER_ID}` : undefined), appName);
+  const attachment =
+    inline != null && html !== emailContent
+      ? { filename: "header.jpg", content: inline, contentId: INLINE_HEADER_ID }
+      : undefined;
 
   try {
-    return await mailersend.email.send(emailParams);
+    // Le SDK ne lève pas sur un refus de l'API : il renvoie `{ data, error }`.
+    const { data, error } = await resend.emails.send({
+      from: `${fromName} <${from}>`,
+      to: [userModel.email ?? ""],
+      replyTo,
+      subject: `${appName} - ${subject}`,
+      html,
+      ...(attachment != null ? { attachments: [attachment] } : {}),
+      text,
+    });
+    if (error != null) throw error;
+    return data?.id ?? "";
   } catch (e: unknown) {
-    // Le client HTTP (gaxios) attache la requête complète à ses erreurs réseau, en-tête
-    // Authorization (clé API) compris : la journaliser telle quelle l'écrirait en clair
-    // dans Cloud Logging. On ne garde que le statut et le motif renvoyé par l'API.
-    throw new Error(`MailerSend : ${describeError(e)}`);
+    // Une erreur réseau (fetch) peut embarquer la requête, en-tête Authorization (clé API)
+    // compris : la journaliser telle quelle l'écrirait en clair dans Cloud Logging.
+    // On ne garde que le statut et le motif renvoyé par l'API.
+    throw new Error(`Resend : ${describeError(e)}`);
   }
 }

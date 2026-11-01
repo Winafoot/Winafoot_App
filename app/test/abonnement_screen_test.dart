@@ -166,7 +166,8 @@ void main() {
   testWidgets('aucune exception de layout sur les formules 1, 2 et 3 équipes, même sur écran bas', (
     WidgetTester tester,
   ) async {
-    tester.view.physicalSize = const Size(1194, 500);
+    // 600 = plus petite hauteur encore traitée comme une tablette (OrientationController.tabletShortestSide).
+    tester.view.physicalSize = const Size(1194, 600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(_host(FakeBillingService(offers: _offers)));

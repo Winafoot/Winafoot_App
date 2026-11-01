@@ -22,7 +22,7 @@ void main() {
     'butsSubis',
     'tirsCadres',
     'butsMarques',
-    'interceptions',
+    'recuperations',
     'duelsAeriens',
   ];
 
@@ -31,7 +31,7 @@ void main() {
         enabledStatsInCatalogOrder(stocke).map((StatDef s) => s.key).toList();
 
     expect(keys, <String>[
-      'interceptions',
+      'recuperations',
       'tirsCadres',
       'butsMarques',
       'butsSubis',
@@ -104,7 +104,7 @@ void main() {
 
     final List<double> xs = <double>[
       for (final String label in const <String>[
-        'Interception de ballons',
+        'Récupérations de ballons',
         'Tirs cadrés',
         'Buts marqués',
         'Buts subis',

@@ -1,9 +1,11 @@
+import 'package:wina/view/page/gerer_equipe_nav.dart';
 import 'dart:async';
 
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/custom_composition.dart';
 import 'package:wina/models/formation.dart';
@@ -48,30 +50,29 @@ class GererEquipeCompositionScreen extends ConsumerWidget {
         label: 'app.gerer-equipe-composition.suivant'.tr(),
         enabled: draft.hasFormation,
         onTap:
-            () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder:
-                    (_) => GererEquipePlacementScreen(
-                      allowedPlayerIds: allowedPlayerIds,
-                    ),
+            () => openGererScreen(
+              context,
+              kGererPlacementRoute,
+              () => GererEquipePlacementScreen(
+                allowedPlayerIds: allowedPlayerIds,
               ),
             ),
       ),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          formatWidth(40),
-          formatHeight(8),
-          formatWidth(40),
+          isPhoneLayout ? 16 : cW(40),
+          cH(8),
+          isPhoneLayout ? 16 : cW(40),
           0,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             SizedBox(
-              width: formatWidth(370),
+              width: isPhoneLayout ? 190 : cW(370),
               child: _ChosenPreview(formation: draft.formation),
             ),
-            sw(24),
+            cSw(24),
             Expanded(
               child: _CompositionsList(
                 standards: standards,
@@ -101,10 +102,10 @@ class _ChosenPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(formatWidth(12)),
+      padding: EdgeInsets.all(cW(12)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(18)),
+        borderRadius: BorderRadius.circular(cR(18)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -112,24 +113,36 @@ class _ChosenPreview extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              Text(
-                'app.gerer-equipe-composition.composition-choisie'.tr(),
-                style: AppThemeStyle.semiBStyle(14, AppColor.primaryLabels),
+              Expanded(
+                child: Text(
+                  'app.gerer-equipe-composition.composition-choisie'.tr(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppThemeStyle.semiBStyle(
+                    isPhoneLayout ? cFs(16) : cFs(14),
+                    AppColor.primaryLabels,
+                  ),
+                ),
               ),
-              const Spacer(),
-              if (formation != null) _LabelPill(formation!.label),
+              if (formation != null) ...<Widget>[
+                const SizedBox(width: 6),
+                _LabelPill(formation!.label),
+              ],
             ],
           ),
-          sh(12),
+          SizedBox(height: isPhoneLayout ? 6 : cH(12)),
           Flexible(
             child: FormationPitch(formation: formation, markerFraction: 0.15),
           ),
           if (formation == null) ...[
-            sh(10),
+            cSh(10),
             Text(
               'app.gerer-equipe-composition.aide-choix'.tr(),
               textAlign: TextAlign.center,
-              style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+              style: AppThemeStyle.regularStyle(
+                isPhoneLayout ? cFs(15) : cFs(12),
+                AppColor.secondaryLabels,
+              ),
             ),
           ],
         ],
@@ -187,36 +200,82 @@ class _CompositionsListState extends State<_CompositionsList> {
     });
   }
 
+  /// Téléphone : largeur d'une cellule pour [perRow] pastilles par ligne.
+  static double _cell(double maxWidth, int perRow) =>
+      (maxWidth - 10 * (perRow - 1)) / perRow;
+
   Widget _grid(List<Formation> list) {
+    if (isPhoneLayout) {
+      return LayoutBuilder(
+        builder:
+            (BuildContext context, BoxConstraints c) => Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                for (final Formation f in list)
+                  _FormationChip(
+                    label: f.label,
+                    selected: widget.selected == f,
+                    width: _cell(c.maxWidth, 3),
+                    onTap: () => widget.onSelect(f),
+                  ),
+              ],
+            ),
+      );
+    }
     return Wrap(
-      spacing: formatWidth(14),
-      runSpacing: formatHeight(14),
+      spacing: isPhoneLayout ? 10 : cW(14),
+      runSpacing: isPhoneLayout ? 10 : cH(14),
       children: <Widget>[
         for (final Formation f in list)
-          _CompoCard(
-            formation: f,
-            selected: widget.selected == f,
-            dimmed: widget.selected != null && widget.selected != f,
-            onTap: () => widget.onSelect(f),
-          ),
+          if (isPhoneLayout)
+            const SizedBox.shrink()
+          else
+            _CompoCard(
+              formation: f,
+              selected: widget.selected == f,
+              dimmed: widget.selected != null && widget.selected != f,
+              onTap: () => widget.onSelect(f),
+            ),
       ],
     );
   }
 
   Widget _customGrid(List<CustomComposition> list) {
+    if (isPhoneLayout) {
+      return LayoutBuilder(
+        builder:
+            (BuildContext context, BoxConstraints box) => Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: <Widget>[
+                for (final CustomComposition c in list)
+                  _FormationChip(
+                    label: '${c.toFormation().label} · ${c.name}',
+                    selected: widget.selected == c.toFormation(),
+                    width: _cell(box.maxWidth, 2),
+                    onTap: () => widget.onSelect(c.toFormation(), name: c.name),
+                  ),
+              ],
+            ),
+      );
+    }
     return Wrap(
-      spacing: formatWidth(14),
-      runSpacing: formatHeight(14),
+      spacing: isPhoneLayout ? 10 : cW(14),
+      runSpacing: isPhoneLayout ? 10 : cH(14),
       children: <Widget>[
         for (final CustomComposition c in list)
-          _CompoCard(
-            formation: c.toFormation(),
-            name: c.name,
-            selected: widget.selected == c.toFormation(),
-            dimmed:
-                widget.selected != null && widget.selected != c.toFormation(),
-            onTap: () => widget.onSelect(c.toFormation(), name: c.name),
-          ),
+          if (isPhoneLayout)
+            const SizedBox.shrink()
+          else
+            _CompoCard(
+              formation: c.toFormation(),
+              name: c.name,
+              selected: widget.selected == c.toFormation(),
+              dimmed:
+                  widget.selected != null && widget.selected != c.toFormation(),
+              onTap: () => widget.onSelect(c.toFormation(), name: c.name),
+            ),
       ],
     );
   }
@@ -232,26 +291,31 @@ class _CompositionsListState extends State<_CompositionsList> {
                 .toList(growable: false)
             : widget.standards;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: formatHeight(12)),
+    final Widget scroll = SingleChildScrollView(
+      padding: EdgeInsets.only(bottom: cH(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Align(
-            alignment: Alignment.centerRight,
-            child: _SearchField(
-              controller: _controller,
-              onChanged: _onSearchChanged,
-              onClear: _clearSearch,
+          if (!isPhoneLayout) ...<Widget>[
+            Align(
+              alignment: Alignment.centerRight,
+              child: _SearchField(
+                controller: _controller,
+                onChanged: _onSearchChanged,
+                onClear: _clearSearch,
+              ),
             ),
-          ),
-          sh(14),
+            cSh(14),
+          ],
           if (searching) ...<Widget>[
             Text(
               'app.gerer-equipe-composition.resultats-recherche'.tr(),
-              style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(
+                isPhoneLayout ? cFs(19) : cFs(15),
+                AppColor.primaryLabels,
+              ),
             ),
-            sh(10),
+            cSh(10),
             if (filtered.isEmpty)
               EmptyStatePlaceholder(
                 title: 'app.gerer-equipe-composition.aucun-resultat'.tr(),
@@ -259,7 +323,7 @@ class _CompositionsListState extends State<_CompositionsList> {
                     'app.gerer-equipe-composition.aucun-resultat-sous-titre'
                         .tr(),
                 titleSize: 18,
-                padding: EdgeInsets.symmetric(vertical: formatHeight(40)),
+                padding: EdgeInsets.symmetric(vertical: cH(40)),
               )
             else
               _grid(filtered),
@@ -268,30 +332,114 @@ class _CompositionsListState extends State<_CompositionsList> {
               children: <Widget>[
                 Text(
                   'app.gerer-equipe-composition.mes-compositions'.tr(),
-                  style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+                  style: AppThemeStyle.semiBStyle(
+                    isPhoneLayout ? cFs(19) : cFs(15),
+                    AppColor.primaryLabels,
+                  ),
                 ),
                 const Spacer(),
-                _CreateCompoButton(onTap: widget.onCreate),
+                if (!isPhoneLayout) _CreateCompoButton(onTap: widget.onCreate),
               ],
             ),
-            sh(10),
+            cSh(10),
             if (widget.customs.isEmpty)
               Text(
                 'app.gerer-equipe-composition.aucune-composition-personnalisee'
                     .tr(),
-                style: AppThemeStyle.regularStyle(13, AppColor.secondaryLabels),
+                style: AppThemeStyle.regularStyle(
+                  isPhoneLayout ? cFs(16) : cFs(13),
+                  AppColor.secondaryLabels,
+                ),
               )
             else
               _customGrid(widget.customs),
-            sh(18),
+            cSh(18),
             Text(
               'app.gerer-equipe-composition.compositions-standards'.tr(),
-              style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+              style: AppThemeStyle.semiBStyle(
+                isPhoneLayout ? cFs(19) : cFs(15),
+                AppColor.primaryLabels,
+              ),
             ),
-            sh(10),
+            cSh(10),
             _grid(widget.standards),
           ],
         ],
+      ),
+    );
+    if (!isPhoneLayout) return scroll;
+    // Téléphone : recherche et création restent en haut, seules les cartes défilent.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: _SearchField(
+                controller: _controller,
+                onChanged: _onSearchChanged,
+                onClear: _clearSearch,
+              ),
+            ),
+            const SizedBox(width: 8),
+            _CreateCompoButton(onTap: widget.onCreate),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Expanded(child: scroll),
+      ],
+    );
+  }
+}
+
+/// Téléphone : schéma en pastille (« 4-4-2 »), sans mini-terrain — l'aperçu de
+/// gauche montre déjà le schéma retenu. Zone tactile de 40.
+class _FormationChip extends StatelessWidget {
+  const _FormationChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.width,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  /// Largeur d'une cellule : 3 pastilles par ligne (2 pour les noms longs).
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: selected ? AppColor.primaryColor : AppColor.surface,
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: selected ? AppColor.primaryColor : AppColor.divider,
+              ),
+            ),
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppThemeStyle.semiBStyle(
+                cFs(18),
+                selected ? AppColor.textLight : AppColor.primaryLabels,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -325,11 +473,12 @@ class _CompoCard extends StatelessWidget {
         opacity: dimmed ? 0.3 : 1,
         duration: const Duration(milliseconds: 200),
         child: Container(
-          width: formatWidth(190),
-          padding: EdgeInsets.all(formatWidth(8)),
+          // Téléphone : 3 cartes par ligne dans la colonne de droite.
+          width: isPhoneLayout ? 140 : cW(190),
+          padding: EdgeInsets.all(isPhoneLayout ? 8 : cW(8)),
           decoration: BoxDecoration(
             color: AppColor.surface,
-            borderRadius: BorderRadius.circular(r(14)),
+            borderRadius: BorderRadius.circular(cR(14)),
             border: Border.all(
               color: selected ? AppColor.primaryColor : AppColor.divider,
               width: selected ? 2 : 1,
@@ -343,14 +492,14 @@ class _CompoCard extends StatelessWidget {
                 children: <Widget>[
                   _LabelPill(formation.label),
                   if (name != null) ...<Widget>[
-                    sw(6),
+                    cSw(6),
                     Expanded(
                       child: Text(
                         name!,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppThemeStyle.mediumStyle(
-                          12,
+                          cFs(12),
                           AppColor.primaryLabels,
                         ),
                       ),
@@ -358,16 +507,16 @@ class _CompoCard extends StatelessWidget {
                   ] else
                     const Spacer(),
                   if (selected) ...<Widget>[
-                    sw(4),
+                    cSw(4),
                     Icon(
                       Iconsax.tick_circle,
-                      size: sp(18),
+                      size: cIc(18),
                       color: AppColor.primaryColor,
                     ),
                   ],
                 ],
               ),
-              sh(8),
+              cSh(8),
               FormationPitch(formation: formation, markerFraction: 0.19),
             ],
           ),
@@ -385,17 +534,20 @@ class _LabelPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(12),
-        vertical: formatHeight(5),
-      ),
+      padding:
+          isPhoneLayout
+              ? const EdgeInsets.symmetric(horizontal: 10, vertical: 4)
+              : EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(5)),
       decoration: BoxDecoration(
         color: AppColor.chipBackground,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
       ),
       child: Text(
         label,
-        style: AppThemeStyle.semiBStyle(12, AppColor.primaryLabels),
+        style: AppThemeStyle.semiBStyle(
+          isPhoneLayout ? cFs(16) : cFs(12),
+          AppColor.primaryLabels,
+        ),
       ),
     );
   }
@@ -411,27 +563,30 @@ class _CreateCompoButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColor.chipBackground,
-      borderRadius: BorderRadius.circular(r(12)),
+      borderRadius: BorderRadius.circular(cR(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(14),
-            vertical: formatHeight(8),
-          ),
+          padding:
+              isPhoneLayout
+                  ? const EdgeInsets.symmetric(horizontal: 12, vertical: 9)
+                  : EdgeInsets.symmetric(horizontal: cW(14), vertical: cH(8)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Icon(
                 Iconsax.add_copy,
-                size: sp(16),
+                size: isPhoneLayout ? 18 : cIc(16),
                 color: AppColor.primaryColor,
               ),
-              sw(6),
+              cSw(6),
               Text(
                 'app.gerer-equipe-composition.creer-composition'.tr(),
-                style: AppThemeStyle.semiBStyle(13, AppColor.primaryColor),
+                style: AppThemeStyle.semiBStyle(
+                  isPhoneLayout ? cFs(16) : cFs(13),
+                  AppColor.primaryColor,
+                ),
               ),
             ],
           ),
@@ -484,21 +639,22 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: formatWidth(260),
-      padding: EdgeInsets.symmetric(horizontal: formatWidth(14)),
+      width: isPhoneLayout ? null : cW(260),
+      height: isPhoneLayout ? 38 : null,
+      padding: EdgeInsets.symmetric(horizontal: isPhoneLayout ? 12 : cW(14)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(12)),
+        borderRadius: BorderRadius.circular(cR(12)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Row(
         children: <Widget>[
           Icon(
             Iconsax.search_normal_1_copy,
-            size: sp(16),
+            size: cIc(16),
             color: AppColor.secondaryLabels,
           ),
-          sw(8),
+          cSw(8),
           Expanded(
             child: TextField(
               controller: controller,
@@ -508,13 +664,16 @@ class _SearchField extends StatelessWidget {
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => FocusScope.of(context).unfocus(),
               inputFormatters: <TextInputFormatter>[FormationSearchFormatter()],
-              style: AppThemeStyle.regularStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.regularStyle(
+                isPhoneLayout ? cFs(18) : cFs(13),
+                AppColor.primaryLabels,
+              ),
               decoration: InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
                 hintText: 'app.recherche.compositions-hint'.tr(),
                 hintStyle: AppThemeStyle.regularStyle(
-                  13,
+                  isPhoneLayout ? cFs(18) : cFs(13),
                   AppColor.secondaryLabels,
                 ),
               ),
@@ -523,10 +682,10 @@ class _SearchField extends StatelessWidget {
           if (controller.text.isNotEmpty)
             InkResponse(
               onTap: onClear,
-              radius: sp(18),
+              radius: cIc(18),
               child: Icon(
                 Iconsax.close_circle,
-                size: sp(16),
+                size: cIc(16),
                 color: AppColor.secondaryLabels,
               ),
             ),

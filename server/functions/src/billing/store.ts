@@ -14,6 +14,7 @@ export function subscriptionToDoc(sub: SubscriptionData): Record<string, unknown
     expiresAt: Timestamp.fromMillis(sub.expiresAtMs),
     store: sub.store,
     lastEventMs: sub.lastEventMs,
+    autoRenew: sub.autoRenew ?? null,
     updatedAt: Timestamp.now(),
   };
 }
@@ -29,6 +30,7 @@ export function subscriptionFromDoc(data: any): SubscriptionData | undefined {
     expiresAtMs: data.expiresAt.toMillis(),
     store: data.store,
     lastEventMs: data.lastEventMs ?? 0,
+    autoRenew: typeof data.autoRenew === "boolean" ? data.autoRenew : undefined,
   };
 }
 

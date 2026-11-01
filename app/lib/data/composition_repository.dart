@@ -28,12 +28,13 @@ abstract class CompositionRepository {
     return _collection().snapshots().map((
       QuerySnapshot<Map<String, dynamic>> snap,
     ) {
-      final List<CustomComposition> list = snap.docs
-          .map(
-            (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
-                CustomComposition.fromDoc(d.id, d.data()),
-          )
-          .toList();
+      final List<CustomComposition> list =
+          snap.docs
+              .map(
+                (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                    CustomComposition.fromDoc(d.id, d.data()),
+              )
+              .toList();
       // `createdAt` est un horodatage serveur : il vaut `null` sur l'écriture
       // locale tant que le serveur n'a pas répondu. Une composition tout juste
       // créée est la plus récente : elle doit rester en tête, et non retomber

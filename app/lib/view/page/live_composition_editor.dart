@@ -1,9 +1,11 @@
+import 'package:wina/view/page/gerer_equipe_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/live_match.dart';
 import 'package:wina/models/match_composition.dart';
 import 'package:wina/providers/composition_providers.dart';
+import 'package:wina/providers/player_providers.dart';
 import 'package:wina/providers/live_match_providers.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/coup_denvoi_step3_screen.dart';
@@ -36,7 +38,10 @@ void openLiveCompositionEditor(BuildContext context, WidgetRef ref) {
           assignments: live.assignments,
           numbers: live.numbers,
           substituteIds: live.substituteIds,
+          // Sans lui, rouvrir « Modifier composition » puis valider retirerait le brassard du capitaine.
+          captainId: live.captainId,
         ),
+        maxSquad: ref.read(maxSquadSizeProvider).valueOrNull,
       );
   Navigator.of(context).push(
     MaterialPageRoute<void>(
@@ -70,12 +75,11 @@ class _LiveCompoEditorState extends ConsumerState<_LiveCompoEditor> {
 
   Future<void> _run() async {
     final MatchComposition? before = ref.read(matchDraftProvider).composition;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder:
-            (_) => GererEquipeCompositionScreen(
-              allowedPlayerIds: widget.allowedPlayerIds,
-            ),
+    await openGererScreen(
+      context,
+      kGererCompositionRoute,
+      () => GererEquipeCompositionScreen(
+        allowedPlayerIds: widget.allowedPlayerIds,
       ),
     );
     if (!mounted) return;

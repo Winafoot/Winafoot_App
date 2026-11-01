@@ -25,7 +25,7 @@ describe("App Check on the callables", () => {
   const exported = Object.entries(callables);
 
   it("sees every callable export", () => {
-    expect(exported).toHaveLength(20);
+    expect(exported).toHaveLength(24);
   });
 
   it.each(exported)("%s enforces App Check", (_name, callable) => {

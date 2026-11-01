@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart';
 
 import 'package:skeleton/controller/user_controller.dart';
 import 'package:skeleton/skeleton.dart';
+import 'package:wina/view/page/reset_password_code_page.dart';
+import 'package:wina/view/widget/social_sign_in_ui.dart';
 
 /// Région où les Cloud Functions du projet sont déployées.
 /// `FirebaseFunctions.instance` viserait `us-central1`, où rien ne tourne.
@@ -59,6 +61,20 @@ SkeletonAppConfig initSkeletonAppConfig() {
               width: sp(88),
             ),
           ),
+      // Téléphone (portrait) : même wordmark que l'inscription, au-dessus du titre.
+      // (Tablette : voir `webLoginPageTitleBuilder` ci-dessus.)
+      loginPageTitleBuilder:
+          (BuildContext context, WidgetRef ref) => Column(
+            children: <Widget>[
+              SvgPicture.asset("assets/svg/logo_inline.svg", width: sp(125)),
+              sh(24),
+              Text(
+                "package.skeleton.auth.login-title".tr(),
+                textAlign: TextAlign.center,
+                style: AppThemeStyle.semiBStyle(sp(23), AppColor.primaryLabels),
+              ),
+            ],
+          ),
       // Contenu du CTA « Connexion » : le `Button` Kosmos n'a pas d'emplacement
       // d'icône, seul ce crochet permet d'y poser la pastille fléchée de la
       // maquette. Le bouton garde sa pilule verte, son loader et son mutex.
@@ -82,10 +98,24 @@ SkeletonAppConfig initSkeletonAppConfig() {
               ),
             ],
           ),
+      // « Mot de passe oublié » : le code part par e-mail, l'écran suivant le demande
+      // avec le nouveau mot de passe (au lieu d'un lien à ouvrir).
+      onResetPasswordCodeSent: (BuildContext context, String email) async {
+        await Navigator.of(context).push<bool>(
+          MaterialPageRoute<bool>(
+            builder: (_) => ResetPasswordCodePage(email: email.trim()),
+          ),
+        );
+      },
       showLogoOnPage: false,
       emailMustBeVerified: false,
       sendEmailVerificationIfNotVerified: false,
       canLoginWithPhone: false,
+      // Google (partout) et Apple (iOS) : la connexion et la création de la fiche
+      // coach passent par SocialSignIn (la fiche est écrite par le serveur).
+      authTiers: availableSocialTiers(),
+      tiersSignIn: (BuildContext context, WidgetRef ref, AuthTiers tiers) =>
+          runSocialSignIn(context, tiers),
       logoutCallback: (BuildContext context, WidgetRef ref) async {
         await UserController.logoutUser(context, ref);
       },

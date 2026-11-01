@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="19.264" height="19.264" viewBox="0 0 19.264 19.264">
-  <g id="vuesax_bold_timer" data-name="vuesax/bold/timer" transform="translate(-236 -188)">
-    <g id="timer" transform="translate(236 188)">
-      <path id="Vector" d="M6.959,0a6.963,6.963,0,1,0,6.959,6.967A6.968,6.968,0,0,0,6.959,0Zm.6,6.7a.6.6,0,0,1-1.2,0V2.689a.6.6,0,0,1,1.2,0Z" transform="translate(2.673 3.732)" fill="#518948"/>
-      <path id="Vector-2" data-name="Vector" d="M5.217,1.164H.578A.576.576,0,0,1,0,.586.582.582,0,0,1,.578,0H5.217A.576.576,0,0,1,5.8.578.582.582,0,0,1,5.217,1.164Z" transform="translate(6.734 1.605)" fill="#518948"/>
-      <path id="Vector-3" data-name="Vector" d="M0,0H19.264V19.264H0Z" transform="translate(19.264 19.264) rotate(180)" fill="none" opacity="0"/>
-    </g>
-  </g>
-</svg>

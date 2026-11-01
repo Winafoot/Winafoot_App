@@ -26,22 +26,24 @@ pw.Document _buildDocument(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4.landscape,
       margin: const pw.EdgeInsets.all(24),
-      header: (pw.Context context) => pw.Container(
-        alignment: pw.Alignment.centerLeft,
-        margin: const pw.EdgeInsets.only(bottom: 12),
-        child: pw.Text(
-          title,
-          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-        ),
-      ),
-      footer: (pw.Context context) => pw.Container(
-        alignment: pw.Alignment.centerRight,
-        margin: const pw.EdgeInsets.only(top: 8),
-        child: pw.Text(
-          'Page ${context.pageNumber} / ${context.pagesCount}',
-          style: const pw.TextStyle(fontSize: 9),
-        ),
-      ),
+      header:
+          (pw.Context context) => pw.Container(
+            alignment: pw.Alignment.centerLeft,
+            margin: const pw.EdgeInsets.only(bottom: 12),
+            child: pw.Text(
+              title,
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+      footer:
+          (pw.Context context) => pw.Container(
+            alignment: pw.Alignment.centerRight,
+            margin: const pw.EdgeInsets.only(top: 8),
+            child: pw.Text(
+              'Page ${context.pageNumber} / ${context.pagesCount}',
+              style: const pw.TextStyle(fontSize: 9),
+            ),
+          ),
       build: content,
     ),
   );
@@ -147,65 +149,71 @@ pw.Document buildBilanCollectifDocument({
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(28),
-      header: (pw.Context context) => pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: <pw.Widget>[
-          pw.Text(
-            'STATISTIQUES COLLECTIVES',
-            textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-          ),
-          pw.SizedBox(height: 8),
-          pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+      header:
+          (pw.Context context) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
             children: <pw.Widget>[
-              pw.Expanded(
-                child: pw.Text(
-                  '$ownTeam / $opponent',
-                  style: pw.TextStyle(
-                    fontSize: 12,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                ),
-              ),
-              pw.SizedBox(width: 12),
               pw.Text(
-                _kPeriodLabels[period]!,
+                'STATISTIQUES COLLECTIVES',
+                textAlign: pw.TextAlign.center,
                 style: pw.TextStyle(
-                  fontSize: 12,
+                  fontSize: 16,
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
+              pw.SizedBox(height: 8),
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: <pw.Widget>[
+                  pw.Expanded(
+                    child: pw.Text(
+                      '$ownTeam / $opponent',
+                      style: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  pw.SizedBox(width: 12),
+                  pw.Text(
+                    _kPeriodLabels[period]!,
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 10),
             ],
           ),
-          pw.SizedBox(height: 10),
-        ],
-      ),
-      build: (pw.Context context) => <pw.Widget>[
-        // Une page sans contenu n'est pas écrite : sans ce texte la période
-        // disparaîtrait du PDF.
-        if (blocks.isEmpty)
-          pw.Text(
-            'Aucune statistique enregistrée pour ce match.',
-            style: const pw.TextStyle(fontSize: 11),
-          ),
-        for (int i = 0; i < blocks.length; i += 2)
-          pw.Padding(
-            padding: const pw.EdgeInsets.only(bottom: 10),
-            child: pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: <pw.Widget>[
-                pw.Expanded(child: _collectifBlock(blocks[i])),
-                pw.SizedBox(width: 24),
-                pw.Expanded(
-                  child: i + 1 < blocks.length
-                      ? _collectifBlock(blocks[i + 1])
-                      : pw.SizedBox(),
+      build:
+          (pw.Context context) => <pw.Widget>[
+            // Une page sans contenu n'est pas écrite : sans ce texte la période
+            // disparaîtrait du PDF.
+            if (blocks.isEmpty)
+              pw.Text(
+                'Aucune statistique enregistrée pour ce match.',
+                style: const pw.TextStyle(fontSize: 11),
+              ),
+            for (int i = 0; i < blocks.length; i += 2)
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 10),
+                child: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: <pw.Widget>[
+                    pw.Expanded(child: _collectifBlock(blocks[i])),
+                    pw.SizedBox(width: 24),
+                    pw.Expanded(
+                      child:
+                          i + 1 < blocks.length
+                              ? _collectifBlock(blocks[i + 1])
+                              : pw.SizedBox(),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-      ],
+              ),
+          ],
     ),
   );
   return doc;
@@ -235,14 +243,14 @@ const int kStatsPerPage = 10;
 
 // Largeurs de colonnes (pt) : A4 paysage moins marges = 794 pt utiles, donc
 // 100 + 22 + 10 × 67 = 792 tient sur une page. 67 pt = 63 pt utiles (2 pt de
-// marge de chaque côté) : en Poppins gras 9, « Dégagements » (le plus long mot
-// d'un libellé) fait 64,8 pt et se coupe en plein mot ; en 8,5 il fait 61,2 pt.
+// marge de chaque côté) : en Poppins gras 8,5, « Récupérations » (le plus long mot
+// d'un libellé) fait 63,02 pt et se coupe en plein mot ; en 8,3 il fait 61,5 pt.
 const double _kNameWidth = 100;
 const double _kNumberWidth = 22;
 @visibleForTesting
 const double kStatWidth = 67;
 @visibleForTesting
-const double kStatHeaderFontSize = 8.5;
+const double kStatHeaderFontSize = 8.3;
 
 /// Découpe [stats] (dans l'ordre du catalogue) en pages de [maxPerPage]
 /// colonnes au plus. Les catégories consécutives se regroupent sur une même
@@ -315,7 +323,9 @@ List<pw.Widget> bilanIndividuelContent(
   // Sans joueur (effectif pas encore chargé) ni statistique, il n'y a rien à
   // répartir : une seule page plutôt qu'une page d'en-têtes nus par tranche.
   final List<List<StatDef>> pages =
-      rows.isEmpty || split.isEmpty ? <List<StatDef>>[const <StatDef>[]] : split;
+      rows.isEmpty || split.isEmpty
+          ? <List<StatDef>>[const <StatDef>[]]
+          : split;
   return <pw.Widget>[
     for (int i = 0; i < pages.length; i++) ...<pw.Widget>[
       if (i > 0) pw.NewPage(),

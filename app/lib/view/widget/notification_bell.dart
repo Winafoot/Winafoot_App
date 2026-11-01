@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/providers/notification_providers.dart';
 import 'package:wina/view/page/notifications_screen.dart';
@@ -26,26 +27,26 @@ class NotificationBell extends ConsumerWidget {
         children: [
           Icon(
             Iconsax.notification_bing,
-            size: sp(24),
+            size: cIc(24),
             color: AppColor.primaryLabels,
           ),
           if (unread > 0)
             Positioned(
-              right: -formatWidth(4),
-              top: -formatHeight(4),
+              right: -cW(4),
+              top: -cH(4),
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: formatWidth(4)),
-                constraints: BoxConstraints(minWidth: sp(15)),
-                height: sp(15),
+                padding: EdgeInsets.symmetric(horizontal: cW(4)),
+                constraints: BoxConstraints(minWidth: cIc(15)),
+                height: cIc(15),
                 decoration: BoxDecoration(
                   color: AppColor.destructive,
-                  borderRadius: BorderRadius.circular(r(8)),
+                  borderRadius: BorderRadius.circular(cR(8)),
                   border: Border.all(color: AppColor.background, width: 1.5),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   unread > 9 ? '9+' : '$unread',
-                  style: AppThemeStyle.boldStyle(9, AppColor.textLight),
+                  style: AppThemeStyle.boldStyle(cFs(9), AppColor.textLight),
                 ),
               ),
             ),

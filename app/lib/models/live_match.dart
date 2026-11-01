@@ -7,11 +7,19 @@ import 'package:wina/models/match_period.dart';
 import 'package:wina/models/player.dart';
 import 'package:wina/models/stat_catalog.dart';
 
+/// Nombre d'actions affichées dans l'« Historique » du direct (les plus récentes).
+///
+/// Limite d'AFFICHAGE seulement : [LiveMatch.events] garde le journal complet, car
+/// `LiveMatchNotifier.removeEvent` recalcule les statistiques et le score en rejouant ce
+/// journal. Le tronquer à 20 ferait perdre les actions plus anciennes à la première annulation.
+const int kMatchHistoryDisplayLimit = 20;
+
 /// Un événement enregistré pendant le match (incrément/décrément d'une stat),
 /// affiché dans l'« Historique ».
 @immutable
 class MatchEvent {
   const MatchEvent({
+    this.id = '',
     required this.atSeconds,
     required this.playerId,
     required this.playerName,
@@ -21,6 +29,9 @@ class MatchEvent {
     required this.half,
   });
 
+  /// Identifiant stable de l'événement : l'adjoint désigne ainsi l'événement à retirer (l'index change
+  /// dès qu'un nouvel événement arrive). Vide pour un événement d'avant l'adjoint.
+  final String id;
   final int atSeconds;
   final String playerId;
   final String playerName;
@@ -54,10 +65,15 @@ class LiveMatch {
     this.events = const <MatchEvent>[],
     this.selectedPlayerId,
     this.halfTimeStatKeys,
+    this.swapSides = false,
+    this.captainId,
   });
 
   final String formationLabel;
   final List<FormationSlot> slots;
+
+  /// Capitaine de la composition (brassard affiché sur son maillot pendant le match), `null` si aucun.
+  final String? captainId;
 
   /// playerId par emplacement (titulaires).
   final List<String?> assignments;
@@ -85,6 +101,10 @@ class LiveMatch {
   /// instantané, une stat activée à la mi-temps passerait pour suivie en 1re
   /// mi-temps. `null` tant que la mi-temps n'a pas commencé.
   final List<String>? halfTimeStatKeys;
+
+  /// Terrain inversé à la main (« Changer de côté ») : partagé entre le coach et l'adjoint, qui voient
+  /// ainsi le même sens de jeu. Se cumule avec le changement de côté de la 2e mi-temps.
+  final bool swapSides;
 
   bool get isLive => status == MatchStatus.live;
   bool get isPaused => status == MatchStatus.paused;
@@ -191,9 +211,15 @@ class LiveMatch {
     List<MatchEvent>? events,
     String? selectedPlayerId,
     List<String>? halfTimeStatKeys,
+    // Efface l'instantané de la mi-temps (annulation de la mi-temps) : `null` ne suffit pas, il garde l'ancienne valeur.
+    bool clearHalfTimeStatKeys = false,
+    bool? swapSides,
+    String? captainId,
+    bool clearCaptain = false,
   }) {
     return LiveMatch(
       formationLabel: formationLabel ?? this.formationLabel,
+      captainId: clearCaptain ? null : (captainId ?? this.captainId),
       slots: slots ?? this.slots,
       assignments: assignments ?? this.assignments,
       enabledStatKeys: enabledStatKeys ?? this.enabledStatKeys,
@@ -207,7 +233,11 @@ class LiveMatch {
       status: status ?? this.status,
       events: events ?? this.events,
       selectedPlayerId: selectedPlayerId ?? this.selectedPlayerId,
-      halfTimeStatKeys: halfTimeStatKeys ?? this.halfTimeStatKeys,
+      halfTimeStatKeys:
+          clearHalfTimeStatKeys
+              ? null
+              : (halfTimeStatKeys ?? this.halfTimeStatKeys),
+      swapSides: swapSides ?? this.swapSides,
     );
   }
 
@@ -221,6 +251,7 @@ class LiveMatch {
       enabledStatKeys: match.enabledStatKeys,
       numbers: composition?.numbers ?? const <String, int>{},
       substituteIds: composition?.substituteIds ?? const <String>[],
+      captainId: composition?.captainId,
     );
   }
 
@@ -244,6 +275,7 @@ class LiveMatch {
               : stats.statKeys,
       numbers: composition?.numbers ?? const <String, int>{},
       substituteIds: composition?.substituteIds ?? const <String>[],
+      captainId: composition?.captainId,
       playerStats: stats.playerStats,
       scoreUs: match.scoreUs,
       scoreThem: match.scoreThem,

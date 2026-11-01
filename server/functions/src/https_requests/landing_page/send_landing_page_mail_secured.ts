@@ -33,11 +33,11 @@ export default landingEndpoint(async (body, config, res) => {
     return;
   }
 
-  // Avant le plafond global : un robot sans jeton valide ne doit pas vider le quota MailerSend de tous.
+  // Avant le plafond global : un robot sans jeton valide ne doit pas vider le quota Resend de tous.
   if (!(await requireCaptcha(body, res))) return;
 
   // Plafond global quotidien, compté APRÈS la validation : les formulaires invalides n'entament pas le
-  // quota, et une armée d'IP ne vide pas le quota MailerSend partagé par tous les mails transactionnels.
+  // quota, et une armée d'IP ne vide pas le quota Resend partagé par tous les mails transactionnels.
   if (!(await consume("support-global", "all", LIMITS.supportGlobal))) {
     res.status(429).send({ message: "Too many requests" });
     return;

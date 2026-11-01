@@ -197,7 +197,17 @@ class _AuthParentState extends ConsumerState<AuthParent> {
       ) : 
       
        Center(
-        child: SingleChildScrollView(
+        child: LayoutBuilder(
+          builder: (BuildContext lbContext, BoxConstraints cons) {
+            // Tient sur un ecran sans defilement (telephone paysage) : le contenu est reduit
+            // si besoin ; le clavier ouvert fait defiler au lieu de le reduire encore.
+            final double fullHeight = MediaQuery.sizeOf(lbContext).height - MediaQuery.paddingOf(lbContext).vertical;
+            return SingleChildScrollView(
+              child: SizedBox(
+                width: cons.maxWidth,
+                height: fullHeight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -220,12 +230,16 @@ class _AuthParentState extends ConsumerState<AuthParent> {
               Center(
                 child: Padding(
                           padding:
-                              EdgeInsets.only(bottom: themeData.height ?? formatHeight(70)),
+                              EdgeInsets.only(bottom: formatHeight(8)),
                           child: widget.child,
                           ),
               )
             ],
           ),
+                ),
+              ),
+            );
+          },
         ),
       ),
           ),

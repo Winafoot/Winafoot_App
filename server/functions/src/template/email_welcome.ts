@@ -22,5 +22,5 @@ export function generateTemplateWelcomeEmail(appName: string, contactEmail?: str
       Votre &#233;quipe ${app}
     </p>
   `;
-  return wrapEmailLayout(logoUrl, content);
+  return wrapEmailLayout(logoUrl, content, appName);
 }

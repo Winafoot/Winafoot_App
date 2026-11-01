@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/coach_profile.dart';
 import 'package:wina/view/widget/app_notif.dart';
@@ -97,13 +98,16 @@ class _JerseyFormState extends State<JerseyForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Téléphone paysage : nom et couleur sur une seule ligne, bouton dessous,
+    // pour tenir sans défiler.
+    if (isPhoneLayout) return _compact();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_added.isNotEmpty) ...[
           Wrap(
-            spacing: formatWidth(8),
-            runSpacing: formatHeight(8),
+            spacing: cW(8),
+            runSpacing: cH(8),
             children: [
               for (int i = 0; i < _added.length; i++)
                 _AddedChip(
@@ -112,19 +116,19 @@ class _JerseyFormState extends State<JerseyForm> {
                 ),
             ],
           ),
-          sh(18),
+          cSh(18),
         ],
         CpLabel('app.jersey-form.nom-label'.tr()),
-        sh(8),
+        cSh(8),
         CpTextField(
           controller: _nom,
           hint: 'app.jersey-form.nom-hint'.tr(),
           onChanged: _onFieldChanged,
           error: _submitted && _nom.text.trim().isEmpty,
         ),
-        sh(18),
+        cSh(18),
         CpLabel('app.jersey-form.couleur-label'.tr()),
-        sh(8),
+        cSh(8),
         CpDropdown<JerseyColorOption>(
           value: _color,
           values: JerseyColorOption.values,
@@ -133,7 +137,76 @@ class _JerseyFormState extends State<JerseyForm> {
           onChanged: (JerseyColorOption v) => setState(() => _color = v),
           error: _submitted && _color == null,
         ),
-        sh(20),
+        cSh(20),
+        CpButton(
+          label: 'app.jersey-form.ajouter'.tr(),
+          onTap: _add,
+          soft: true,
+        ),
+      ],
+    );
+  }
+
+  /// Variante téléphone paysage (voir `build`).
+  Widget _compact() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_added.isNotEmpty) ...[
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (int i = 0; i < _added.length; i++)
+                _AddedChip(
+                  jersey: _added[i],
+                  onRemove: () => setState(() => _added.removeAt(i)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CpLabel('app.jersey-form.nom-label'.tr()),
+                  const SizedBox(height: 4),
+                  CpTextField(
+                    controller: _nom,
+                    hint: 'app.jersey-form.nom-hint'.tr(),
+                    onChanged: _onFieldChanged,
+                    error: _submitted && _nom.text.trim().isEmpty,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CpLabel('app.jersey-form.couleur-label'.tr()),
+                  const SizedBox(height: 4),
+                  CpDropdown<JerseyColorOption>(
+                    value: _color,
+                    values: JerseyColorOption.values,
+                    labelOf: (JerseyColorOption v) => v.label,
+                    leadingOf:
+                        (JerseyColorOption v) => ShirtIcon(asset: v.asset),
+                    onChanged:
+                        (JerseyColorOption v) => setState(() => _color = v),
+                    error: _submitted && _color == null,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         CpButton(
           label: 'app.jersey-form.ajouter'.tr(),
           onTap: _add,
@@ -154,34 +227,31 @@ class _AddedChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(12),
-        vertical: formatHeight(7),
-      ),
+      padding: EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(7)),
       decoration: BoxDecoration(
         color: AppColor.background,
-        borderRadius: BorderRadius.circular(r(14)),
+        borderRadius: BorderRadius.circular(cR(14)),
         border: Border.all(color: AppColor.divider),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           ShirtIcon(asset: jersey.color.asset, size: 20),
-          sw(8),
+          cSw(8),
           Flexible(
             child: Text(
               jersey.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.mediumStyle(13, AppColor.primaryLabels),
+              style: AppThemeStyle.mediumStyle(cFs(13), AppColor.primaryLabels),
             ),
           ),
-          sw(8),
+          cSw(8),
           GestureDetector(
             onTap: onRemove,
             child: Icon(
               Iconsax.close_circle,
-              size: sp(15),
+              size: cIc(15),
               color: AppColor.secondaryLabels,
             ),
           ),
@@ -202,8 +272,8 @@ class ShirtIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.asset(
       asset,
-      width: formatHeight(size),
-      height: formatHeight(size),
+      width: cH(size),
+      height: cH(size),
       fit: BoxFit.contain,
     );
   }

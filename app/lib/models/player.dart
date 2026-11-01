@@ -76,11 +76,11 @@ class Player {
 
   /// Champs persistés (l'id et l'ordre/horodatage sont gérés par le repository).
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'firstName': firstName,
-        'lastName': lastName,
-        'strongFoot': strongFoot.name,
-        'position': position.name,
-      };
+    'firstName': firstName,
+    'lastName': lastName,
+    'strongFoot': strongFoot.name,
+    'position': position.name,
+  };
 
   /// Construit un joueur depuis un document Firestore. Tolérant aux valeurs
   /// manquantes ou inconnues (retombe sur des valeurs par défaut sûres).
@@ -91,7 +91,8 @@ class Player {
       lastName: (json['lastName'] as String?) ?? '',
       strongFoot:
           StrongFoot.values.asNameMap()[json['strongFoot']] ?? StrongFoot.droit,
-      position: PlayerPosition.values.asNameMap()[json['position']] ??
+      position:
+          PlayerPosition.values.asNameMap()[json['position']] ??
           PlayerPosition.milieu,
     );
   }
@@ -115,4 +116,3 @@ bool isSquadFull(int playerCount, {int max = kMaxSquadSize}) =>
 class SquadFullException implements Exception {
   const SquadFullException();
 }
-

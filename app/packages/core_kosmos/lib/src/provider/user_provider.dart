@@ -102,6 +102,11 @@ class UserProvider<U> with ChangeNotifier {
 
         autoSaveMedia = _user?.autoSaveMedia ?? false;
         notifyListeners();
+      } else if (event.metadata.isFromCache) {
+        // Réponse du cache seul : la fiche n'y est peut-être pas encore (compte tout juste créé par le
+        // serveur, après une lecture 'inexistante' restée en cache). On attend la confirmation du serveur
+        // avant de déconnecter.
+        printDebug("User ${user.uid} absent du cache, en attente du serveur");
       } else {
         printError("User ${user.uid} not found");
         _user = null;

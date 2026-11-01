@@ -14,13 +14,15 @@ import { UserSecurityMetadataModel } from "../../model/user/metadata/user_securi
 import { logger } from "../../runtime/firebase";
 import { describeError } from "../../utils/describe_error";
 import { mailIdentity } from "../../utils/mail_identity";
+import { discardCode, issueCode, OTP_TTL_MS } from "../../utils/otp_code";
 
-/** Délai minimal entre deux e-mails de vérification pour un même compte. */
-const RESEND_DELAY_HOURS = 6;
+/** Délai minimal entre deux e-mails de vérification pour un même compte (le plafond horaire s'ajoute dans l'adaptateur). */
+const RESEND_DELAY_SECONDS = 30;
 
 /**
- * Envoie le lien de vérification de l'adresse du compte `uid`. Renvoie `true` si l'e-mail est parti,
- * `false` sinon (adresse déjà vérifiée, fiche absente, envoi trop récent, échec d'envoi).
+ * Envoie le code à 6 chiffres qui vérifie l'adresse du compte `uid` (à saisir dans l'app, voir
+ * verify_email_code_secured). Un nouvel envoi remplace le code précédent. Renvoie `true` si l'e-mail
+ * est parti, `false` sinon (adresse déjà vérifiée, fiche absente, envoi trop récent, échec d'envoi).
  *
  * `metadata/security.lastVerifEmailAt` n'est posé qu'APRÈS un envoi réussi : un échec ne bloque
  * pas le compte pendant le délai d'attente.
@@ -49,8 +51,8 @@ export default async (data: { uid: string }): Promise<boolean> => {
     const lastVerifEmailAt: TimestampNullable = userSecurity.lastVerifEmailAt;
 
     if (lastVerifEmailAt != null) {
-      const diffHours: number = (Date.now() - lastVerifEmailAt.toDate().getTime()) / (1000 * 3600);
-      if (diffHours < RESEND_DELAY_HOURS) {
+      const diffSeconds: number = (Date.now() - lastVerifEmailAt.toDate().getTime()) / 1000;
+      if (diffSeconds < RESEND_DELAY_SECONDS) {
         return false;
       }
     }
@@ -61,18 +63,24 @@ export default async (data: { uid: string }): Promise<boolean> => {
       return false;
     }
 
-    const confirmLink = await auth().generateEmailVerificationLink(user.email!);
+    const code: string = await issueCode("verify-email", uid);
     const { appName, contactEmail } = mailIdentity(config);
-    const emailContent = generateTemplateVerifyYourEmail(appName, confirmLink, contactEmail);
+    const emailContent = generateTemplateVerifyYourEmail(appName, code, contactEmail);
 
     // Version texte brut : seule chose que verront les clients mail sans HTML,
-    // le lien de confirmation doit donc y figurer en clair.
+    // le code doit donc y figurer en clair.
     const emailText: string =
-      `Pour continuer sur ${appName}, confirmez votre adresse e-mail en ouvrant ce lien :\n\n` +
-      `${confirmLink}` +
-      (contactEmail != null ? `\n\nBesoin d’aide ? Écrivez-nous à ${contactEmail}.` : "");
+      `Pour continuer sur ${appName}, saisissez ce code dans l’application pour confirmer votre adresse e-mail : ${code}\n\n` +
+      `Ce code est valable ${OTP_TTL_MS / 60_000} minutes.` +
+      (contactEmail != null ? `\n\nBesoin d’aide ? Écrivez-nous à ${contactEmail}.` : "");
 
-    await sendEmail(config, user, emailContent, "Vérifiez votre adresse e-mail", emailText);
+    try {
+      await sendEmail(config, user, emailContent, "Votre code de vérification", emailText);
+    } catch (e) {
+      // Un code jamais reçu ne doit pas rester valable.
+      await discardCode("verify-email", uid);
+      throw e;
+    }
 
     await UserProvider.instance.securityRepository.updateField(uid, "lastVerifEmailAt", firestore.FieldValue.serverTimestamp());
 

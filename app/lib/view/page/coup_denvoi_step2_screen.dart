@@ -2,12 +2,15 @@ import 'dart:math' as math;
 
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/coach_profile.dart';
 import 'package:wina/models/game_match.dart';
 import 'package:wina/providers/coach_providers.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/coup_denvoi_step3_screen.dart';
+import 'package:wina/view/page/gerer_maillots_screen.dart';
 import 'package:wina/view/widget/jersey_form.dart';
 import 'package:wina/view/widget/match_wizard.dart';
 
@@ -43,18 +46,18 @@ class CoupDEnvoiStep2Screen extends ConsumerWidget {
       child: Center(
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(40),
-            vertical: formatHeight(80),
+            horizontal: isPhoneLayout ? 16 : cW(40),
+            vertical: isPhoneLayout ? 4 : cH(80),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Expanded(child: _ownColumn(draft, notifier, jerseys)),
+              Expanded(child: _ownColumn(context, draft, notifier, jerseys)),
               Padding(
                 padding: EdgeInsets.only(
-                  top: formatHeight(200),
-                  left: formatWidth(24),
-                  right: formatWidth(24),
+                  top: isPhoneLayout ? 80 : cH(200),
+                  left: isPhoneLayout ? 12 : cW(24),
+                  right: isPhoneLayout ? 12 : cW(24),
                 ),
                 child: const VsBadge(),
               ),
@@ -67,6 +70,7 @@ class CoupDEnvoiStep2Screen extends ConsumerWidget {
   }
 
   Widget _ownColumn(
+    BuildContext context,
     GameMatch draft,
     MatchDraftNotifier notifier,
     List<Jersey> jerseys,
@@ -74,14 +78,60 @@ class CoupDEnvoiStep2Screen extends ConsumerWidget {
     return Column(
       children: <Widget>[
         TeamLabelBadge('app.coup-denvoi-step2.mon-equipe'.tr()),
-        sh(20),
+        cSh(20),
         if (jerseys.isEmpty)
+          // Aucun maillot (ignoré à l'inscription) : sans lui impossible de continuer, on propose de l'ajouter ici.
           Padding(
-            padding: EdgeInsets.symmetric(vertical: formatHeight(30)),
-            child: Text(
-              'app.coup-denvoi-step2.aucun-maillot'.tr(),
-              textAlign: TextAlign.center,
-              style: AppThemeStyle.regularStyle(13, AppColor.secondaryLabels),
+            padding: EdgeInsets.symmetric(vertical: isPhoneLayout ? 8 : cH(30)),
+            child: Column(
+              children: <Widget>[
+                Text(
+                  'app.coup-denvoi-step2.aucun-maillot'.tr(),
+                  textAlign: TextAlign.center,
+                  style: AppThemeStyle.regularStyle(
+                    cFs(13),
+                    AppColor.secondaryLabels,
+                  ),
+                ),
+                cSh(14),
+                Material(
+                  color: AppColor.primaryColor,
+                  borderRadius: BorderRadius.circular(cR(999)),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(cR(999)),
+                    onTap:
+                        () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const GererMaillotsScreen(),
+                          ),
+                        ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isPhoneLayout ? 16 : cW(24),
+                        vertical: isPhoneLayout ? 9 : cH(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(
+                            Iconsax.add_circle,
+                            size: cIc(20),
+                            color: Colors.white,
+                          ),
+                          cSw(8),
+                          Text(
+                            'app.coup-denvoi-step2.ajouter-maillot'.tr(),
+                            style: AppThemeStyle.semiBStyle(
+                              cFs(16),
+                              Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           )
         else
@@ -116,22 +166,22 @@ class CoupDEnvoiStep2Screen extends ConsumerWidget {
     return Column(
       children: <Widget>[
         TeamLabelBadge(name),
-        sh(20),
-        ShirtIcon(asset: color.asset, size: 168),
-        sh(16),
+        cSh(20),
+        ShirtIcon(asset: color.asset, size: isPhoneLayout ? 110 : 168),
+        cSh(16),
         Text(
           'app.coup-denvoi-step2.maillot-adverse'.tr(),
-          style: AppThemeStyle.semiBStyle(17, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(17), AppColor.primaryLabels),
         ),
-        sh(8),
+        cSh(8),
         Text(
           'app.coup-denvoi-step2.choisir-couleur'.tr(),
           textAlign: TextAlign.center,
-          style: AppThemeStyle.regularStyle(13, AppColor.secondaryLabels),
+          style: AppThemeStyle.regularStyle(cFs(13), AppColor.secondaryLabels),
         ),
-        sh(14),
+        cSh(14),
         SizedBox(
-          width: formatWidth(320),
+          width: isPhoneLayout ? 230 : cW(320),
           child: LabeledPillDropdown<JerseyColorOption>(
             label: 'app.coup-denvoi-step2.couleur-maillot'.tr(),
             value: draft.opponent.jerseyColor,
@@ -168,19 +218,19 @@ class _SelectableShirt extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          ShirtIcon(asset: jersey.color.asset, size: 168),
-          sh(10),
+          ShirtIcon(asset: jersey.color.asset, size: isPhoneLayout ? 110 : 168),
+          cSh(10),
           Text(
             jersey.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppThemeStyle.semiBStyle(15, AppColor.primaryLabels),
+            style: AppThemeStyle.semiBStyle(cFs(15), AppColor.primaryLabels),
           ),
-          sh(6),
+          cSh(6),
           if (selected)
             InfoChip('app.coup-denvoi-step2.maillot-porte'.tr())
           else
-            SizedBox(height: formatHeight(28)),
+            SizedBox(height: isPhoneLayout ? 22 : cH(28)),
         ],
       ),
     );
@@ -214,7 +264,10 @@ class _JerseyCarouselState extends State<_JerseyCarousel> {
   void initState() {
     super.initState();
     _page = widget.selectedIndex >= 0 ? widget.selectedIndex : 0;
-    _controller = PageController(viewportFraction: 0.33, initialPage: _page);
+    _controller = PageController(
+      viewportFraction: isPhoneLayout ? 0.4 : 0.33,
+      initialPage: _page,
+    );
     // Aucun maillot encore porté : on sélectionne d'emblée celui affiché au
     // centre (comme sur la maquette).
     if (widget.selectedIndex < 0 && widget.jerseys.isNotEmpty) {
@@ -244,7 +297,7 @@ class _JerseyCarouselState extends State<_JerseyCarousel> {
   Widget build(BuildContext context) {
     final int last = widget.jerseys.length - 1;
     return SizedBox(
-      height: formatHeight(240),
+      height: isPhoneLayout ? 140 : cH(240),
       child: Stack(
         children: <Widget>[
           PageView.builder(
@@ -315,7 +368,7 @@ class _CarouselArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool enabled = onTap != null;
-    final double d = sp(38);
+    final double d = cIc(38);
     return GestureDetector(
       onTap: onTap,
       child: Transform.rotate(
@@ -325,12 +378,12 @@ class _CarouselArrow extends StatelessWidget {
           height: d,
           decoration: BoxDecoration(
             color: enabled ? AppColor.primaryLabels : AppColor.disabled,
-            borderRadius: BorderRadius.circular(r(10)),
+            borderRadius: BorderRadius.circular(cR(10)),
           ),
           alignment: Alignment.center,
           child: Transform.rotate(
             angle: -math.pi / 4,
-            child: Icon(icon, size: sp(22), color: AppColor.textLight),
+            child: Icon(icon, size: cIc(22), color: AppColor.textLight),
           ),
         ),
       ),

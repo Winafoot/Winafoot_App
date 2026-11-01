@@ -10,23 +10,33 @@ class AccessInfo {
     this.teamIndex,
     this.teamsAllowed,
     this.expiresAt,
+    this.productId,
+    this.period,
   });
 
   factory AccessInfo.fromUserData(Map<String, dynamic>? data) {
     if (data == null) return const AccessInfo();
     final Object? access = data['access'];
     final Object? subscription = data['subscription'];
-    final Map<String, dynamic>? a = access is Map<String, dynamic> ? access : null;
-    final Map<String, dynamic>? s = subscription is Map<String, dynamic> ? subscription : null;
+    final Map<String, dynamic>? a =
+        access is Map<String, dynamic> ? access : null;
+    final Map<String, dynamic>? s =
+        subscription is Map<String, dynamic> ? subscription : null;
     final Object? teamIndex = data['teamIndex'];
     final Object? teamsAllowed = s?['teamsAllowed'];
     return AccessInfo(
       active: a?['active'] == true,
-      until: a?['until'] is Timestamp ? (a!['until'] as Timestamp).toDate() : null,
+      until:
+          a?['until'] is Timestamp ? (a!['until'] as Timestamp).toDate() : null,
       ownerUid: data['ownerUid'] is String ? data['ownerUid'] as String : null,
       teamIndex: teamIndex is int ? teamIndex : null,
       teamsAllowed: teamsAllowed is int ? teamsAllowed : null,
-      expiresAt: s?['expiresAt'] is Timestamp ? (s!['expiresAt'] as Timestamp).toDate() : null,
+      productId: s?['productId'] is String ? s!['productId'] as String : null,
+      period: s?['period'] is String ? s!['period'] as String : null,
+      expiresAt:
+          s?['expiresAt'] is Timestamp
+              ? (s!['expiresAt'] as Timestamp).toDate()
+              : null,
     );
   }
 
@@ -36,6 +46,11 @@ class AccessInfo {
   final int? teamIndex;
   final int? teamsAllowed;
   final DateTime? expiresAt;
+
+  /// Produit et période de l'abonnement en cours (`subscription.productId` / `period`), pour proposer un
+  /// changement de formule.
+  final String? productId;
+  final String? period;
 
   /// Compte d'équipe lié : il hérite de l'abonnement de son propriétaire.
   bool get isLinked => ownerUid != null;
@@ -58,7 +73,11 @@ AccessDecision decideAccess({
 }
 
 /// Équipes liées encore à créer pour un propriétaire dont l'abonnement est actif.
-int missingTeams(AccessInfo info, {required int linkedCount, required DateTime now}) {
+int missingTeams(
+  AccessInfo info, {
+  required int linkedCount,
+  required DateTime now,
+}) {
   if (info.isLinked || !info.activeAt(now)) return 0;
   final int missing = (info.teamsAllowed ?? 1) - 1 - linkedCount;
   return missing < 0 ? 0 : missing;

@@ -87,12 +87,12 @@ describe("onCreateReport", () => {
   });
 
   it("logs a failed send without failing the trigger, and never logs the provider response", async () => {
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend : 422 : domaine non vérifié"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend : 422 : domaine non vérifié"));
     const snap = await reportSnapshot("r5", BASE_REPORT());
 
     await expect(onCreateReport(snap as any, { params: { reportId: "r5" } })).resolves.toBeUndefined();
 
-    expect(logger.error).toHaveBeenCalledWith("[onCreateReport] e-mail de signalement non envoyé : MailerSend : 422 : domaine non vérifié");
+    expect(logger.error).toHaveBeenCalledWith("[onCreateReport] e-mail de signalement non envoyé : Resend : 422 : domaine non vérifié");
     expect(logger.info).not.toHaveBeenCalled();
   });
 });

@@ -72,12 +72,45 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
       Navigator.of(context).pop();
     }
 
+    // Retour (flèche d'entête ou retour système) : à la mi-temps il ANNULE la
+    // mi-temps et laisse le match en 1re mi-temps ; seul le bouton « Démarrer
+    // 2e mi-temps » (confirmé) lance la 2e. En pause, il reprend le match.
+    void goBack() {
+      if (isHalfTime) {
+        notifier.cancelHalfTime();
+        Navigator.of(context).pop();
+      } else {
+        resume();
+      }
+    }
+
+    // Le bouton « Démarrer 2e mi-temps » est irréversible : on confirme pour
+    // éviter une erreur de sélection.
+    void confirmSecondHalf() {
+      showDialog<void>(
+        context: context,
+        barrierColor: AppColor.scrim,
+        builder:
+            (BuildContext ctx) => AppConfirmDialog(
+              title: 'app.match-break.titre-2e-mi-temps'.tr(),
+              message: 'app.match-break.message-2e-mi-temps'.tr(),
+              primaryLabel: 'app.match-break.rester-sur-ecran'.tr(),
+              onPrimary: () => Navigator.of(ctx).pop(),
+              secondaryLabel: 'app.match-break.demarrer-2e-mi-temps'.tr(),
+              onSecondary: () {
+                Navigator.of(ctx).pop();
+                resume();
+              },
+              secondaryAccent: AppColor.primaryColor,
+            ),
+      );
+    }
+
     final Widget scaffold = Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: <Widget>[
-            const AppBackground(),
             Column(
               children: <Widget>[
                 Padding(
@@ -93,7 +126,7 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
                         clock: live.clock,
                         scoreUs: live.scoreUs,
                         scoreThem: live.scoreThem,
-                        onBack: resume,
+                        onBack: goBack,
                       ),
                       sh(12),
                       Container(height: 1, color: AppColor.divider),
@@ -146,7 +179,7 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
                                     ? 'app.match-break.demarrer-2e-mi-temps'
                                         .tr()
                                     : 'app.match-break.reprendre-match'.tr(),
-                            onResume: resume,
+                            onResume: isHalfTime ? confirmSecondHalf : resume,
                             onEditStats: () => _editStats(context, ref),
                             onEditCompo:
                                 () => openLiveCompositionEditor(context, ref),
@@ -165,15 +198,14 @@ class _MatchBreakScreenState extends ConsumerState<MatchBreakScreen> {
     );
 
     // Le retour système Android passe par `Navigator.maybePop`, que
-    // `canPop: false` intercepte ; le `pop()` de `resume`, lui, n'est pas
-    // bloqué. Sans cette garde, un geste de bord dépile l'écran sans reprise :
-    // la 2e mi-temps ne démarre jamais (`half` reste à 1), tout le reste du
-    // match est compté en 1re mi-temps et la 2e passe « non jouée ». Le retour
-    // système fait donc comme la flèche d'entête : il reprend le match.
+    // `canPop: false` intercepte ; le `pop()` de `goBack`, lui, n'est pas
+    // bloqué. Sans cette garde, un geste de bord dépilerait l'écran sans
+    // remettre le match en cours : il resterait en pause. Le retour système
+    // fait donc comme la flèche d'entête (`goBack`).
     return PopScope<Object?>(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
-        if (!didPop) resume();
+        if (!didPop) goBack();
       },
       child: scaffold,
     );

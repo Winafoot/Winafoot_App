@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/player.dart';
 import 'package:wina/view/widget/app_background.dart';
@@ -24,14 +25,18 @@ class PlayerFormHeader extends StatelessWidget {
     return Row(
       children: [
         CustomBackButton(onTap: onBack),
-        sw(14),
-        Container(width: 1, height: formatHeight(28), color: AppColor.divider),
-        sw(14),
-        Icon(Iconsax.profile_2user, size: sp(26), color: AppColor.primaryColor),
-        sw(12),
+        cSw(14),
+        Container(width: 1, height: cH(28), color: AppColor.divider),
+        cSw(14),
+        Icon(
+          Iconsax.profile_2user,
+          size: cIc(26),
+          color: AppColor.primaryColor,
+        ),
+        cSw(12),
         Text(
           title,
-          style: AppThemeStyle.semiBStyle(28, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(28), AppColor.primaryLabels),
         ),
       ],
     );
@@ -39,7 +44,7 @@ class PlayerFormHeader extends StatelessWidget {
 }
 
 /// Ossature commune des écrans de formulaire joueur : entête + séparateur, puis
-/// le [form] centré et défilable.
+/// le [form] centré, réduit pour tenir sans défilement (le clavier fait défiler).
 class PlayerFormScaffold extends StatelessWidget {
   const PlayerFormScaffold({
     super.key,
@@ -54,34 +59,52 @@ class PlayerFormScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor.background,
-      body: SafeArea(
+      body: AppBackdrop(
         child: Stack(
           children: [
-            const AppBackground(),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: formatWidth(41)),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isPhoneLayout ? 16 : cW(41),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      sh(18),
+                      cSh(isPhoneLayout ? 8 : 18),
                       PlayerFormHeader(
                         title: title,
                         onBack: () => Navigator.of(context).maybePop(),
                       ),
-                      sh(14),
+                      cSh(isPhoneLayout ? 6 : 14),
                       Container(height: 1, color: AppColor.divider),
                     ],
                   ),
                 ),
                 Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(vertical: formatHeight(24)),
-                      child: form,
-                    ),
+                  // Tient sur l'écran sans défilement : le formulaire est réduit si besoin. Le clavier
+                  // ouvert fait défiler au lieu de le réduire encore.
+                  child: LayoutBuilder(
+                    builder: (BuildContext context, BoxConstraints cons) {
+                      final double fullHeight =
+                          cons.maxHeight + keyboardInset(context);
+                      return SingleChildScrollView(
+                        child: SizedBox(
+                          width: cons.maxWidth,
+                          height: fullHeight,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: isPhoneLayout ? 10 : cH(24),
+                              ),
+                              child: form,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -183,38 +206,35 @@ class _PlayerFormState extends State<PlayerForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: formatWidth(430),
-      padding: EdgeInsets.symmetric(
-        horizontal: formatWidth(28),
-        vertical: formatHeight(28),
-      ),
+      width: cW(430),
+      padding: EdgeInsets.symmetric(horizontal: cW(28), vertical: cH(28)),
       decoration: BoxDecoration(
         color: AppColor.surface,
-        borderRadius: BorderRadius.circular(r(16)),
+        borderRadius: BorderRadius.circular(cR(16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           CpLabel('app.player-form.nom-label'.tr()),
-          sh(8),
+          cSh(8),
           CpTextField(
             controller: _nom,
             hint: 'app.player-form.nom-hint'.tr(),
             onChanged: _onFieldChanged,
             error: _submitted && _nom.text.trim().isEmpty,
           ),
-          sh(20),
+          cSh(20),
           CpLabel('app.player-form.prenom-label'.tr()),
-          sh(8),
+          cSh(8),
           CpTextField(
             controller: _prenom,
             hint: 'app.player-form.prenom-hint'.tr(),
             onChanged: _onFieldChanged,
             error: _submitted && _prenom.text.trim().isEmpty,
           ),
-          sh(20),
+          cSh(20),
           CpLabel('app.player-form.pied-fort-label'.tr()),
-          sh(8),
+          cSh(8),
           CpDropdown<StrongFoot>(
             value: _foot,
             values: StrongFoot.values,
@@ -222,9 +242,9 @@ class _PlayerFormState extends State<PlayerForm> {
             onChanged: (StrongFoot v) => setState(() => _foot = v),
             error: _submitted && _foot == null,
           ),
-          sh(20),
+          cSh(20),
           CpLabel('app.player-form.poste-label'.tr()),
-          sh(8),
+          cSh(8),
           CpDropdown<PlayerPosition>(
             value: _position,
             values: PlayerPosition.values,
@@ -232,7 +252,7 @@ class _PlayerFormState extends State<PlayerForm> {
             onChanged: (PlayerPosition v) => setState(() => _position = v),
             error: _submitted && _position == null,
           ),
-          sh(28),
+          cSh(28),
           CpButton(
             label: widget.submitLabel,
             onTap: () {
@@ -240,7 +260,7 @@ class _PlayerFormState extends State<PlayerForm> {
             },
             radius: 14,
           ),
-          sh(14),
+          cSh(14),
           const CpRequiredNote(),
         ],
       ),

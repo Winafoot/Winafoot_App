@@ -7,7 +7,7 @@ vi.mock("../src/config/algolia", async (importActual) => ({ ...(await importActu
 import * as callables from "../src/callables/index";
 import * as httpRequests from "../src/https_requests/index";
 import * as triggers from "../src/triggers/index";
-import { MAILER_API_KEY, readSecret } from "../src/config/secrets";
+import { RESEND_API_KEY, readSecret } from "../src/config/secrets";
 
 const SRC = resolve(__dirname, "../src");
 const INDEXES = ["callables/index.ts", "https_requests/index.ts", "triggers/index.ts"];
@@ -132,7 +132,7 @@ describe("secrets declared by each exported function", () => {
   });
 
   it("knows which functions send e-mails", () => {
-    const mailers = functions.filter((fn) => fn.declared.includes("MAILER_API_KEY")).map((fn) => fn.name).sort();
+    const mailers = functions.filter((fn) => fn.declared.includes("RESEND_API_KEY")).map((fn) => fn.name).sort();
     expect(mailers).toEqual([
       "createAdmin",
       "onCreateReport",
@@ -154,20 +154,20 @@ describe("secrets declared by each exported function", () => {
 });
 
 describe("readSecret", () => {
-  const saved = process.env.MAILER_API_KEY;
+  const saved = process.env.RESEND_API_KEY;
   afterEach(() => {
-    process.env.MAILER_API_KEY = saved;
+    process.env.RESEND_API_KEY = saved;
   });
 
   it("returns the value without surrounding spaces", () => {
-    process.env.MAILER_API_KEY = "  valeur \n";
-    expect(readSecret(MAILER_API_KEY)).toBe("valeur");
+    process.env.RESEND_API_KEY = "  valeur \n";
+    expect(readSecret(RESEND_API_KEY)).toBe("valeur");
   });
 
   it("returns undefined for a blank or missing secret", () => {
-    process.env.MAILER_API_KEY = "   ";
-    expect(readSecret(MAILER_API_KEY)).toBeUndefined();
-    delete process.env.MAILER_API_KEY;
-    expect(readSecret(MAILER_API_KEY)).toBeUndefined();
+    process.env.RESEND_API_KEY = "   ";
+    expect(readSecret(RESEND_API_KEY)).toBeUndefined();
+    delete process.env.RESEND_API_KEY;
+    expect(readSecret(RESEND_API_KEY)).toBeUndefined();
   });
 });

@@ -1,6 +1,8 @@
+import 'package:wina/view/page/gerer_equipe_nav.dart';
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/data/match_repository.dart';
 import 'package:wina/models/coach_profile.dart';
@@ -9,12 +11,14 @@ import 'package:wina/models/match_composition.dart';
 import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/coach_providers.dart';
 import 'package:wina/providers/composition_providers.dart';
+import 'package:wina/providers/player_providers.dart';
 import 'package:wina/providers/match_providers.dart';
 import 'package:wina/view/page/gerer_equipe_count_screen.dart';
 import 'package:wina/view/page/gerer_equipe_placement_screen.dart';
 import 'package:wina/view/page/match_live_screen.dart';
 import 'package:wina/view/page/parametrer_stats_screen.dart';
 import 'package:wina/view/widget/app_notif.dart';
+import 'package:wina/view/widget/adjoint_button.dart';
 import 'package:wina/view/widget/match_wizard.dart';
 import 'package:wina/view/widget/past_match_picker_sheet.dart';
 import 'package:wina/view/widget/team_crest.dart';
@@ -112,19 +116,21 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
       title: 'app.coup-denvoi-step3.titre'.tr(),
       onBack: () => Navigator.of(context).maybePop(),
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: formatWidth(980)),
+        constraints: BoxConstraints(
+          maxWidth: isPhoneLayout ? double.infinity : cW(980),
+        ),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(40),
-            vertical: formatHeight(32),
+            horizontal: isPhoneLayout ? 16 : cW(40),
+            vertical: isPhoneLayout ? 4 : cH(32),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Wrap(
                 alignment: WrapAlignment.center,
-                spacing: formatWidth(14),
-                runSpacing: formatHeight(10),
+                spacing: cW(14),
+                runSpacing: cH(10),
                 children: <Widget>[
                   _HubActionButton(
                     label: 'app.coup-denvoi-step3.gerer-equipe'.tr(),
@@ -139,11 +145,14 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
                         compositionDraftProvider.notifier,
                       );
                       if (existing != null) {
-                        notifier.loadFromComposition(existing);
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const GererEquipePlacementScreen(),
-                          ),
+                        notifier.loadFromComposition(
+                          existing,
+                          maxSquad: ref.read(maxSquadSizeProvider).valueOrNull,
+                        );
+                        openGererScreen(
+                          context,
+                          kGererPlacementRoute,
+                          () => const GererEquipePlacementScreen(),
                         );
                       } else {
                         startGererEquipeFlow(context, ref);
@@ -167,13 +176,13 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
                         Text(
                           'utils.choose'.tr(),
                           style: AppThemeStyle.regularStyle(
-                            14,
+                            cFs(14),
                             AppColor.secondaryLabels,
                           ),
                         ),
                         Icon(
                           Iconsax.arrow_down_1_copy,
-                          size: sp(20),
+                          size: cIc(20),
                           color: AppColor.primaryLabels,
                         ),
                       ],
@@ -182,7 +191,7 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
                   ),
                 ],
               ),
-              sh(64),
+              cSh(isPhoneLayout ? 16 : 64),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -233,22 +242,25 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
     return Column(
       children: <Widget>[
         TeamLabelBadge('app.coup-denvoi-step3.mon-equipe'.tr()),
-        sh(14),
-        TeamCrest(size: 92, color: draft.ownJersey?.color.color),
-        sh(14),
+        cSh(14),
+        TeamCrest(
+          size: isPhoneLayout ? 72 : 92,
+          color: draft.ownJersey?.color.color,
+        ),
+        cSh(14),
         Text(
           name,
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: AppThemeStyle.semiBStyle(21, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(21), AppColor.primaryLabels),
         ),
         if (chips.isNotEmpty) ...<Widget>[
-          sh(14),
+          cSh(14),
           Wrap(
             alignment: WrapAlignment.center,
-            spacing: formatWidth(8),
-            runSpacing: formatHeight(8),
+            spacing: cW(8),
+            runSpacing: cH(8),
             children: chips,
           ),
         ],
@@ -259,29 +271,35 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
   Widget _centerColumn(bool ready) {
     return Padding(
       padding: EdgeInsets.only(
-        top: formatHeight(70),
-        left: formatWidth(24),
-        right: formatWidth(24),
+        top: isPhoneLayout ? 2 : cH(24),
+        left: isPhoneLayout ? 12 : cW(24),
+        right: isPhoneLayout ? 12 : cW(24),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          // « Mon adjoint » au milieu, entre les deux équipes, bien visible avant de lancer le match.
+          const AdjointButton(),
+          cSh(isPhoneLayout ? 8 : 18),
           const VsBadge(),
-          sh(18),
+          cSh(isPhoneLayout ? 10 : 18),
           WizardCtaButton(
             label: 'app.coup-denvoi-step3.demarrer-match'.tr(),
             enabled: ready,
             onTap: () => _startMatch(),
           ),
-          sh(10),
+          cSh(10),
           SizedBox(
-            width: formatWidth(210),
+            width: isPhoneLayout ? 150 : cW(210),
             child: Text(
               ready
                   ? 'app.coup-denvoi-step3.pret'.tr()
                   : 'app.coup-denvoi-step3.non-pret'.tr(),
               textAlign: TextAlign.center,
-              style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+              style: AppThemeStyle.regularStyle(
+                cFs(12),
+                AppColor.secondaryLabels,
+              ),
             ),
           ),
         ],
@@ -297,21 +315,24 @@ class _CoupDEnvoiStep3ScreenState extends ConsumerState<CoupDEnvoiStep3Screen> {
     return Column(
       children: <Widget>[
         TeamLabelBadge('app.coup-denvoi-step3.equipe-adverse'.tr()),
-        sh(14),
-        TeamCrest(size: 92, color: draft.opponent.jerseyColor?.color),
-        sh(14),
+        cSh(14),
+        TeamCrest(
+          size: isPhoneLayout ? 72 : 92,
+          color: draft.opponent.jerseyColor?.color,
+        ),
+        cSh(14),
         Text(
           name,
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: AppThemeStyle.semiBStyle(21, AppColor.primaryLabels),
+          style: AppThemeStyle.semiBStyle(cFs(21), AppColor.primaryLabels),
         ),
-        sh(14),
+        cSh(14),
         Wrap(
           alignment: WrapAlignment.center,
-          spacing: formatWidth(8),
-          runSpacing: formatHeight(8),
+          spacing: cW(8),
+          runSpacing: cH(8),
           children: <Widget>[
             if (draft.opponent.category != null)
               InfoChip(draft.opponent.category!.label),
@@ -339,33 +360,33 @@ class _HubActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double badge = sp(22);
+    final double badge = cIc(22);
     return Material(
       color: AppColor.surface,
-      borderRadius: BorderRadius.circular(r(24)),
+      borderRadius: BorderRadius.circular(cR(24)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(r(24)),
+        borderRadius: BorderRadius.circular(cR(24)),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: formatWidth(18),
-            vertical: formatHeight(12),
-          ),
+          padding: EdgeInsets.symmetric(horizontal: cW(18), vertical: cH(12)),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
                 label,
-                style: AppThemeStyle.mediumStyle(14, AppColor.primaryLabels),
+                style: AppThemeStyle.mediumStyle(
+                  cFs(14),
+                  AppColor.primaryLabels,
+                ),
               ),
-              sw(10),
+              cSw(10),
               trailing ??
                   SizedBox(
                     width: badge,
                     height: badge,
                     child: Icon(
                       Iconsax.arrow_circle_right,
-                      size: sp(13),
+                      size: cIc(13),
                       color: AppColor.primaryLabels,
                     ),
                   ),

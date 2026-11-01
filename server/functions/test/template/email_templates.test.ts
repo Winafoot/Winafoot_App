@@ -13,6 +13,7 @@ import { generateTemplateWelcomeEmail } from "../../src/template/email_welcome";
 import { mailIdentity } from "../../src/utils/mail_identity";
 
 const LINK = "https://demo-wina.firebaseapp.com/__/auth/action?mode=resetPassword&oobCode=XYZ";
+const CODE = "482915";
 
 /** Adresses e-mail que le test donne aux gabarits : les seules qu'un rendu peut contenir. */
 const CONTACT = "support@wina.test";
@@ -23,8 +24,8 @@ const EMAIL_ADDRESS = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g;
 /** Chaque gabarit rendu avec et sans adresse de contact. */
 const render = (contact?: string): Record<string, string> => ({
   welcome: generateTemplateWelcomeEmail("Wina", contact),
-  verify: generateTemplateVerifyYourEmail("Wina", LINK, contact),
-  reset: generateTemplateResetPasswordEmail("Ibrahim", LINK, contact),
+  verify: generateTemplateVerifyYourEmail("Wina", CODE, contact),
+  reset: generateTemplateResetPasswordEmail("Ibrahim", CODE, contact),
   coachInvite: generateTemplateCoachInviteEmail("Ibrahim", LINK, contact, "Wina"),
   adminInvite: generateTemplateAdminInviteEmail("Ibrahim", LINK, contact, "Wina"),
 });

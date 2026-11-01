@@ -1,6 +1,7 @@
 import 'package:core_kosmos/core_kosmos.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:wina/config/phone_scale.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/routes/app_router.gr.dart';
 
@@ -22,7 +23,7 @@ class SettingsButton extends StatelessWidget {
       onTap: () => AutoRouter.of(context).navigate(const ProfileParentRoute()),
       child: Icon(
         Iconsax.setting_2,
-        size: sp(24),
+        size: cIc(24),
         color: AppColor.primaryLabels,
       ),
     );

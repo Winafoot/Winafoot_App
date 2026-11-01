@@ -43,6 +43,28 @@ describe("sendEmailVerification (secured)", () => {
     expect(vi.mocked(sendEmail).mock.calls[0][1]).toMatchObject({ email: "a@club.test" });
   });
 
+  it("puts a six-digit code, and no link, in the mail", async () => {
+    const uid = await seedCoachWithSecurity("a@club.test");
+
+    await sendEmailVerification({}, caller(uid));
+
+    const [, , html, , text] = vi.mocked(sendEmail).mock.calls[0];
+    const code = /(d{6})/.exec(text as string)?.[1];
+    expect(code).toBeDefined();
+    expect(html).toContain(code);
+    expect(html).not.toContain("oobCode");
+    expect((await firestore().collection("email_codes").doc(`verify-email_${uid}`).get()).exists).toBe(true);
+  });
+
+  it("drops the code when the mail provider fails", async () => {
+    const uid = await seedCoachWithSecurity("a@club.test");
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
+
+    await sendEmailVerification({}, caller(uid));
+
+    expect((await firestore().collection("email_codes").doc(`verify-email_${uid}`).get()).exists).toBe(false);
+  });
+
   it("ignores a uid in the payload that is not the caller's", async () => {
     const a = await seedCoachWithSecurity("a@club.test");
     const b = await seedCoachWithSecurity("b@club.test");
@@ -87,17 +109,17 @@ describe("sendEmailVerification (secured)", () => {
 
   it("answers false rather than leaking an error object when the mail provider fails", async () => {
     const uid = await seedCoachWithSecurity("a@club.test");
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     const result = await sendEmailVerification({ uid }, caller(uid));
 
     expect(result).toBe(false);
   });
 
-  // L'horodatage anti-rejeu n'est posé qu'après un envoi réussi : un échec ne bloque pas le compte 6 h.
+  // L'horodatage anti-rejeu n'est posé qu'après un envoi réussi : un échec ne bloque pas le compte.
   it("does not stamp lastVerifEmailAt when the mail provider fails, so the user can retry", async () => {
     const uid = await seedCoachWithSecurity("a@club.test");
-    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("MailerSend indisponible"));
+    vi.mocked(sendEmail).mockRejectedValueOnce(new Error("Resend indisponible"));
 
     expect(await sendEmailVerification({}, caller(uid))).toBe(false);
     expect(await lastVerifEmailAt(uid)).toBeUndefined();
@@ -119,7 +141,7 @@ describe("sendEmailVerification (secured)", () => {
 
   it("sends again once the waiting period is over", async () => {
     const uid = await seedCoachWithSecurity("a@club.test");
-    const sevenHoursAgo = firestore.Timestamp.fromMillis(Date.now() - 7 * 3_600_000);
+    const sevenHoursAgo = firestore.Timestamp.fromMillis(Date.now() - 7 * 3_600_000); // bien au-delà du délai de 30 s
     await firestore().collection("users").doc(uid).collection("metadata").doc("security").update({ lastVerifEmailAt: sevenHoursAgo });
 
     expect(await sendEmailVerification({}, caller(uid))).toBe(true);
