@@ -27,6 +27,7 @@ import 'package:wina/view/widget/jersey_form.dart';
 import 'package:wina/view/widget/notification_bell.dart';
 import 'package:wina/view/widget/search_field.dart';
 import 'package:wina/view/widget/settings_button.dart';
+import 'package:wina/view/widget/subscription_gate.dart';
 import 'package:wina/view/widget/whistle_icon.dart';
 
 // Dimensions couplées de la barre de navigation basse et du bouton flottant
@@ -254,52 +255,73 @@ class _TopBar extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Flexible(
-          // Le nom prend presque toute la place libre (Flexible + Spacer à parts
-          // égales le coupait à la moitié : « Équipe de … » sur tablette).
-          flex: 9,
-          child: Text(
-            teamName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppThemeStyle.semiBStyle(cFs(30), AppColor.primaryLabels),
-          ),
-        ),
-        cSw(20),
-        if (coach?.category != null) ...[
-          _Chip(
-            label: coach!.category!.label,
-            style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
-          ),
-          cSw(8),
-        ],
-        if (coach?.division != null) ...[
-          _Chip(
-            label: coach!.division!.label,
-            style: AppThemeStyle.mediumStyle(cFs(15), AppColor.primaryLabels),
-          ),
-          cSw(8),
-        ],
-        if (coach?.coachFirstName != null) ...[
-          _Chip(
-            label: 'app.mon-equipe.puce-coach'.tr(
-              namedArgs: <String, String>{'prenom': coach!.coachFirstName!},
-            ),
-            style: AppThemeStyle.regularStyle(cFs(15), AppColor.primaryLabels),
-          ),
-          cSw(8),
-        ],
-        cSw(6),
-        _JerseySelector(
-          jerseys: jerseys,
-          onTap:
-              () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const GererMaillotsScreen(),
+        // Groupe de gauche (nom, puces, maillots) : il prend toute la place libre et le nom s'y raccourcit seul si
+        // besoin. Un `Spacer` à côté d'un `Flexible` se partageait l'espace 9 contre 1 et laissait un vide à droite
+        // quand le nom est court : le logo ne touchait jamais le bord.
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  teamName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppThemeStyle.semiBStyle(
+                    cFs(30),
+                    AppColor.primaryLabels,
+                  ),
                 ),
               ),
+              cSw(20),
+              if (coach?.category != null) ...[
+                _Chip(
+                  label: coach!.category!.label,
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
+                ),
+                cSw(8),
+              ],
+              if (coach?.division != null) ...[
+                _Chip(
+                  label: coach!.division!.label,
+                  style: AppThemeStyle.mediumStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
+                ),
+                cSw(8),
+              ],
+              if (coach?.coachFirstName != null) ...[
+                _Chip(
+                  label: 'app.mon-equipe.puce-coach'.tr(
+                    namedArgs: <String, String>{
+                      'prenom': coach!.coachFirstName!,
+                    },
+                  ),
+                  style: AppThemeStyle.regularStyle(
+                    cFs(15),
+                    AppColor.primaryLabels,
+                  ),
+                ),
+                cSw(8),
+              ],
+              cSw(6),
+              _JerseySelector(
+                jerseys: jerseys,
+                onTap:
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const GererMaillotsScreen(),
+                      ),
+                    ),
+              ),
+            ],
+          ),
         ),
-        const Spacer(),
+        // Même groupe, mêmes espaces et même marge que l'en-tête des autres pages (PageHeader : cloche, 16,
+        // réglages, 18, logo) : le logo et les boutons ne bougent pas d'un onglet à l'autre.
         const NotificationBell(),
         cSw(16),
         const SettingsButton(),
@@ -573,7 +595,16 @@ class _PlayerRow extends StatelessWidget {
               style: AppThemeStyle.mediumStyle(cFs(15), AppColor.rosterName),
             ),
           ),
-          // Colonne étroite : le pied fort est dans la fiche joueur.
+          // Pied fort (« Droit » / « Gauche »), à droite du nom, avant l'œil de la fiche joueur.
+          cSw(8),
+          Text(
+            player.strongFoot.label,
+            maxLines: 1,
+            style: AppThemeStyle.regularStyle(
+              cFs(12),
+              AppColor.secondaryLabels,
+            ),
+          ),
           cSw(12),
           // Œil : ouvre la fiche « Détail joueur » du joueur de la ligne.
           GestureDetector(
@@ -621,7 +652,10 @@ class _CoupDEnvoiButton extends ConsumerWidget {
         borderRadius: cR(28),
         verticalPadding: 15,
         horizontalPadding: 28,
-        onTap: () {
+        onTap: () async {
+          // Sans abonnement actif, l'écran de paiement s'ouvre à la place du lancement du match.
+          if (!await ensureCanStartMatch(context, ref)) return;
+          if (!context.mounted) return;
           ref.read(matchDraftProvider.notifier).reset();
           Navigator.of(context).push(
             MaterialPageRoute<void>(

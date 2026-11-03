@@ -227,17 +227,22 @@ class _MaillotsCard extends StatelessWidget {
     // Téléphone : maillots enregistrés à gauche, ajout à droite, côte à côte
     // (une seule carte verticale obligeait à défiler longuement).
     if (isPhoneLayout) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (jerseys.isNotEmpty) ...[
-              Expanded(child: _card(_savedList())),
-              const SizedBox(width: 12),
+      // `PlayerFormScaffold` place le formulaire dans un FittedBox, qui lui donne une largeur illimitée :
+      // sans largeur explicite, les `Expanded` du Row font échouer la mise en page et l'écran reste inutilisable.
+      return SizedBox(
+        width: MediaQuery.sizeOf(context).width,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (jerseys.isNotEmpty) ...[
+                Expanded(child: _card(_savedList())),
+                const SizedBox(width: 12),
+              ],
+              Expanded(child: _card(_addForm())),
             ],
-            Expanded(child: _card(_addForm())),
-          ],
+          ),
         ),
       );
     }

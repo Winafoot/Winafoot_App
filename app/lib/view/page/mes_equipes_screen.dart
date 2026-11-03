@@ -19,6 +19,7 @@ import 'package:wina/view/widget/app_notif.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
 import 'package:wina/view/widget/custom_back_button.dart';
 import 'package:wina/view/widget/label_pill.dart';
+import 'package:wina/view/widget/login_identifier_box.dart';
 import 'package:wina/view/widget/team_crest.dart';
 
 /// Réinitialise le mot de passe d'une équipe liée (injectable pour les tests).
@@ -354,22 +355,21 @@ class _LinkedTeamCard extends StatelessWidget {
       teamIndex: team.teamIndex,
       pills: _pillsFor(team.category, team.division, team.teamFormat),
       playerCount: team.playerCount,
-      footer: Row(
+      footer: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Expanded(
-            child: Text(
-              team.identifier,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppThemeStyle.regularStyle(15, AppColor.secondaryLabels),
-            ),
+          LoginIdentifierBox(
+            identifier: team.identifier,
+            help: 'app.teams.login-id-help'.tr(),
           ),
-          sw(12),
-          TextButton(
-            onPressed: onReset,
-            child: Text(
-              'app.teams.reset-password'.tr(),
-              style: AppThemeStyle.semiBStyle(15, AppColor.primaryColor),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: onReset,
+              child: Text(
+                'app.teams.reset-password'.tr(),
+                style: AppThemeStyle.semiBStyle(15, AppColor.primaryColor),
+              ),
             ),
           ),
         ],

@@ -31,11 +31,11 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
-    // Mur de paiement. Interrupteur : app_config/config.paywall_enforced (écrit par un administrateur
-    // via la console, jamais par un client). Désactivé : aucune règle ci-dessous ne change. Activé, les
-    // données de l'équipe (joueurs, matchs, compositions ; pas les maillots, créés avant l'abonnement) exigent users/{uid}.access actif
-    // et non expiré, champ posé par le serveur seul (billing/store.ts). Le document utilisateur reste
-    // lisible et la suppression de ses données reste permise : le mur ne prive pas de sa fiche.
+    // Abonnement. Interrupteur : app_config/config.paywall_enforced (écrit par un administrateur via la
+    // console, jamais par un client). Désactivé : aucune règle ci-dessous ne change. Activé, l'app reste gratuite
+    // (effectif, compositions, maillots, lecture de l'historique) et seul le LANCEMENT d'un match exige
+    // users/{uid}.access actif et non expiré (champ posé par le serveur seul, billing/store.ts) : création et mise
+    // à jour des matchs, et match en direct partagé avec l'adjoint. La suppression de ses données reste permise.
     // `||` court-circuite : sans mur, la fiche utilisateur n'est pas lue (pas de lecture facturée en plus).
     function paywallOn() {
       let cfg = /databases/$(database)/documents/app_config/config;
@@ -474,7 +474,7 @@ service cloud.firestore {
         allow create, update: if isOwner(uid) && hasAccess(uid)
           && request.resource.data.keys().hasOnly([
             'matchId', 'status', 'half', 'elapsedSeconds', 'scoreUs', 'scoreThem', 'formationLabel',
-            'slots', 'assignments', 'numbers', 'substituteIds', 'enabledStatKeys', 'halfTimeStatKeys',
+            'slots', 'assignments', 'numbers', 'captainId', 'substituteIds', 'enabledStatKeys', 'halfTimeStatKeys',
             'playerStats', 'events', 'players', 'kit', 'opponentName', 'swapSides', 'updatedAt'
           ])
           && request.resource.data.status in ['live', 'paused', 'ended'];
@@ -511,31 +511,28 @@ service cloud.firestore {
       // transaction, nombre RÉEL de joueurs), pas ici : les règles ne savent pas compter les
       // documents d'une collection. Le client ne peut donc que lire et modifier ses joueurs.
       match /players/{playerId} {
-        allow read: if isOwner(uid) && hasAccess(uid);
+        allow read: if isOwner(uid);
         allow create, delete: if false;
         allow update: if isOwner(uid)
-          && hasAccess(uid)
           && onlyChanges(['firstName', 'lastName', 'strongFoot', 'position'])
           && validPlayer(request.resource.data);
       }
 
       match /matches/{matchId} {
-        allow read: if isOwner(uid) && hasAccess(uid);
+        allow read: if isOwner(uid);
         allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && hasAccess(uid) && validMatch(request.resource.data);
       }
 
       match /compositions/{compositionId} {
-        allow read: if isOwner(uid) && hasAccess(uid);
+        allow read: if isOwner(uid);
         allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
-          && hasAccess(uid)
           && validCustomComposition(request.resource.data);
       }
 
-      // Hors mur de paiement : les maillots se créent à l'étape 2 de « Finalisez votre profil »
-      // (CoachProfileRepository.addJerseys), qui précède l'abonnement. Les soumettre au mur bloquerait tout
-      // nouveau coach avant qu'il puisse payer.
+      // Libres, comme l'effectif et les compositions : les maillots se créent à l'étape 2 de « Finalisez votre
+      // profil » (CoachProfileRepository.addJerseys), avant tout abonnement.
       match /jerseys/{jerseyId} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && validJersey(request.resource.data);

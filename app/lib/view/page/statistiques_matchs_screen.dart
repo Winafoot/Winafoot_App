@@ -1378,13 +1378,13 @@ class BilanCard extends StatelessWidget {
       enabled: halvesAvailable,
       onTap: () => onPeriod(MatchPeriod.firstHalf),
     ),
-    const _PeriodDivider(),
+    SizedBox(width: cW(10)),
     _PeriodLink(
       label: 'app.statistiques-matchs.mi-temps-2'.tr(),
       enabled: halvesAvailable,
       onTap: () => onPeriod(MatchPeriod.secondHalf),
     ),
-    const _PeriodDivider(),
+    SizedBox(width: cW(10)),
     _PeriodLink(
       label: 'app.statistiques-matchs.final'.tr(),
       onTap: () => onPeriod(MatchPeriod.total),
@@ -1427,6 +1427,18 @@ class _PeriodLink extends StatelessWidget {
         ),
       ],
     );
+    // Pastille entourée : la période se lit comme un bouton, pas comme un simple texte.
+    final Widget outlined = Container(
+      padding: EdgeInsets.symmetric(horizontal: cW(12), vertical: cH(6)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: enabled ? AppColor.primaryColor : AppColor.divider,
+          width: 1.2,
+        ),
+      ),
+      child: content,
+    );
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: enabled ? onTap : null,
@@ -1436,9 +1448,9 @@ class _PeriodLink extends StatelessWidget {
           _detailPhoneLook
               ? ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 48),
-                child: Center(widthFactor: 1, child: content),
+                child: Center(widthFactor: 1, child: outlined),
               )
-              : content,
+              : outlined,
     );
   }
 }
@@ -1467,6 +1479,13 @@ class _PeriodButton extends StatelessWidget {
         child: Container(
           height: 44,
           alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: enabled ? AppColor.primaryColor : AppColor.divider,
+              width: 1.2,
+            ),
+          ),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
@@ -1479,22 +1498,6 @@ class _PeriodButton extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PeriodDivider extends StatelessWidget {
-  const _PeriodDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: _detailPhoneLook ? 10 : cW(19)),
-      child: Container(
-        width: 0.5,
-        height: _detailPhoneLook ? 36 : cH(25),
-        color: AppColor.inkNavy.withValues(alpha: .2),
       ),
     );
   }

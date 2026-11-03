@@ -7,6 +7,7 @@ import 'package:wina/services/register_validation.dart';
 import 'package:wina/view/widget/app_notif.dart';
 import 'package:wina/view/widget/check_profil_form.dart';
 import 'package:wina/view/widget/confirm_dialog.dart';
+import 'package:wina/view/widget/login_identifier_box.dart';
 
 /// Même règle que le serveur : 3 à 30 caractères, minuscules, chiffres et tirets (ni au début ni à la fin).
 final RegExp _identifierPattern = RegExp(r'^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$');
@@ -216,16 +217,9 @@ class _MonAdjointScreenState extends ConsumerState<MonAdjointScreen> {
             child: CpButton(label: 'app.assistant.create'.tr(), onTap: _create),
           ),
         ] else ...<Widget>[
-          CpLabel('app.assistant.identifier'.tr()),
-          sh(8),
-          Text(
-            current.identifier,
-            style: AppThemeStyle.semiBStyle(18, AppColor.primaryLabels),
-          ),
-          sh(6),
-          Text(
-            'app.assistant.login-help'.tr(),
-            style: AppThemeStyle.regularStyle(12, AppColor.secondaryLabels),
+          LoginIdentifierBox(
+            identifier: current.identifier,
+            help: 'app.assistant.login-help'.tr(),
           ),
           sh(18),
           if (_changingPassword) ...<Widget>[
