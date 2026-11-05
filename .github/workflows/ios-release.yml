@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15-intel
+    runs-on: macos-26
     timeout-minutes: 60
     defaults:
       run:
@@ -17,6 +17,12 @@ jobs:
       BUNDLE_ID: fr.winafoot.app
     steps:
       - uses: actions/checkout@v4
+
+      # connectivity_plus (>= 7.1) exige Xcode 26.1.1 minimum (NWPath.isUltraConstrained), et Apple impose le
+      # SDK iOS 26 pour les envois sur l'App Store : le runner macos-15 ne suffit plus.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       # Variable de dépôt IOS_BUILD_NUMBER_OFFSET = dernier numéro de build déjà envoyé sur TestFlight.
       - name: Numéro de build
