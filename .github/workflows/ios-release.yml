@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-26
+    runs-on: macos-15-intel
     timeout-minutes: 60
     defaults:
       run:
@@ -19,10 +19,24 @@ jobs:
       - uses: actions/checkout@v4
 
       # connectivity_plus (>= 7.1) exige Xcode 26.1.1 minimum (NWPath.isUltraConstrained), et Apple impose le
-      # SDK iOS 26 pour les envois sur l'App Store : le runner macos-15 ne suffit plus.
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+      # SDK iOS 26 pour les envois sur l'App Store : l'Xcode par défaut du runner ne suffit plus.
+      # On prend le Xcode 26 le plus récent déjà présent sur l'image ; sinon on installe 26.1.1 avec xcodes.
+      # Secrets requis pour ce repli : XCODES_USERNAME et XCODES_PASSWORD (compte Apple, sans double authentification
+      # ou avec un cookie de session valide, sinon le téléchargement échoue).
+      - name: Xcode 26
+        env:
+          XCODES_USERNAME: ${{ secrets.XCODES_USERNAME }}
+          XCODES_PASSWORD: ${{ secrets.XCODES_PASSWORD }}
+        run: |
+          XCODE_APP=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1 || true)
+          if [ -z "$XCODE_APP" ]; then
+            echo "Aucun Xcode 26 sur l'image : installation de 26.1.1 avec xcodes"
+            brew install aria2 xcodesorg/made/xcodes
+            sudo xcodes install 26.1.1 --experimental-unxip --select --no-superuser
+            XCODE_APP=$(ls -d /Applications/Xcode*26*.app | sort -V | tail -n 1)
+          fi
+          sudo xcode-select -s "$XCODE_APP"
+          xcodebuild -version
 
       # Variable de dépôt IOS_BUILD_NUMBER_OFFSET = dernier numéro de build déjà envoyé sur TestFlight.
       - name: Numéro de build
