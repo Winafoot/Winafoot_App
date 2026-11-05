@@ -47,12 +47,21 @@ class SocialSignInResult {
 /// règles Firestore interdisent au client de la créer, c'est le callable
 /// `completeSocialSignup` qui l'écrit, après acceptation des CGU.
 abstract class SocialSignIn {
+  /// Nom complet reçu d'Apple (prénom puis nom), vide si la personne l'a masqué.
+  @visibleForTesting
+  static String joinAppleName(String? givenName, String? familyName) =>
+      <String?>[givenName, familyName]
+          .whereType<String>()
+          .map((String n) => n.trim())
+          .where((String n) => n.isNotEmpty)
+          .join(' ');
+
   /// [askCgu] demande l'acceptation des CGU à un nouveau coach (`true` : accepté).
   static Future<SocialSignInResult> signIn(
     SocialProvider provider, {
     required Future<bool> Function() askCgu,
   }) async {
-    String? appleGivenName;
+    String? appleFullName;
     final String? failure;
     switch (provider) {
       case SocialProvider.google:
@@ -72,8 +81,12 @@ abstract class SocialSignIn {
         if (credential == null) {
           return const SocialSignInResult(SocialSignInOutcome.cancelled);
         }
-        // Apple ne donne le prénom qu'à la toute première connexion.
-        appleGivenName = credential.givenName;
+        // Apple ne donne le nom qu'à la toute première connexion (et pas du tout si la personne le masque) :
+        // il est enregistré tout de suite, sans jamais le redemander.
+        appleFullName = joinAppleName(
+          credential.givenName,
+          credential.familyName,
+        );
         failure = (await KosmosAuth.signInWithApple(
           credential,
           rawNonce,
@@ -102,8 +115,8 @@ abstract class SocialSignIn {
         region: kCloudRegion,
       ).httpsCallable('completeSocialSignup').call(<String, dynamic>{
         'acceptedCgu': true,
-        if (appleGivenName != null && appleGivenName.trim().isNotEmpty)
-          'firstname': appleGivenName.trim(),
+        if (appleFullName != null && appleFullName.isNotEmpty)
+          'firstname': appleFullName,
       });
       // La lecture 'la fiche n'existe pas' faite plus haut est restée en cache : on la remplace par la fiche
       // que le serveur vient d'écrire, pour que l'écoute de l'accueil ne s'appuie pas sur du périmé.

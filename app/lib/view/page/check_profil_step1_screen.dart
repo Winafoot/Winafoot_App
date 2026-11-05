@@ -1,4 +1,5 @@
 import 'package:core_kosmos/core_kosmos.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:wina/data/coach_profile_repository.dart';
 import 'package:wina/models/coach_profile.dart';
@@ -44,6 +45,10 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
   /// Nom complet déjà connu (coach inscrit depuis l'app : son prénom) : le champ
   /// n'est plus demandé à l'onboarding, seulement en modification.
   bool _nameKnown = false;
+
+  /// Compte créé avec Apple ou Google : le nom est facultatif (Apple ne le renvoie qu'une fois, et la personne peut
+  /// le masquer). Une app qui s'appuie sur « Se connecter avec Apple » ne doit pas l'exiger.
+  bool _socialAccount = false;
   bool _busy = false;
 
   /// Vrai dès qu'un « Continuer » a échoué : les champs obligatoires restés
@@ -65,10 +70,11 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
       final CoachProfile profile =
           await CoachProfileRepository.watchCoachProfile().first;
       final String coachName = profile.coachName?.trim() ?? '';
-      final String? name =
-          coachName.isNotEmpty
-              ? coachName
-              : await CoachProfileRepository.loadInitialCoachName();
+      final String? name = CoachProfileRepository.knownCoachName(
+        coachName.isNotEmpty
+            ? coachName
+            : await CoachProfileRepository.loadInitialCoachName(),
+      );
       if (!mounted) return;
       setState(() {
         if (name != null && _nom.text.isEmpty) _nom.text = name;
@@ -80,7 +86,14 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
         _division ??= profile.division;
         _format ??= profile.teamFormat;
         _formatLocked = profile.teamFormat != null;
-        _nameKnown = coachName.isNotEmpty;
+        // Connu : déjà saisi, ou reçu d'Apple / Google à l'inscription, ou posé par le back-office.
+        _nameKnown = name != null;
+        _socialAccount =
+            FirebaseAuth.instance.currentUser?.providerData.any(
+              (UserInfo p) =>
+                  p.providerId == 'apple.com' || p.providerId == 'google.com',
+            ) ??
+            false;
       });
     } catch (_) {
       // Pré-remplissage best-effort.
@@ -96,7 +109,7 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
 
   Future<void> _continue() async {
     if (_busy) return;
-    if (_nom.text.trim().isEmpty ||
+    if ((_nom.text.trim().isEmpty && !_socialAccount) ||
         _equipe.text.trim().isEmpty ||
         _category == null ||
         _division == null ||
@@ -168,14 +181,20 @@ class _CheckProfilStep1ScreenState extends State<CheckProfilStep1Screen> {
       // laisse `onBack` nul, le profil devant être complété avant d'entrer.
       onBack: widget.editMode ? () => Navigator.of(context).maybePop() : null,
       children: [
-        if (!_nameKnown || widget.editMode) ...<Widget>[
-          const CpLabel('Nom complet du coach*'),
+        // Jamais redemandé à l'inscription quand il est déjà connu, ni à un compte Apple / Google (Apple le donne
+        // une seule fois, et la personne peut le masquer) ; il reste modifiable dans « Modifier mon équipe ».
+        if ((!_nameKnown && !_socialAccount) || widget.editMode) ...<Widget>[
+          CpLabel(
+            _socialAccount
+                ? 'Nom complet du coach (facultatif)'
+                : 'Nom complet du coach*',
+          ),
           sh(8),
           CpTextField(
             controller: _nom,
             hint: 'Ex. John Doe',
             onChanged: _onFieldChanged,
-            error: _submitted && _nom.text.trim().isEmpty,
+            error: _submitted && _nom.text.trim().isEmpty && !_socialAccount,
           ),
           sh(18),
         ],

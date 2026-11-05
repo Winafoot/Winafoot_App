@@ -5,6 +5,7 @@ import 'package:wina/billing/access_info.dart';
 import 'package:wina/config/legal_links.dart';
 import 'package:wina/config/skeleton_config.dart' show kCloudRegion;
 import 'package:wina/config/theme.dart';
+import 'package:wina/models/coach_profile.dart' show Jersey;
 import 'package:wina/view/widget/confirm_dialog.dart';
 import 'package:wina/providers/billing_providers.dart';
 import 'package:wina/view/page/abonnement_screen.dart';
@@ -13,6 +14,7 @@ import 'package:wina/view/page/mes_equipes_screen.dart';
 import 'package:wina/view/page/mon_adjoint_screen.dart';
 import 'package:wina/view/page/settings/settings_node.dart';
 import 'package:wina/view/widget/custom_back_button.dart';
+import 'package:wina/view/widget/team_crest.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
@@ -403,15 +405,21 @@ class SettingsWebPage extends ConsumerWidget {
   ) {
     final String teamName =
         ref.watch(coachProfileProvider).valueOrNull?.teamName?.trim() ?? '';
+    // Écusson teinté de la couleur du premier maillot de l'équipe ; neutre tant qu'aucun maillot n'est enregistré.
+    final List<Jersey> jerseys =
+        ref.watch(jerseysProvider).valueOrNull ?? const <Jersey>[];
+    final Color? crestColor = jerseys.isEmpty ? null : jerseys.first.color.color;
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Identité de la carte : nom d'équipe + email, centrés (Figma).
+        // Identité de la carte : écusson, nom d'équipe + email, centrés (Figma).
         Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            sh(30),
+            sh(14),
+            Center(child: TeamCrest(size: 56, color: crestColor)),
+            sh(10),
             Text(
               teamName,
               textAlign: TextAlign.center,
