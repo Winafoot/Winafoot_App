@@ -58,10 +58,12 @@ class AccessInfo {
   bool activeAt(DateTime now) => active && until != null && until!.isAfter(now);
 }
 
-enum AccessDecision { open, paywall, linkedBlocked }
+enum AccessDecision { open, linkedBlocked }
 
-/// Ce que l'app affiche. Le mur désactivé (`app_config/config.paywall_enforced` absent ou faux) laisse tout
-/// ouvert, comme les règles Firestore.
+/// Ce que l'app affiche à l'ouverture. L'app est gratuite : un propriétaire sans abonnement entre toujours, et c'est
+/// au lancement d'un match que le paiement lui est demandé (voir [canStartMatch]). Seul un compte d'équipe liée dont
+/// le propriétaire n'a plus d'abonnement actif reste bloqué. L'interrupteur désactivé
+/// (`app_config/config.paywall_enforced` absent ou faux) laisse tout ouvert, comme les règles Firestore.
 AccessDecision decideAccess({
   required bool paywallEnforced,
   required AccessInfo info,
@@ -69,8 +71,16 @@ AccessDecision decideAccess({
 }) {
   if (!paywallEnforced) return AccessDecision.open;
   if (info.activeAt(now)) return AccessDecision.open;
-  return info.isLinked ? AccessDecision.linkedBlocked : AccessDecision.paywall;
+  return info.isLinked ? AccessDecision.linkedBlocked : AccessDecision.open;
 }
+
+/// Un match peut être lancé : l'abonnement n'est pas exigé, ou il est actif. Sinon, « Coup d'envoi » ouvre l'écran
+/// de paiement. Les règles Firestore font respecter la même décision côté serveur (création des matchs).
+bool canStartMatch({
+  required bool paywallEnforced,
+  required AccessInfo info,
+  required DateTime now,
+}) => !paywallEnforced || info.activeAt(now);
 
 /// Équipes liées encore à créer pour un propriétaire dont l'abonnement est actif.
 int missingTeams(

@@ -1,7 +1,7 @@
 // server/tests/rules/paywall.test.js
 /**
- * Règles Firestore : mur de paiement. Désactivé tant que app_config/config.paywall_enforced
- * n'est pas à true ; activé, les données de l'équipe exigent users/{uid}.access actif et non expiré.
+ * Règles Firestore : abonnement. Désactivé tant que app_config/config.paywall_enforced n'est pas à true ;
+ * activé, l'app reste gratuite et seul le lancement d'un match exige users/{uid}.access actif et non expiré.
  */
 
 import { readFileSync } from 'node:fs';
@@ -60,36 +60,53 @@ describe('mur de paiement désactivé', () => {
   });
 });
 
-describe('mur de paiement activé', () => {
-  it("refuse la lecture et l'écriture sans champ access", async () => {
+/** Match valide minimal : le lancement d'un match est ce que le mur de paiement protège. */
+const draftMatch = () => ({ status: 'draft' });
+
+/** État publié par le téléphone du coach pour l'adjoint (voir live_match.test.js). */
+const liveSnapshot = () => ({
+  matchId: 'm1', status: 'live', half: 1, elapsedSeconds: 0, scoreUs: 0, scoreThem: 0, formationLabel: '4-3-3',
+  slots: [], assignments: [], numbers: {}, captainId: null, substituteIds: [], enabledStatKeys: [], halfTimeStatKeys: [],
+  swapSides: false, playerStats: {}, events: [], players: {}, kit: null, opponentName: '', updatedAt: new Date(),
+});
+
+describe('mur de paiement activé : l\'app reste gratuite', () => {
+  it("laisse lire et gérer l'effectif, les compositions et l'historique sans abonnement", async () => {
     await seed({ paywall: true });
-    await assertFails(getDoc(doc(db(), `users/${UID}/matches/m1`)));
-    await assertFails(getDoc(doc(db(), `users/${UID}/players/p1`)));
+    await assertSucceeds(getDoc(doc(db(), `users/${UID}/players/p1`)));
+    await assertSucceeds(updateDoc(doc(db(), `users/${UID}/players/p1`), { firstName: 'Z' }));
+    await assertSucceeds(getDoc(doc(db(), `users/${UID}/matches/m1`)));
+    await assertSucceeds(setDoc(doc(db(), `users/${UID}/compositions/c1`), { name: 'Ma compo', formationLabel: '4-3-3' }));
+    await assertSucceeds(getDoc(doc(db(), `users/${UID}/compositions/c1`)));
   });
 
-  it("laisse créer et lire les maillots sans accès (étape 2 du profil, avant l'abonnement)", async () => {
+  it('laisse créer et lire les maillots sans abonnement', async () => {
     await seed({ paywall: true });
     await assertSucceeds(setDoc(doc(db(), `users/${UID}/jerseys/j1`), jersey()));
     await assertSucceeds(getDoc(doc(db(), `users/${UID}/jerseys/j1`)));
   });
 
-  it('accepte un accès actif et non expiré', async () => {
+  it("refuse de lancer un match sans abonnement : création du match et match en direct", async () => {
+    await seed({ paywall: true });
+    await assertFails(setDoc(doc(db(), `users/${UID}/matches/m2`), draftMatch()));
+    await assertFails(setDoc(doc(db(), `users/${UID}/matches/m1`), draftMatch(), { merge: true }));
+    await assertFails(setDoc(doc(db(), `users/${UID}/liveMatch/current`), liveSnapshot()));
+  });
+
+  it('accepte de lancer un match avec un accès actif et non expiré', async () => {
     await seed({ paywall: true, access: { active: true, until: future() } });
-    await assertSucceeds(getDoc(doc(db(), `users/${UID}/matches/m1`)));
-    await assertSucceeds(getDoc(doc(db(), `users/${UID}/players/p1`)));
-    await assertSucceeds(setDoc(doc(db(), `users/${UID}/jerseys/j1`), jersey()));
-    await assertSucceeds(updateDoc(doc(db(), `users/${UID}/players/p1`), { firstName: 'Z' }));
+    await assertSucceeds(setDoc(doc(db(), `users/${UID}/matches/m2`), draftMatch()));
+    await assertSucceeds(setDoc(doc(db(), `users/${UID}/liveMatch/current`), liveSnapshot()));
   });
 
-  it('refuse un accès expiré', async () => {
-    await seed({ paywall: true, access: { active: true, until: past() } });
-    await assertFails(getDoc(doc(db(), `users/${UID}/matches/m1`)));
-  });
-
-  it('refuse un accès inactif', async () => {
-    await seed({ paywall: true, access: { active: false, until: future() } });
-    await assertFails(getDoc(doc(db(), `users/${UID}/matches/m1`)));
-    await assertFails(getDoc(doc(db(), `users/${UID}/players/p1`)));
+  it('refuse de lancer un match avec un accès expiré ou inactif, mais garde le reste ouvert', async () => {
+    for (const access of [{ active: true, until: past() }, { active: false, until: future() }]) {
+      await testEnv.clearFirestore();
+      await seed({ paywall: true, access });
+      await assertFails(setDoc(doc(db(), `users/${UID}/matches/m2`), draftMatch()));
+      await assertSucceeds(getDoc(doc(db(), `users/${UID}/matches/m1`)));
+      await assertSucceeds(getDoc(doc(db(), `users/${UID}/players/p1`)));
+    }
   });
 
   it('laisse toujours lire sa fiche et supprimer ses données', async () => {
@@ -101,6 +118,7 @@ describe('mur de paiement activé', () => {
   it("n'ouvre pas les données d'un autre compte", async () => {
     await seed({ paywall: true, access: { active: true, until: future() } });
     await assertFails(getDoc(doc(db('coach-bob'), `users/${UID}/matches/m1`)));
+    await assertFails(getDoc(doc(db('coach-bob'), `users/${UID}/players/p1`)));
   });
 });
 

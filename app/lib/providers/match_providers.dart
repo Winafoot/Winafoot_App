@@ -4,6 +4,7 @@ import 'package:wina/models/career_stats.dart';
 import 'package:wina/models/coach_profile.dart';
 import 'package:wina/models/game_match.dart';
 import 'package:wina/models/match_composition.dart';
+import 'package:wina/models/stat_catalog.dart';
 import 'package:wina/providers/auth_providers.dart';
 
 /// Brouillon du match en cours de construction dans l'assistant « Coup
@@ -61,6 +62,17 @@ final finishedMatchesProvider = StreamProvider<List<GameMatch>>((ref) {
   final String? uid = ref.watch(authUidProvider).valueOrNull;
   if (uid == null) return Stream<List<GameMatch>>.value(const <GameMatch>[]);
   return MatchRepository.watchFinishedMatches();
+});
+
+/// Statistiques activées lors du dernier match joué (bascules seules), ou `null` s'il n'y en a pas encore.
+/// C'est le point de départ du paramétrage d'un nouveau match ; à défaut, les statistiques par défaut du catalogue.
+/// Le flux est trié du plus récent au plus ancien : le premier match est le dernier joué.
+final lastMatchStatKeysProvider = Provider<List<String>?>((ref) {
+  final List<GameMatch> matches =
+      ref.watch(finishedMatchesProvider).valueOrNull ?? const <GameMatch>[];
+  if (matches.isEmpty) return null;
+  final List<String> keys = toggleKeys(matches.first.enabledStatKeys);
+  return keys.isEmpty ? null : keys;
 });
 
 /// Cumul des statistiques carrière par joueur (tous matchs terminés) :

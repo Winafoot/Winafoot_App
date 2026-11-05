@@ -88,7 +88,6 @@ class RevenueCatBillingService implements BillingService {
     final Offerings offerings = await Purchases.getOfferings();
     final List<Package> packages =
         offerings.current?.availablePackages ?? const <Package>[];
-    final Set<String> eligible = await _trialEligibleIds(packages);
     final List<PlanOffer> out = <PlanOffer>[];
     for (final Package p in packages) {
       final StoreProduct product = p.storeProduct;
@@ -102,40 +101,8 @@ class RevenueCatBillingService implements BillingService {
           price: product.price,
           currencyCode: product.currencyCode,
           priceString: product.priceString,
-          trialEligible: eligible.contains(product.identifier),
         ),
       );
-    }
-    return out;
-  }
-
-  /// Produits dont l'essai gratuit est offert à cet utilisateur. iOS : éligibilité calculée par le SDK
-  /// (un seul essai par groupe d'abonnement). Android : le SDK ne sait pas la calculer ; Google ne propose la
-  /// phase gratuite dans l'option par défaut qu'aux comptes encore éligibles. En cas de doute : pas d'essai
-  /// annoncé, jamais l'inverse (on ne promet pas un essai à quelqu'un qui serait débité aussitôt).
-  Future<Set<String>> _trialEligibleIds(List<Package> packages) async {
-    final Set<String> out = <String>{};
-    try {
-      if (defaultTargetPlatform == TargetPlatform.iOS) {
-        final Map<String, IntroEligibility> map =
-            await Purchases.checkTrialOrIntroductoryPriceEligibility(<String>[
-              for (final Package p in packages) p.storeProduct.identifier,
-            ]);
-        map.forEach((String id, IntroEligibility e) {
-          if (e.status ==
-              IntroEligibilityStatus.introEligibilityStatusEligible) {
-            out.add(id);
-          }
-        });
-      } else {
-        for (final Package p in packages) {
-          if (p.storeProduct.defaultOption?.freePhase != null) {
-            out.add(p.storeProduct.identifier);
-          }
-        }
-      }
-    } catch (_) {
-      // Éligibilité inconnue : aucun essai annoncé.
     }
     return out;
   }

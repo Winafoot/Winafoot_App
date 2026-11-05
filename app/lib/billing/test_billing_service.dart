@@ -75,7 +75,6 @@ class TestBillingService implements BillingService {
     price: price,
     currencyCode: 'EUR',
     priceString: formatMoney(price, 'EUR'),
-    trialEligible: true,
   );
 
   @override

@@ -87,14 +87,12 @@ void main() {
     expect(find.text('APP OUVERTE'), findsOneWidget);
   });
 
-  testWidgets('mur activé, propriétaire sans accès : écran Abonnement', (WidgetTester tester) async {
+  testWidgets('mur activé, propriétaire sans accès : l\'app s\'ouvre, le paiement est demandé au coup d\'envoi', (WidgetTester tester) async {
     _tablet(tester);
     await tester.pumpWidget(_host(enforced: true, info: _info(active: false)));
     await tester.pumpAndSettle();
-    expect(find.text('APP OUVERTE'), findsNothing);
-    // L'écran Abonnement s'affiche même sans offres (le titre est toujours présent).
-    expect(find.text('Choisissez votre formule'), findsOneWidget);
-    expect(find.text('Abonnement'), findsOneWidget);
+    expect(find.text('APP OUVERTE'), findsOneWidget);
+    expect(find.text('Choisissez votre formule'), findsNothing);
   });
 
   testWidgets('mur activé, compte lié sans accès : équipe bloquée', (WidgetTester tester) async {

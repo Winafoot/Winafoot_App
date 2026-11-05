@@ -36,6 +36,18 @@ abstract class CoachProfileRepository {
     }, SetOptions(merge: true));
   }
 
+  /// Prénom que le serveur pose faute de mieux à une première connexion Apple ou Google sans nom
+  /// (`completeSocialSignup`, FIRSTNAME_FALLBACK) : ce n'est pas un vrai nom, il ne doit ni être pré-rempli ni
+  /// faire croire que le nom est connu.
+  static const String fallbackCoachName = 'Coach';
+
+  /// Vrai nom du coach d'après la valeur lue sur la fiche, ou `null` s'il est vide ou si c'est le nom de secours.
+  static String? knownCoachName(String? loaded) {
+    final String? name = loaded?.trim();
+    if (name == null || name.isEmpty || name == fallbackCoachName) return null;
+    return name;
+  }
+
   /// Nom pré-rempli à l'étape 1 « Finalisez votre profil » : le `coachName`
   /// déjà saisi s'il existe, sinon le `firstname` posé par le back-office lors
   /// de la création du compte. `null` si aucun nom n'est disponible.

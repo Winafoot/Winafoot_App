@@ -29,12 +29,18 @@ class _ParametrerStatsScreenState extends ConsumerState<ParametrerStatsScreen> {
   void initState() {
     super.initState();
     // Seules les bascules : une clé calculée héritée d'un ancien match (ou d'une
-    // copie) n'est ni affichée ni comptée. Rien de reconnu → défauts.
+    // copie) n'est ni affichée ni comptée. Ordre de reprise : la sélection déjà
+    // faite sur ce match, sinon les statistiques du dernier match joué, sinon les
+    // statistiques par défaut du catalogue.
     final List<String> existing = toggleKeys(
       ref.read(matchDraftProvider).enabledStatKeys,
     );
+    final List<String>? lastMatch = ref.read(lastMatchStatKeysProvider);
     _selected =
-        (existing.isNotEmpty ? existing : defaultEnabledStatKeys()).toSet();
+        (existing.isNotEmpty
+                ? existing
+                : (lastMatch ?? defaultEnabledStatKeys()))
+            .toSet();
   }
 
   void _toggle(String key, bool on) =>

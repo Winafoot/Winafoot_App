@@ -48,14 +48,32 @@ void main() {
       expect(decideAccess(paywallEnforced: true, info: AccessInfo.fromUserData(_doc()), now: _now), AccessDecision.open);
     });
 
-    test('mur activé, accès expiré : mur de paiement pour un propriétaire', () {
+    test('mur activé, accès expiré : un propriétaire entre quand même (l\'app est gratuite)', () {
       final AccessInfo info = AccessInfo.fromUserData(_doc(until: _now.subtract(const Duration(seconds: 1))));
-      expect(decideAccess(paywallEnforced: true, info: info, now: _now), AccessDecision.paywall);
+      expect(decideAccess(paywallEnforced: true, info: info, now: _now), AccessDecision.open);
+      expect(decideAccess(paywallEnforced: true, info: const AccessInfo(), now: _now), AccessDecision.open);
     });
 
     test('mur activé, accès inactif : équipe bloquée pour un compte lié', () {
       final AccessInfo info = AccessInfo.fromUserData(_doc(active: false, ownerUid: 'o1', teamIndex: 2));
       expect(decideAccess(paywallEnforced: true, info: info, now: _now), AccessDecision.linkedBlocked);
+    });
+  });
+
+  group('canStartMatch', () {
+    test('mur désactivé : on peut toujours lancer un match', () {
+      expect(canStartMatch(paywallEnforced: false, info: const AccessInfo(), now: _now), isTrue);
+    });
+
+    test('mur activé, accès actif : on peut lancer un match', () {
+      expect(canStartMatch(paywallEnforced: true, info: AccessInfo.fromUserData(_doc()), now: _now), isTrue);
+    });
+
+    test('mur activé, sans abonnement, expiré ou inactif : le paiement est demandé', () {
+      expect(canStartMatch(paywallEnforced: true, info: const AccessInfo(), now: _now), isFalse);
+      final AccessInfo expired = AccessInfo.fromUserData(_doc(until: _now.subtract(const Duration(seconds: 1))));
+      expect(canStartMatch(paywallEnforced: true, info: expired, now: _now), isFalse);
+      expect(canStartMatch(paywallEnforced: true, info: AccessInfo.fromUserData(_doc(active: false)), now: _now), isFalse);
     });
   });
 

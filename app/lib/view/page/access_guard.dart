@@ -9,13 +9,13 @@ import 'package:wina/config/theme.dart';
 import 'package:wina/data/linked_team_repository.dart';
 import 'package:wina/providers/auth_providers.dart';
 import 'package:wina/providers/billing_providers.dart';
-import 'package:wina/view/page/abonnement_screen.dart';
 import 'package:wina/view/page/creer_equipe_liee_screen.dart';
 import 'package:wina/view/widget/app_loader.dart';
 
 /// Entoure le contenu de l'app : selon `app_config/config.paywall_enforced` et `users/{uid}.access`, affiche
-/// l'app, le mur de paiement (propriétaire) ou l'écran « équipe bloquée » (compte lié). Les règles Firestore
-/// font respecter la même décision côté serveur : cet écran n'est qu'un reflet.
+/// l'app, ou l'écran « équipe bloquée » (compte lié dont le propriétaire n'a plus d'abonnement). Il n'y a plus de
+/// mur de paiement : l'app est gratuite et le paiement est demandé au lancement d'un match (`ensureCanStartMatch`).
+/// Les règles Firestore font respecter la même décision côté serveur : cet écran n'est qu'un reflet.
 ///
 /// Une erreur de lecture Firestore ne bloque jamais l'app sur un chargement infini : le mur se désactive
 /// (`paywallEnforcedProvider` émet `false` sur erreur) et un accès illisible est traité comme « pas d'accès ».
@@ -97,8 +97,6 @@ class _AccessGuardState extends ConsumerState<AccessGuard> {
     );
 
     switch (decision) {
-      case AccessDecision.paywall:
-        return const AbonnementScreen();
       case AccessDecision.linkedBlocked:
         return const _LinkedBlockedScreen();
       case AccessDecision.open:

@@ -2,7 +2,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import type { Response } from "express";
 import { firestore } from "firebase-admin";
 import type { Request } from "firebase-functions/v2/https";
-import { isFirstPayment, isTrialStart } from "../../billing/billing_mail";
+import { isFirstPayment } from "../../billing/billing_mail";
 import { sendSubscriptionMail } from "../../billing/send_subscription_mail";
 import { applyEvent, type RevenueCatEvent, type SubscriptionData } from "../../billing/subscription";
 import { subscriptionFromDoc, writeSubscriptionAndAccess } from "../../billing/store";
@@ -52,11 +52,11 @@ export default async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-/** Propriétaire, abonnement et type de mail à envoyer (début d'essai, premier paiement) ; vide sinon. */
+/** Propriétaire, abonnement et type de mail à envoyer (premier paiement) ; vide sinon. */
 interface PaidResult {
   owner?: firestore.DocumentSnapshot;
   sub?: SubscriptionData;
-  kind?: "trial-started" | "payment-confirmed";
+  kind?: "payment-confirmed";
 }
 
 async function applyToOwner(event: RevenueCatEvent): Promise<PaidResult> {
@@ -87,11 +87,6 @@ async function applyToOwner(event: RevenueCatEvent): Promise<PaidResult> {
       result.owner = owner;
       result.sub = next;
       result.kind = "payment-confirmed";
-    } else if (isTrialStart(next, event) && event.event_timestamp_ms > (owner.get("billingMail.trialStartEventMs") ?? 0)) {
-      tx.update(ownerRef, { "billingMail.trialStartEventMs": event.event_timestamp_ms });
-      result.owner = owner;
-      result.sub = next;
-      result.kind = "trial-started";
     }
   });
   return result;

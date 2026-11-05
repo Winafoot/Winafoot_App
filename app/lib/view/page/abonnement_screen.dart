@@ -25,13 +25,21 @@ import 'package:wina/view/widget/team_crest.dart';
 const Duration _kActivationDelay = Duration(seconds: 60);
 
 /// Écran « Abonnement » (maquettes tablette) : choix de la formule (1, 2 ou 3 équipes), puis abonnement
-/// annuel ou mensuel. Mur obligatoire : pas de bouton retour. L'écran ne navigue pas après l'achat, la
-/// garde d'accès le remplace dès que `users/{uid}.access` devient actif.
+/// annuel ou mensuel. Ouvert par « Coup d'envoi » quand le compte n'a pas d'abonnement actif ([asGate]), ou depuis
+/// les réglages pour changer de formule ([changePlan]).
 class AbonnementScreen extends ConsumerStatefulWidget {
-  const AbonnementScreen({super.key, this.changePlan = false});
+  const AbonnementScreen({
+    super.key,
+    this.changePlan = false,
+    this.asGate = false,
+  });
 
-  /// Changement de formule depuis les réglages (abonnement déjà actif) : l'écran est refermable et n'est plus le mur.
+  /// Changement de formule depuis les réglages (abonnement déjà actif) : l'écran est refermable.
   final bool changePlan;
+
+  /// Porte du lancement d'un match : refermable, avec une phrase d'explication ; il se referme tout seul en renvoyant
+  /// `true` dès que `users/{uid}.access` devient actif, pour que le lancement du match se poursuive.
+  final bool asGate;
 
   @override
   ConsumerState<AbonnementScreen> createState() => _AbonnementScreenState();
@@ -175,6 +183,17 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
   @override
   Widget build(BuildContext context) {
     final AsyncValue<Map<int, TeamsOffer>> offers = ref.watch(offersProvider);
+    if (widget.asGate) {
+      ref.listen<AsyncValue<AccessInfo?>>(accessInfoProvider, (
+        AsyncValue<AccessInfo?>? _,
+        AsyncValue<AccessInfo?> next,
+      ) {
+        final AccessInfo? info = next.valueOrNull;
+        if (info != null && info.activeAt(DateTime.now()) && mounted) {
+          Navigator.of(context).pop(true);
+        }
+      });
+    }
 
     final Widget screen = Scaffold(
       backgroundColor: AppColor.background,
@@ -192,7 +211,7 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                   sh(16),
                   _Header(
                     onBack:
-                        widget.changePlan
+                        widget.changePlan || widget.asGate
                             ? () => Navigator.of(context).maybePop()
                             : null,
                   ),
@@ -226,6 +245,17 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                                   AppColor.primaryLabels,
                                 ),
                               ),
+                              if (widget.asGate) ...<Widget>[
+                                _gap(10, 8),
+                                Text(
+                                  'app.subscription.gate-intro'.tr(),
+                                  textAlign: TextAlign.center,
+                                  style: AppThemeStyle.regularStyle(
+                                    _t(18),
+                                    AppColor.secondaryLabels,
+                                  ),
+                                ),
+                              ],
                               _gap(32, 22),
                               _TeamSelector(
                                 selected: _teams,
@@ -256,14 +286,9 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                                 },
                               ),
                               _gap(28, 14),
-                              _Footer(
-                                onRestore: _restore,
-                                trial:
-                                    offers.valueOrNull?[_teams]?.hasTrial ??
-                                    false,
-                              ),
+                              _Footer(onRestore: _restore),
                               _gap(16, 8),
-                              if (!widget.changePlan)
+                              if (!widget.changePlan && !widget.asGate)
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: TextButton(
@@ -363,6 +388,45 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
         ),
     ];
     if (OrientationController.isPhone) {
+      // Même petit texte que sur les cartes de la tablette : prix barré (12 mois au tarif mensuel) et équivalent par
+      // mois pour l'annuel, prix par équipe pour le mensuel.
+      InlineSpan? yearlyNote;
+      if (offer.yearly != null && offer.yearlyPerMonth != null) {
+        final String code = offer.yearly!.currencyCode;
+        final String? full =
+            offer.yearlyFullPrice == null
+                ? null
+                : formatMoney(offer.yearlyFullPrice!, code);
+        yearlyNote = TextSpan(
+          children: <InlineSpan>[
+            if (full != null)
+              TextSpan(
+                text: full,
+                style: const TextStyle(decoration: TextDecoration.lineThrough),
+              ),
+            TextSpan(
+              text:
+                  '${full != null ? ' · ' : ''}${'app.subscription.per-month-equiv'.tr(args: <String>[formatMoney(offer.yearlyPerMonth!, code)])}',
+            ),
+          ],
+        );
+      }
+      InlineSpan? monthlyNote;
+      if (offer.monthly != null) {
+        monthlyNote = TextSpan(
+          text:
+              offer.teams == 1 || offer.monthlyPerTeam == null
+                  ? 'app.subscription.for-one-team'.tr()
+                  : 'app.subscription.per-team'.tr(
+                    args: <String>[
+                      formatMoney(
+                        offer.monthlyPerTeam!,
+                        offer.monthly!.currencyCode,
+                      ),
+                    ],
+                  ),
+        );
+      }
       // Deux boutons (annuel / mensuel) : un appui ouvre le détail de l'offre et le paiement.
       return IntrinsicHeight(
         child: Row(
@@ -375,6 +439,7 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                   price: offer.yearly!.priceString,
                   unit: 'app.subscription.per-year'.tr(),
                   badge: 'app.subscription.save-yearly'.tr(),
+                  note: yearlyNote,
                   highlighted: true,
                   onTap:
                       () => _showOffer(
@@ -395,6 +460,7 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                   label: 'app.subscription.short-monthly'.tr(),
                   price: offer.monthly!.priceString,
                   unit: 'app.subscription.per-month'.tr(),
+                  note: monthlyNote,
                   onTap:
                       () => _showOffer(
                         _MonthlyCard(
@@ -971,11 +1037,6 @@ class _YearlyCard extends StatelessWidget {
             unit: 'app.subscription.per-year'.tr(),
             color: AppColor.rosterName,
           ),
-          if (yearly.trialEligible)
-            _TrialThen(
-              price: yearly.priceString,
-              unit: 'app.subscription.per-year'.tr(),
-            ),
           sh(10),
           Text.rich(
             TextSpan(
@@ -1058,11 +1119,6 @@ class _MonthlyCard extends StatelessWidget {
             unit: 'app.subscription.per-month'.tr(),
             color: AppColor.primaryLabels,
           ),
-          if (monthly.trialEligible)
-            _TrialThen(
-              price: monthly.priceString,
-              unit: 'app.subscription.per-month'.tr(),
-            ),
           sh(10),
           Text(
             offer.teams == 1
@@ -1140,32 +1196,11 @@ class _CurrentPlan extends ConsumerWidget {
   }
 }
 
-/// « 7 jours gratuits, puis X / an » : le prix suit toujours la promesse d'essai (règle 3.1.2 d'Apple).
-class _TrialThen extends StatelessWidget {
-  const _TrialThen({required this.price, required this.unit});
-
-  final String price;
-  final String unit;
-
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Text(
-        'app.subscription.trial-then'.tr(args: <String>['$price $unit']),
-        style: AppThemeStyle.semiBStyle(_t(15), AppColor.primaryColor),
-      ),
-    );
-  }
-}
-
-/// Pied de page : essai gratuit, restauration, mentions légales et liens CGU / confidentialité.
+/// Pied de page : restauration, mentions légales et liens CGU / confidentialité.
 class _Footer extends StatelessWidget {
-  const _Footer({required this.onRestore, required this.trial});
+  const _Footer({required this.onRestore});
 
   final VoidCallback onRestore;
-
-  /// L'essai gratuit est offert à cet utilisateur : sinon la ligne d'essai n'est pas affichée.
-  final bool trial;
 
   TextStyle get _link => AppThemeStyle.regularStyle(
     12,
@@ -1174,7 +1209,7 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle trial = AppThemeStyle.regularStyle(
+    final TextStyle line = AppThemeStyle.regularStyle(
       14,
       AppColor.primaryLabels,
     );
@@ -1193,27 +1228,18 @@ class _Footer extends StatelessWidget {
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Text(
-                (this.trial
-                        ? 'app.subscription.trial-line'
-                        : 'app.subscription.no-trial-line')
-                    .tr(),
-                style: trial,
-              ),
-              Text(' · ', style: trial),
+              Text('app.subscription.payment-line'.tr(), style: line),
+              Text(' · ', style: line),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: onRestore,
-                child: Text('app.subscription.restore'.tr(), style: trial),
+                child: Text('app.subscription.restore'.tr(), style: line),
               ),
             ],
           ),
           sh(6),
           Text(
-            (this.trial
-                    ? 'app.subscription.legal'
-                    : 'app.subscription.legal-no-trial')
-                .tr(),
+            'app.subscription.legal'.tr(),
             textAlign: TextAlign.center,
             style: AppThemeStyle.regularStyle(11, AppColor.secondaryLabels),
           ),
@@ -1330,6 +1356,7 @@ class _PlanChoice extends StatelessWidget {
     required this.unit,
     required this.onTap,
     this.badge,
+    this.note,
     this.highlighted = false,
   });
 
@@ -1337,6 +1364,9 @@ class _PlanChoice extends StatelessWidget {
   final String price;
   final String unit;
   final String? badge;
+
+  /// Petit texte sous le prix (prix barré et équivalent mensuel, ou prix par équipe), comme sur les cartes de la tablette.
+  final InlineSpan? note;
   final bool highlighted;
   final VoidCallback onTap;
 
@@ -1374,6 +1404,19 @@ class _PlanChoice extends StatelessWidget {
               child: Text(price, style: AppThemeStyle.boldStyle(_t(28), fg)),
             ),
             Text(unit, style: AppThemeStyle.regularStyle(_t(14), fg)),
+            if (note != null) ...<Widget>[
+              const SizedBox(height: 6),
+              Text.rich(
+                TextSpan(
+                  style: AppThemeStyle.regularStyle(
+                    _t(13),
+                    highlighted ? fg.withValues(alpha: 0.92) : AppColor.secondaryLabels,
+                  ),
+                  children: <InlineSpan>[note!],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
             if (badge != null) ...<Widget>[
               const SizedBox(height: 8),
               FittedBox(
