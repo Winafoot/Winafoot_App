@@ -286,12 +286,7 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                                 },
                               ),
                               _gap(28, 14),
-                              _Footer(
-                                onRestore: _restore,
-                                trial:
-                                    offers.valueOrNull?[_teams]?.hasTrial ??
-                                    false,
-                              ),
+                              _Footer(onRestore: _restore),
                               _gap(16, 8),
                               if (!widget.changePlan && !widget.asGate)
                                 Align(
@@ -1042,11 +1037,6 @@ class _YearlyCard extends StatelessWidget {
             unit: 'app.subscription.per-year'.tr(),
             color: AppColor.rosterName,
           ),
-          if (yearly.trialEligible)
-            _TrialThen(
-              price: yearly.priceString,
-              unit: 'app.subscription.per-year'.tr(),
-            ),
           sh(10),
           Text.rich(
             TextSpan(
@@ -1129,11 +1119,6 @@ class _MonthlyCard extends StatelessWidget {
             unit: 'app.subscription.per-month'.tr(),
             color: AppColor.primaryLabels,
           ),
-          if (monthly.trialEligible)
-            _TrialThen(
-              price: monthly.priceString,
-              unit: 'app.subscription.per-month'.tr(),
-            ),
           sh(10),
           Text(
             offer.teams == 1
@@ -1211,32 +1196,11 @@ class _CurrentPlan extends ConsumerWidget {
   }
 }
 
-/// « 7 jours gratuits, puis X / an » : le prix suit toujours la promesse d'essai (règle 3.1.2 d'Apple).
-class _TrialThen extends StatelessWidget {
-  const _TrialThen({required this.price, required this.unit});
-
-  final String price;
-  final String unit;
-
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Text(
-        'app.subscription.trial-then'.tr(args: <String>['$price $unit']),
-        style: AppThemeStyle.semiBStyle(_t(15), AppColor.primaryColor),
-      ),
-    );
-  }
-}
-
-/// Pied de page : essai gratuit, restauration, mentions légales et liens CGU / confidentialité.
+/// Pied de page : restauration, mentions légales et liens CGU / confidentialité.
 class _Footer extends StatelessWidget {
-  const _Footer({required this.onRestore, required this.trial});
+  const _Footer({required this.onRestore});
 
   final VoidCallback onRestore;
-
-  /// L'essai gratuit est offert à cet utilisateur : sinon la ligne d'essai n'est pas affichée.
-  final bool trial;
 
   TextStyle get _link => AppThemeStyle.regularStyle(
     12,
@@ -1245,7 +1209,7 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle trial = AppThemeStyle.regularStyle(
+    final TextStyle line = AppThemeStyle.regularStyle(
       14,
       AppColor.primaryLabels,
     );
@@ -1264,27 +1228,18 @@ class _Footer extends StatelessWidget {
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Text(
-                (this.trial
-                        ? 'app.subscription.trial-line'
-                        : 'app.subscription.no-trial-line')
-                    .tr(),
-                style: trial,
-              ),
-              Text(' · ', style: trial),
+              Text('app.subscription.payment-line'.tr(), style: line),
+              Text(' · ', style: line),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: onRestore,
-                child: Text('app.subscription.restore'.tr(), style: trial),
+                child: Text('app.subscription.restore'.tr(), style: line),
               ),
             ],
           ),
           sh(6),
           Text(
-            (this.trial
-                    ? 'app.subscription.legal'
-                    : 'app.subscription.legal-no-trial')
-                .tr(),
+            'app.subscription.legal'.tr(),
             textAlign: TextAlign.center,
             style: AppThemeStyle.regularStyle(11, AppColor.secondaryLabels),
           ),

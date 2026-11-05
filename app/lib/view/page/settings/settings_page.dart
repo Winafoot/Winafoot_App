@@ -148,6 +148,16 @@ class SettingsWebPage extends ConsumerWidget {
                             // corriger le nom de l'équipe, d'où le chevron
                             // des cellules navigables.
                             SettingsNode(
+                              leadingBuilder:
+                                  (_) => CircleAvatar(
+                                    radius: r(18.5),
+                                    backgroundColor: AppColor.primaryColor,
+                                    child: Icon(
+                                      Iconsax.people,
+                                      size: sp(17),
+                                      color: AppColor.textLight,
+                                    ),
+                                  ),
                               title:
                                   ref
                                               .watch(coachProfileProvider)
