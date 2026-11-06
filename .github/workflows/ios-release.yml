@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 60
+    timeout-minutes: 120
     defaults:
       run:
         working-directory: app
@@ -56,6 +56,19 @@ jobs:
 
       - name: Dépendances
         run: flutter pub get
+
+      # Cache des téléchargements CocoaPods (Firebase pèse lourd), clé = Podfile.lock : relancé à l'identique,
+      # `pod install` ne retélécharge plus rien. Le code compilé n'est pas mis en cache : Xcode le refait à chaque
+      # checkout (dates des fichiers modifiées), un cache y serait inutile et risquerait de servir du périmé.
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/CocoaPods
+            app/ios/Pods
+          key: pods-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('app/ios/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Pods
         run: cd ios && pod install
