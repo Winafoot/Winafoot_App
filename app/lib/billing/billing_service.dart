@@ -42,6 +42,10 @@ abstract class BillingService {
 
   /// `true` si un abonnement a été retrouvé.
   Future<bool> restore();
+
+  /// Ouvre la saisie d'un code promo (offre de réduction ou d'introduction). iOS : feuille système d'Apple ;
+  /// Android : pas de feuille dans l'app, l'écran d'échange du Play Store est ouvert par l'appelant.
+  Future<void> presentCodeRedemption();
 }
 
 /// Implémentation RevenueCat. Clés publiques injectées au build :
@@ -157,6 +161,16 @@ class RevenueCatBillingService implements BillingService {
       return info.entitlements.active.isNotEmpty;
     } on PlatformException catch (e) {
       throw BillingException(e.message ?? 'La restauration a échoué.');
+    }
+  }
+
+  @override
+  Future<void> presentCodeRedemption() async {
+    await _ensureConfigured();
+    try {
+      await Purchases.presentCodeRedemptionSheet();
+    } on PlatformException catch (e) {
+      throw BillingException(e.message ?? 'La saisie du code a échoué.');
     }
   }
 }

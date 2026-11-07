@@ -66,6 +66,9 @@ describe("exposed surface", () => {
     "setCoachDisabled",
     "deleteCoach",
     "setCoachSubscription",
+    "createAppleOfferCode",
+    "getAppleOfferCodeValues",
+    "listAppleSubscriptions",
     "listAdmins",
     "createAdmin",
     "updateAdmin",
@@ -84,8 +87,8 @@ describe("exposed surface", () => {
 
   // Le changement d'adresse passe par l'écran Paramètres de l'app (verifyBeforeUpdateEmail, côté client) :
   // les callables du socle sendChangeEmail et changeEmail n'avaient aucun appelant atteignable.
-  it("exposes exactly thirty-three callables", () => {
-    expect(Object.keys(callables)).toHaveLength(33);
+  it("exposes exactly thirty-six callables", () => {
+    expect(Object.keys(callables)).toHaveLength(36);
     expect(callables).not.toHaveProperty("sendChangeEmail");
     expect(callables).not.toHaveProperty("changeEmail");
   });
@@ -107,7 +110,7 @@ describe("wiring of the hardened callables", () => {
 
   // L'adaptateur admin refuse l'appel AVANT de charger le module du handler : un export recâblé sur
   // l'adaptateur authentifié ou public ouvrirait la gestion des comptes administrateurs à n'importe qui.
-  it.each(["listAdmins", "createAdmin", "updateAdmin", "deleteAdmin", "getAdminStats", "getCoachData", "listReports", "sendAdminNotification", "resetLinkedTeamPasswordByAdmin", "setCoachSubscription"])("%s rejects an anonymous caller", async (name) => {
+  it.each(["listAdmins", "createAdmin", "updateAdmin", "deleteAdmin", "getAdminStats", "getCoachData", "listReports", "sendAdminNotification", "resetLinkedTeamPasswordByAdmin", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions"])("%s rejects an anonymous caller", async (name) => {
     const callable = (callables as Record<string, any>)[name];
 
     await expect(callable.run({ data: {}, rawRequest: {} })).rejects.toMatchObject({ code: "permission-denied" });
@@ -124,6 +127,9 @@ describe("wiring of the hardened callables", () => {
     ["sendAdminNotification", "send_notification"],
     ["resetLinkedTeamPasswordByAdmin", "reset_linked_team_password"],
     ["setCoachSubscription", "set_coach_subscription"],
+    ["createAppleOfferCode", "create_apple_offer_code"],
+    ["getAppleOfferCodeValues", "get_apple_offer_code_values"],
+    ["listAppleSubscriptions", "list_apple_subscriptions"],
   ])("%s points at its admin handler through the admin adapter", (name, module) => {
     const adminSource = readFileSync(join(__dirname, "../src/callables/index.ts"), "utf8");
     expect(adminSource).toMatch(new RegExp(`export const ${name} = onCall\\([^;]*adminCallableAdapter\\("callables/admin/${module}"\\)`));
@@ -176,7 +182,7 @@ describe("instance cap of the public functions", () => {
   );
 
   // Un appel anonyme sur un callable admin est refusé DANS le code, donc après le démarrage de l'instance.
-  it.each(["createCoach", "resendInvite", "setCoachDisabled", "deleteCoach", "setCoachSubscription", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin"])("admin callable %s is capped", (name) => {
+  it.each(["createCoach", "resendInvite", "setCoachDisabled", "deleteCoach", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin"])("admin callable %s is capped", (name) => {
     expect((callables as Record<string, any>)[name].__endpoint.maxInstances).toBe(ADMIN_MAX_INSTANCES);
   });
 

@@ -18,6 +18,47 @@ export const setCoachSubscription = call<
   { action: "grant" | "revoke"; untilMs: number | null }
 >("setCoachSubscription");
 
+/** Offre de réduction Apple créée dans App Store Connect : `batchId` pour un lot de codes à usage unique, `customCode` pour un code personnalisé. */
+export interface AppleOfferResult {
+  offerId: string;
+  appliedPrice: number;
+  appliedPercentOff: number;
+  batchId?: string;
+  customCode?: string;
+}
+export const createAppleOfferCode = call<
+  {
+    subscriptionId: string;
+    name: string;
+    basePrice: number;
+    percentOff?: number;
+    months?: number;
+    territory?: string;
+    expirationDate: string;
+    customCode?: string;
+    numberOfCodes?: number;
+  },
+  AppleOfferResult
+>("createAppleOfferCode");
+export const getAppleOfferCodeValues = call<{ batchId: string }, { codes: string[] }>("getAppleOfferCodeValues");
+
+export interface AppleSubscription {
+  id: string;
+  name: string;
+  productId: string;
+  appName: string;
+  groupName: string;
+}
+export interface AppleTerritory {
+  id: string;
+  currency: string;
+}
+/** Sans argument : abonnements et territoires d'App Store Connect. Avec `subscriptionId` : le prix actuel (`price`) dans le territoire. */
+export const listAppleSubscriptions = call<
+  { subscriptionId?: string; territory?: string; basePrice?: number; percentOff?: number },
+  { subscriptions: AppleSubscription[]; territories: AppleTerritory[]; price?: number; discounted?: { price: number; percentOff: number } }
+>("listAppleSubscriptions");
+
 // Administrateurs : le serveur applique les garde-fous, la vue n'en affiche que le message.
 export interface AdminAccount {
   uid: string;

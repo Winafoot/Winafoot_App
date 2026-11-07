@@ -2,7 +2,7 @@ import { onCall } from "firebase-functions/v2/https";
 import { ALGOLIA_ENABLED } from "../config/algolia";
 import { APP_CHECK } from "../config/app_check";
 import { ADMIN_MAX_INSTANCES, LIMITS, PUBLIC_MAX_INSTANCES } from "../config/rate_limits";
-import { ALGOLIA_SEARCH_SECRET_PARAMS, MAILER_SECRET_PARAMS } from "../config/secrets";
+import { ALGOLIA_SEARCH_SECRET_PARAMS, APPSTORE_SECRET_PARAMS, MAILER_SECRET_PARAMS } from "../config/secrets";
 import { callableAdapter } from "../runtime/v2";
 import { limitedAuthedCallableAdapter, limitedPublicCallableAdapter } from "../runtime/v2_limited";
 import { adminCallableAdapter } from "../runtime/v2_admin";
@@ -126,6 +126,7 @@ export const getSearchKey = onCall(
 /** Back-office Wina — endpoints administrateur (adaptateur authentifiant) */
 const ADMIN = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES };
 const ADMIN_MAILER = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: MAILER_SECRET_PARAMS };
+const ADMIN_APPSTORE = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: APPSTORE_SECRET_PARAMS };
 // Mot de passe choisi par l'administrateur : createCoach n'envoie aucun e-mail.
 export const createCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/create_coach"));
 export const resendInvite = onCall(ADMIN_MAILER, adminCallableAdapter("callables/admin/resend_invite"));
@@ -133,6 +134,10 @@ export const setCoachDisabled = onCall(ADMIN, adminCallableAdapter("callables/ad
 export const deleteCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/delete_coach"));
 // Abonnement offert (comptes de test) : attribué ou retiré à la main, sans passer par les stores.
 export const setCoachSubscription = onCall(ADMIN, adminCallableAdapter("callables/admin/set_coach_subscription"));
+// Codes d'offre Apple (réduction sur le premier mois) créés et relus via l'API App Store Connect.
+export const createAppleOfferCode = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/create_apple_offer_code"));
+export const getAppleOfferCodeValues = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/get_apple_offer_code_values"));
+export const listAppleSubscriptions = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/list_apple_subscriptions"));
 
 // Comptes administrateurs (vue « Administrateurs » du back-office) : mêmes adaptateur et options que ci-dessus.
 export const listAdmins = onCall(ADMIN, adminCallableAdapter("callables/admin/list_admins"));

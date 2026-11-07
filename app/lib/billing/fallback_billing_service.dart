@@ -84,4 +84,8 @@ class FallbackBillingService implements BillingService {
   @override
   Future<bool> restore() =>
       _usingFallback ? fallback.restore() : primary.restore();
+
+  /// Les codes promo sont ceux des stores : toujours via RevenueCat, jamais en mode simulé.
+  @override
+  Future<void> presentCodeRedemption() => primary.presentCodeRedemption();
 }

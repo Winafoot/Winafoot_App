@@ -22,6 +22,7 @@ class FakeBillingService implements BillingService {
   final List<String?> replacedProductIds = <String?>[];
   final List<bool> deferredPurchases = <bool>[];
   int restoreCalls = 0;
+  int codeRedemptionCalls = 0;
 
   @override
   bool get isAvailable => available;
@@ -49,5 +50,10 @@ class FakeBillingService implements BillingService {
   Future<bool> restore() async {
     restoreCalls++;
     return restoreResult;
+  }
+
+  @override
+  Future<void> presentCodeRedemption() async {
+    codeRedemptionCalls++;
   }
 }

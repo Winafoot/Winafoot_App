@@ -502,6 +502,8 @@
       "view-team": "Voir l'équipe"
     },
     "settings-extra": {
+      "redeem-code": "J'ai un code promo",
+      "redeem-code-sub": "Saisir un code de réduction ou d'offre",
       "my-teams": "Mes équipes",
       "my-teams-sub": "Équipes supplémentaires de votre abonnement",
       "change-plan": "Changer de formule",
@@ -555,6 +557,7 @@
       "payment-line": "Sans engagement · Paiement via l'App Store ou Google Play",
       "legal": "Abonnement à renouvellement automatique. Le montant de la formule choisie est prélevé sur votre compte App Store ou Google Play à chaque période, sauf résiliation au moins 24 h avant la fin de la période en cours. Gérez ou résiliez votre abonnement dans les réglages de votre compte.",
       "restore": "Restaurer mes achats",
+      "redeem-code": "J'ai un code promo",
       "terms": "Conditions générales d'utilisation",
       "privacy": "Politique de confidentialité",
       "unavailable": "Achats indisponibles pour le moment.",

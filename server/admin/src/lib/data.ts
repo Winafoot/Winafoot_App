@@ -112,6 +112,7 @@ export const AUDIT_ACTIONS: Record<string, string> = {
   delete: "Suppression",
   grant_subscription: "Abonnement offert",
   revoke_subscription: "Abonnement retiré",
+  create_offer_code: "Code d'offre créé",
   view_coach_data: "Consultation des données",
   send_notification: "Notification envoyée",
   linked_reset_password: "Mot de passe d'équipe liée",

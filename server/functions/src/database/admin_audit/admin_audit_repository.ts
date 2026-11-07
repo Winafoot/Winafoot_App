@@ -9,6 +9,8 @@ export type AdminAuditAction =
   // Abonnement offert depuis le back-office (comptes de test) : `details` porte la formule et la durée.
   | "grant_subscription"
   | "revoke_subscription"
+  // Code d'offre Apple généré depuis le back-office : `details` porte l'offre, jamais les codes.
+  | "create_offer_code"
   // Consultation des données d'un coach (effectif, matchs, compositions) : tracée, elles concernent des joueurs.
   | "view_coach_data"
   // Message envoyé à un groupe de comptes (jamais le texte, seulement l'audience) et mot de passe d'une équipe liée redéfini.

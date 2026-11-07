@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:core_kosmos/core_kosmos.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:skeleton/controller/user_controller.dart';
 import 'package:skeleton/skeleton.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:wina/billing/access_info.dart';
 import 'package:wina/config/legal_links.dart';
 import 'package:wina/billing/billing_service.dart';
@@ -180,6 +182,28 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
     }
   }
 
+  /// Code promo : feuille de saisie d'Apple sur iOS, écran « Utiliser un code » du Play Store sur Android. L'accès
+  /// arrive ensuite par le webhook RevenueCat ; l'écran se ferme alors tout seul (voir le `ref.listen` ci-dessous).
+  Future<void> _redeemCode() async {
+    if (_busy) return;
+    try {
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        await ref.read(billingServiceProvider).presentCodeRedemption();
+      } else {
+        await launchUrl(
+          Uri.parse('https://play.google.com/redeem'),
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } on BillingException catch (e) {
+      if (mounted) _notifyError(e.message);
+    } on BillingUnavailable {
+      if (mounted) _notifyError('app.subscription.unavailable'.tr());
+    } catch (_) {
+      if (mounted) _notifyError('utils.error-default'.tr());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final AsyncValue<Map<int, TeamsOffer>> offers = ref.watch(offersProvider);
@@ -286,7 +310,7 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                                 },
                               ),
                               _gap(28, 14),
-                              _Footer(onRestore: _restore),
+                              _Footer(onRestore: _restore, onRedeemCode: _redeemCode),
                               _gap(16, 8),
                               if (!widget.changePlan && !widget.asGate)
                                 Align(
@@ -1196,11 +1220,12 @@ class _CurrentPlan extends ConsumerWidget {
   }
 }
 
-/// Pied de page : restauration, mentions légales et liens CGU / confidentialité.
+/// Pied de page : restauration, code promo, mentions légales et liens CGU / confidentialité.
 class _Footer extends StatelessWidget {
-  const _Footer({required this.onRestore});
+  const _Footer({required this.onRestore, required this.onRedeemCode});
 
   final VoidCallback onRestore;
+  final VoidCallback onRedeemCode;
 
   TextStyle get _link => AppThemeStyle.regularStyle(
     12,
@@ -1234,6 +1259,12 @@ class _Footer extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: onRestore,
                 child: Text('app.subscription.restore'.tr(), style: line),
+              ),
+              Text(' · ', style: line),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onRedeemCode,
+                child: Text('app.subscription.redeem-code'.tr(), style: line),
               ),
             ],
           ),

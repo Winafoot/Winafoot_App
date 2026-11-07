@@ -12,6 +12,7 @@ import {
   Moon,
   ShieldCheck,
   Sun,
+  Tag,
   UserPlus,
   Users,
   Wallet,
@@ -36,6 +37,7 @@ const NAV: { title: string; items: NavItem[] }[] = [
       { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
       { href: "/coachs/", label: "Coachs", icon: Users },
       { href: "/abonnements/", label: "Abonnements", icon: Wallet },
+      { href: "/offres/", label: "Codes promo", icon: Tag },
     ],
   },
   {

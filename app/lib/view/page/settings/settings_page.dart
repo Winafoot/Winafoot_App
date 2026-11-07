@@ -2,12 +2,15 @@ import 'dart:async' show unawaited;
 
 import 'package:kosmos_auth/kosmos_auth.dart' show KosmosAuth;
 import 'package:wina/billing/access_info.dart';
+import 'package:wina/billing/billing_service.dart'
+    show BillingException, BillingUnavailable;
 import 'package:wina/config/legal_links.dart';
 import 'package:wina/config/skeleton_config.dart' show kCloudRegion;
 import 'package:wina/config/theme.dart';
 import 'package:wina/models/coach_profile.dart' show Jersey;
 import 'package:wina/view/widget/confirm_dialog.dart';
 import 'package:wina/providers/billing_providers.dart';
+import 'package:wina/view/widget/app_notif.dart';
 import 'package:wina/view/page/abonnement_screen.dart';
 import 'package:wina/view/page/check_profil_step1_screen.dart';
 import 'package:wina/view/page/mes_equipes_screen.dart';
@@ -280,6 +283,13 @@ class SettingsWebPage extends ConsumerWidget {
                                       ),
                                       mode: LaunchMode.externalApplication,
                                     ),
+                                children: [],
+                              ),
+                              SettingsNode(
+                                title: 'app.settings-extra.redeem-code'.tr(),
+                                subtitle:
+                                    'app.settings-extra.redeem-code-sub'.tr(),
+                                onTap: () => _redeemCode(context, ref),
                                 children: [],
                               ),
                               SettingsNode(
@@ -903,6 +913,27 @@ Future<void> _showChangeEmailDialog(BuildContext context, String currentEmail) {
       onDone: () => Navigator.of(ctx).pop(),
     ),
   );
+}
+
+/// Code promo (réduction ou offre d'introduction créée dans les stores). iOS : feuille de saisie d'Apple dans
+/// l'app ; Android : écran « Utiliser un code » du Play Store. L'accès arrive ensuite par le webhook RevenueCat.
+Future<void> _redeemCode(BuildContext context, WidgetRef ref) async {
+  try {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await ref.read(billingServiceProvider).presentCodeRedemption();
+    } else {
+      await launchUrl(
+        Uri.parse('https://play.google.com/redeem'),
+        mode: LaunchMode.externalApplication,
+      );
+    }
+  } on BillingException catch (e) {
+    if (context.mounted) showAppNotif(context, title: e.message);
+  } on BillingUnavailable {
+    if (context.mounted) {
+      showAppNotif(context, title: 'Achats indisponibles pour le moment.');
+    }
+  }
 }
 
 /// Sécurité : choix entre l'adresse e-mail et le mot de passe, chacun dans sa propre fenêtre.

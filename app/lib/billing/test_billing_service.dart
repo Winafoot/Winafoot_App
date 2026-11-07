@@ -103,4 +103,7 @@ class TestBillingService implements BillingService {
   /// Rien à restaurer : l'abonnement de test vit déjà sur la fiche du compte.
   @override
   Future<bool> restore() async => false;
+
+  @override
+  Future<void> presentCodeRedemption() async {}
 }
