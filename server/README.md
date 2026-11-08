@@ -84,6 +84,7 @@ formulaire de support ne sont pas envoyés. Un échec d'envoi est journalisé av
 | Champ | Usage côté serveur |
 |---|---|
 | `appName`, `contactEmail`, `mail` | E-mails (ci-dessus) |
+| `salesEmail` | Adresse interne prévenue par e-mail à chaque nouvel abonnement (achat initial reçu par le webhook RevenueCat) ; absente, aucun mail interne n'est envoyé |
 | `landingUrl` | URL https de la landing, pour le lien de suppression de compte et le CORS (à défaut, l'hébergement du projet) |
 | `maintenance` | Posé à `true` par le coupe-circuit budgétaire |
 | `cgvu` | Une modification remet à zéro l'acceptation des CGU des comptes |

@@ -364,9 +364,10 @@ class SettingsWebPage extends ConsumerWidget {
                                 await SharePlus.instance.share(
                                   ShareParams(
                                     text:
-                                        message ??
-                                        'package.settings.node.share.subtitle'
-                                            .tr(),
+                                        message?.trim().isNotEmpty == true
+                                            ? message!
+                                            : 'package.settings.node.share.message'
+                                                .tr(args: <String>[kSiteUrl]),
                                   ),
                                 );
                               },

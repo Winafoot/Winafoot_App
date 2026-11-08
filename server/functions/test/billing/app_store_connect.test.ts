@@ -66,7 +66,7 @@ describe("normalizePem", () => {
   const pem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
 
   it.each([
-    ["with literal \n", (p: string) => p.trim().replace(/\n/g, "\n")],
+    ["with literal \\n", (p: string) => p.trim().replace(/\n/g, "\\n")],
     ["on a single line", (p: string) => p.trim().replace(/\n/g, " ")],
     ["without BEGIN/END lines", (p: string) => p.replace(/-----[^-]+-----/g, "").replace(/\s+/g, "")],
   ])("rebuilds a readable key pasted %s", (_name, mangle) => {

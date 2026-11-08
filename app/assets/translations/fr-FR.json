@@ -335,7 +335,8 @@
         },
         "share": {
           "title": "Partager l'app",
-          "subtitle": "Soutenez-nous en partageant l'app"
+          "subtitle": "Soutenez-nous en partageant l'app",
+          "message": "Je gère mon équipe de foot avec Wina, l'app pour suivre ses matchs et ses stats en direct. Découvre-la ici : {}"
         },
         "link": {
           "privacy-policy": "Politique de confidentialité",

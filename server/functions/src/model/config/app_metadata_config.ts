@@ -23,6 +23,8 @@ class AppMetadataConfig {
   /// Contact
   contactEmail?: string;
   contactPhone?: string;
+  /// Adresse interne prévenue à chaque nouvel abonnement (sans elle, aucun mail interne n'est envoyé).
+  salesEmail?: string;
 
   /// Social Network
   facebookUrl?: string;

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { OffersTracking } from "@/components/offers-tracking";
 import { PageHeader } from "@/components/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -258,6 +259,8 @@ export default function OffersPage() {
           </CardContent>
         </Card>
       )}
+
+      <OffersTracking />
     </>
   );
 }

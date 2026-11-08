@@ -3,6 +3,7 @@ import type { Response } from "express";
 import { firestore } from "firebase-admin";
 import type { Request } from "firebase-functions/v2/https";
 import { isFirstPayment } from "../../billing/billing_mail";
+import { notifyNewSubscription } from "../../billing/notify_new_subscription";
 import { sendSubscriptionMail } from "../../billing/send_subscription_mail";
 import { applyEvent, type RevenueCatEvent, type SubscriptionData } from "../../billing/subscription";
 import { subscriptionFromDoc, writeSubscriptionAndAccess } from "../../billing/store";
@@ -45,6 +46,8 @@ export default async (req: Request, res: Response): Promise<void> => {
     // Début d'essai ou premier paiement : mail correspondant, hors transaction. Un échec d'envoi est journalisé et
     // ne fait pas rejouer l'événement (sendSubscriptionMail ne lève jamais).
     if (paid.owner != null && paid.sub != null && paid.kind != null) await sendSubscriptionMail(paid.kind, paid.owner, paid.sub);
+    // Mail interne : un coach vient de prendre un abonnement (paiement, essai ou offre), une seule fois par événement.
+    if (paid.newOwner != null && paid.newSub != null) await notifyNewSubscription(paid.newOwner, paid.newSub, event);
     res.status(200).send("ok");
   } catch (e) {
     logger.error(`[Error] revenuecatWebhook: ${describeError(e)}`);
@@ -57,6 +60,9 @@ interface PaidResult {
   owner?: firestore.DocumentSnapshot;
   sub?: SubscriptionData;
   kind?: "payment-confirmed";
+  /** Nouvel abonnement à signaler en interne (achat initial). */
+  newOwner?: firestore.DocumentSnapshot;
+  newSub?: SubscriptionData;
 }
 
 async function applyToOwner(event: RevenueCatEvent): Promise<PaidResult> {
@@ -69,6 +75,8 @@ async function applyToOwner(event: RevenueCatEvent): Promise<PaidResult> {
     result.owner = undefined;
     result.sub = undefined;
     result.kind = undefined;
+    result.newOwner = undefined;
+    result.newSub = undefined;
     const owner = await tx.get(ownerRef);
     // Compte inconnu, ou compte lié : l'abonnement n'appartient qu'au propriétaire.
     if (!owner.exists || owner.get("ownerUid") != null) return;
@@ -79,6 +87,14 @@ async function applyToOwner(event: RevenueCatEvent): Promise<PaidResult> {
     if (next == null) return;
 
     writeSubscriptionAndAccess(tx, ownerRef, linked.docs, next, Date.now());
+
+    // Mail interne à chaque nouvel abonnement : le rejeu d'un même événement ne le renvoie pas.
+    const lastNewMs: number = owner.get("billingMail.newSubscriptionEventMs") ?? 0;
+    if (event.type === "INITIAL_PURCHASE" && event.event_timestamp_ms > lastNewMs) {
+      tx.update(ownerRef, { "billingMail.newSubscriptionEventMs": event.event_timestamp_ms });
+      result.newOwner = owner;
+      result.newSub = next;
+    }
 
     // Un seul mail par paiement : le rejeu d'un même événement ne renvoie rien.
     const lastMailMs: number = owner.get("billingMail.paymentEventMs") ?? 0;

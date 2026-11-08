@@ -19,6 +19,12 @@ export interface SubscriptionData {
   lastEventMs: number;
   /** Faux dès que l'utilisateur résilie (CANCELLATION) : l'abonnement ne sera plus renouvelé ni prélevé. Absent : inconnu. */
   autoRenew?: boolean;
+  /**
+   * Premier achat avec une offre d'introduction ou un code promo (période INTRO, ou `offer_code` présent) :
+   * `code` est le code saisi quand RevenueCat le transmet. Posé une fois, jamais effacé : sert au suivi des
+   * codes promo du back-office. Absent pour les abonnements achetés avant son ajout.
+   */
+  introOffer?: { code: string | null; atMs: number };
 }
 
 /** Les champs de l'événement RevenueCat dont le serveur se sert (https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields). */
@@ -33,6 +39,11 @@ export interface RevenueCatEvent {
   event_timestamp_ms: number;
   store?: string;
   cancel_reason?: string;
+  /** Code d'offre saisi à l'achat, quand le store le transmet à RevenueCat. */
+  offer_code?: string | null;
+  /** Montant payé dans la devise d'achat (absent pour un essai ou une offre gratuite). */
+  price_in_purchased_currency?: number;
+  currency?: string;
 }
 
 export interface Access {
@@ -101,6 +112,15 @@ export function applyEvent(prev: SubscriptionData | undefined, event: RevenueCat
   if (event.type === "CANCELLATION" || event.type === "EXPIRATION") autoRenew = false;
   else if (event.type === "INITIAL_PURCHASE" || event.type === "RENEWAL" || event.type === "UNCANCELLATION" || event.type === "PRODUCT_CHANGE") autoRenew = true;
 
+  // Premier achat avec offre d'introduction ou code : conservé tel quel ensuite.
+  const offerCode = typeof event.offer_code === "string" && event.offer_code !== "" ? event.offer_code : null;
+  const usedOffer = event.period_type === "INTRO" || offerCode != null;
+  const introOffer =
+    prev?.introOffer ??
+    (usedOffer && (event.type === "INITIAL_PURCHASE" || event.type === "PRODUCT_CHANGE" || event.type === "RENEWAL")
+      ? { code: offerCode, atMs: event.event_timestamp_ms }
+      : undefined);
+
   return {
     productId: (event.type === "PRODUCT_CHANGE" ? event.new_product_id : event.product_id) as string,
     period: product.period,
@@ -111,6 +131,7 @@ export function applyEvent(prev: SubscriptionData | undefined, event: RevenueCat
     store: event.store === "PLAY_STORE" ? "play_store" : event.store != null ? "app_store" : (prev?.store ?? "app_store"),
     lastEventMs: event.event_timestamp_ms,
     autoRenew,
+    ...(introOffer != null ? { introOffer } : {}),
   };
 }
 

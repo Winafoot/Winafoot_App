@@ -50,3 +50,48 @@ export function paymentConfirmedText(d: SubscriptionMailData): string {
     `Le reçu est envoyé par ${d.storeName}. Gérer ou résilier votre abonnement : ${d.manageUrl}`
   );
 }
+
+export interface NewSubscriptionNoticeData {
+  appName: string;
+  /** Nom de l'équipe et adresse du coach qui s'abonne. */
+  team: string;
+  coachEmail: string;
+  formula: string;
+  storeName: string;
+  /** « Paiement au tarif normal », « Offre d'introduction ou code promo », « Essai ou offre gratuite ». */
+  kind: string;
+  offerCode?: string;
+  price: string;
+  /** Prochaine échéance, déjà mise en forme. */
+  dateLabel: string;
+}
+
+function noticeLines(d: NewSubscriptionNoticeData): [string, string][] {
+  return [
+    ["Coach", d.coachEmail],
+    ["Équipe", d.team || "—"],
+    ["Formule", d.formula],
+    ["Type", d.kind],
+    ...(d.offerCode != null ? ([["Code", d.offerCode]] as [string, string][]) : []),
+    ["Montant", d.price],
+    ["Boutique", d.storeName],
+    ["Prochaine échéance", d.dateLabel],
+  ];
+}
+
+/** Mail interne : un coach vient de prendre un abonnement. */
+export function generateTemplateNewSubscriptionNotice(d: NewSubscriptionNoticeData): string {
+  const rows = noticeLines(d)
+    .map(([label, value]) => `<strong>${escapeHtml(label)}&#160;:</strong> ${escapeHtml(value)}`)
+    .join("<br>");
+  const content = `
+    <h1 class="h3" style="${EMAIL_H1_STYLE}" align="left">Nouvel abonnement</h1>
+    <br>
+    <p class="text-gray-700" style="${EMAIL_P_STYLE}" align="left">${rows}</p>
+  `;
+  return wrapEmailLayout("", content, d.appName);
+}
+
+export function newSubscriptionNoticeText(d: NewSubscriptionNoticeData): string {
+  return `Nouvel abonnement\n\n${noticeLines(d).map(([label, value]) => `${label} : ${value}`).join("\n")}`;
+}

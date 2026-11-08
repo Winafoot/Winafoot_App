@@ -13,6 +13,8 @@ export interface Subscription {
   trialEnd?: Timestamp | null;
   expiresAt?: Timestamp | null;
   store?: "app_store" | "play_store";
+  /** Premier achat avec une offre d'introduction ou un code promo (posé par le webhook RevenueCat). */
+  introOffer?: { code: string | null; atMs: number };
   updatedAt?: Timestamp | null;
 }
 

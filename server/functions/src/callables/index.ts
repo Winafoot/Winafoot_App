@@ -150,6 +150,20 @@ export const deleteAdmin = onCall(ADMIN, adminCallableAdapter("callables/admin/d
 export const getAdminStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_admin_stats"));
 export const getCoachData = onCall(ADMIN, adminCallableAdapter("callables/admin/get_coach_data"));
 export const listReports = onCall(ADMIN, adminCallableAdapter("callables/admin/list_reports"));
+// Vue « Équipes » et « Statistiques » : activité par compte (comptages), bilan d'une équipe (journalisé) et activité hebdomadaire.
+export const getTeamActivity = onCall(ADMIN, adminCallableAdapter("callables/admin/get_team_activity"));
+export const getTeamStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_team_stats"));
+export const getUsageStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_usage_stats"));
+// Équipe liée dont le compte principal a disparu : refusée si le propriétaire existe encore, sinon supprimée comme un coach.
+export const deleteOrphanTeam = onCall(ADMIN, adminCallableAdapter("callables/admin/delete_orphan_team"));
+// Notes internes sur un coach (collection admin_notes, fermée aux clients) et niveau des clients par catégorie (agrégats anonymes).
+export const getCoachNote = onCall(ADMIN, adminCallableAdapter("callables/admin/get_coach_note"));
+export const setCoachNote = onCall(ADMIN, adminCallableAdapter("callables/admin/set_coach_note"));
+export const getPlayerBenchmarks = onCall(ADMIN, adminCallableAdapter("callables/admin/get_player_benchmarks"));
+// Vue « Joueurs » : tous les joueurs avec leurs totaux (bornée et journalisée).
+export const getAllPlayers = onCall(ADMIN, adminCallableAdapter("callables/admin/get_all_players"));
+// Suivi des codes promo : offres, lots de codes et dates limites lus dans App Store Connect (mêmes secrets que la création).
+export const listAppleOffers = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/list_apple_offers"));
 
 // Messages aux coachs (notification interne et push) et mots de passe des comptes d'équipe liés, à la demande du propriétaire.
 export const sendAdminNotification = onCall(ADMIN, adminCallableAdapter("callables/admin/send_notification"));

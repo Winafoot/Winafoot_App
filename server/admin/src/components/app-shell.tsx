@@ -5,12 +5,15 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   FileText,
+  BarChart3,
+  Goal,
   LayoutDashboard,
   Loader2,
   LogOut,
   Menu,
   Moon,
   ShieldCheck,
+  Shirt,
   Sun,
   Tag,
   UserPlus,
@@ -36,6 +39,9 @@ const NAV: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
       { href: "/coachs/", label: "Coachs", icon: Users },
+      { href: "/equipes/", label: "Équipes", icon: Shirt },
+      { href: "/joueurs/", label: "Joueurs", icon: Goal },
+      { href: "/statistiques/", label: "Statistiques", icon: BarChart3 },
       { href: "/abonnements/", label: "Abonnements", icon: Wallet },
       { href: "/offres/", label: "Codes promo", icon: Tag },
     ],
