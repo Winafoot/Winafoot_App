@@ -6,6 +6,7 @@ import { CalendarClock, CreditCard, Gift, Wallet } from "lucide-react";
 import { SubscriptionBadge } from "@/components/coach-badges";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
+import { RevenueSection } from "@/components/revenue-section";
 import { StatCard } from "@/components/stat-card";
 import { Alert } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -112,6 +113,8 @@ export default function SubscriptionsPage() {
         <StatCard label="Paiement en attente" value={counts.grace} icon={CreditCard} loading={loading} tone={counts.grace > 0 ? "warning" : "default"} />
         <StatCard label="Échéance sous 14 jours" value={counts.endingSoon} icon={CalendarClock} loading={loading} tone={counts.endingSoon > 0 ? "warning" : "default"} hint={counts.manual > 0 ? `${counts.manual} abonnement(s) offert(s)` : undefined} />
       </section>
+
+      <RevenueSection coaches={data} loading={loading} />
 
       <DataTable
         columns={columns}

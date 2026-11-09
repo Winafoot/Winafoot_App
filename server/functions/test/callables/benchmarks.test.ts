@@ -29,11 +29,18 @@ describe("computeBenchmarks", () => {
     expect(rows.find((r) => r.category === "Seniors")).toMatchObject({ matches: 1, goalsForPerMatch: 5 });
   });
 
-  it("ranks players anonymously and only from three matches", () => {
+  it("ranks players from three matches only", () => {
     const { topScorers, topAssisters } = computeBenchmarks(categories, matches);
-    expect(topScorers).toEqual([{ rank: 1, category: "U13", matches: 3, goals: 4, assists: 2, goalsPerMatch: 1.3 }]);
+    expect(topScorers).toEqual([
+      { rank: 1, name: "Joueur supprimé", teamName: "—", teamUid: "t1", playerId: "a", category: "U13", matches: 3, goals: 4, assists: 2, goalsPerMatch: 1.3 },
+    ]);
     expect(topAssisters.map((p) => p.assists)).toEqual([2, 2]);
-    expect(JSON.stringify([topScorers, topAssisters])).not.toMatch(/"(a|b|c|d|t1|t2|t3|name|uid)"/);
+  });
+
+  it("names the players and their team when identities are known", () => {
+    const identity = { players: new Map([["t1/a", "Lucas Martin"]]), teams: new Map([["t1", "FC Test"]]) };
+    const { topScorers } = computeBenchmarks(categories, matches, identity);
+    expect(topScorers[0]).toMatchObject({ name: "Lucas Martin", teamName: "FC Test", teamUid: "t1", playerId: "a" });
   });
 
   it("files accounts without a known category apart", () => {

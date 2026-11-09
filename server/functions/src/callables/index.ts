@@ -162,6 +162,8 @@ export const setCoachNote = onCall(ADMIN, adminCallableAdapter("callables/admin/
 export const getPlayerBenchmarks = onCall(ADMIN, adminCallableAdapter("callables/admin/get_player_benchmarks"));
 // Vue « Joueurs » : tous les joueurs avec leurs totaux (bornée et journalisée).
 export const getAllPlayers = onCall(ADMIN, adminCallableAdapter("callables/admin/get_all_players"));
+// Modification de la configuration de l'app (champs de la liste blanche de _app_config.ts), journalisée.
+export const updateAppConfig = onCall(ADMIN, adminCallableAdapter("callables/admin/update_app_config"));
 // Suivi des codes promo : offres, lots de codes et dates limites lus dans App Store Connect (mêmes secrets que la création).
 export const listAppleOffers = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/list_apple_offers"));
 

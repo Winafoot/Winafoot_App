@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, Shirt, Swords, UserCheck, Users, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
@@ -8,7 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { errorMessage, getPlayerBenchmarks, getTeamActivity, getUsageStats, type AnonymousPlayer, type CategoryBenchmark, type TeamActivity, type UsageWeek } from "@/lib/callables";
+import { errorMessage, getPlayerBenchmarks, getTeamActivity, getUsageStats, type CategoryBenchmark, type RankedPlayer, type TeamActivity, type UsageWeek } from "@/lib/callables";
 import { useCoaches } from "@/lib/data";
 import { formatDateTime } from "@/lib/utils";
 
@@ -18,12 +19,13 @@ const average = (sum: number, count: number) => (count > 0 ? (sum / count).toFix
 
 /** Statistiques d'usage : équipes actives, matchs par semaine, moyennes, part d'abonnés. */
 export default function StatisticsPage() {
+  const router = useRouter();
   const { data: coaches, linked, loading } = useCoaches();
   const [teams, setTeams] = useState<TeamActivity[] | null>(null);
   const [weeks, setWeeks] = useState<UsageWeek[] | null>(null);
   const [meta, setMeta] = useState<{ generatedAt: string; truncated: boolean; limit: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [bench, setBench] = useState<{ categories: CategoryBenchmark[]; topScorers: AnonymousPlayer[]; topAssisters: AnonymousPlayer[]; matchesUsed: number; truncated: boolean; limit: number } | null>(null);
+  const [bench, setBench] = useState<{ categories: CategoryBenchmark[]; topScorers: RankedPlayer[]; topAssisters: RankedPlayer[]; matchesUsed: number; truncated: boolean; limit: number } | null>(null);
 
   useEffect(() => {
     getTeamActivity({})
@@ -122,7 +124,7 @@ export default function StatisticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Niveau par catégorie</CardTitle>
-            <CardDescription>Moyennes sur les matchs terminés de tous les clients. Aucun nom ni équipe : seulement des agrégats.</CardDescription>
+            <CardDescription>Moyennes sur les matchs terminés de tous les clients : des agrégats, sans nom ni équipe.</CardDescription>
           </CardHeader>
           <CardContent>
             {bench == null && !error ? (
@@ -163,8 +165,8 @@ export default function StatisticsPage() {
         </Card>
         <div className="grid gap-4 lg:grid-cols-2">
           {([
-            ["Meilleurs buteurs", "Joueurs ayant disputé au moins 3 matchs, anonymes.", bench?.topScorers],
-            ["Meilleurs passeurs", "Joueurs ayant disputé au moins 3 matchs, anonymes.", bench?.topAssisters],
+            ["Meilleurs buteurs", "Joueurs ayant disputé au moins 3 matchs. Cliquez sur un joueur pour ouvrir sa fiche.", bench?.topScorers],
+            ["Meilleurs passeurs", "Joueurs ayant disputé au moins 3 matchs. Cliquez sur un joueur pour ouvrir sa fiche.", bench?.topAssisters],
           ] as const).map(([title, description, players]) => (
             <Card key={title}>
               <CardHeader>
@@ -181,6 +183,8 @@ export default function StatisticsPage() {
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
                         <TableHead>Rang</TableHead>
+                        <TableHead>Joueur</TableHead>
+                        <TableHead>Équipe</TableHead>
                         <TableHead>Catégorie</TableHead>
                         <TableHead>Matchs</TableHead>
                         <TableHead>Buts</TableHead>
@@ -189,8 +193,10 @@ export default function StatisticsPage() {
                     </TableHeader>
                     <TableBody>
                       {players.map((p) => (
-                        <TableRow key={p.rank}>
+                        <TableRow key={`${p.teamUid}/${p.playerId}`} className="cursor-pointer" onClick={() => router.push(`/equipes/detail/?uid=${encodeURIComponent(p.teamUid)}&player=${encodeURIComponent(p.playerId)}`)}>
                           <TableCell className="tabular-nums">{p.rank}</TableCell>
+                          <TableCell className="font-medium">{p.name}</TableCell>
+                          <TableCell>{p.teamName}</TableCell>
                           <TableCell>{p.category}</TableCell>
                           <TableCell className="tabular-nums">{p.matches}</TableCell>
                           <TableCell className="tabular-nums">{p.goals}</TableCell>

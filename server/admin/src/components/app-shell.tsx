@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   Moon,
+  Settings,
   ShieldCheck,
   Shirt,
   Sun,
@@ -52,6 +53,7 @@ const NAV: { title: string; items: NavItem[] }[] = [
       { href: "/creer-coach/", label: "Créer un coach", icon: UserPlus },
       { href: "/administrateurs/", label: "Administrateurs", icon: ShieldCheck },
       { href: "/audit/", label: "Journal d'audit", icon: FileText },
+      { href: "/configuration/", label: "Configuration", icon: Settings },
     ],
   },
 ];

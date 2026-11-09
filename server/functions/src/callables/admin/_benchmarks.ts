@@ -19,9 +19,13 @@ export interface CategoryBenchmark {
   yellowCardsPerMatch: number;
 }
 
-/** Joueur anonyme : ni nom, ni équipe, ni identifiant. */
-export interface AnonymousPlayer {
+/** Joueur du classement : nom et équipe pour le retrouver, `teamUid` et `playerId` pour ouvrir sa fiche. */
+export interface RankedPlayer {
   rank: number;
+  name: string;
+  teamName: string;
+  teamUid: string;
+  playerId: string;
   category: string;
   matches: number;
   goals: number;
@@ -31,21 +35,26 @@ export interface AnonymousPlayer {
 
 export interface Benchmarks {
   categories: CategoryBenchmark[];
-  topScorers: AnonymousPlayer[];
-  topAssisters: AnonymousPlayer[];
+  topScorers: RankedPlayer[];
+  topAssisters: RankedPlayer[];
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
- * Moyennes par catégorie et classement anonyme des joueurs, à partir de la catégorie de chaque compte
+ * Moyennes par catégorie et classement des joueurs, à partir de la catégorie de chaque compte
  * (`categories`: uid -> catégorie) et des matchs terminés (`uid` = compte propriétaire du match).
- * Rien d'identifiant n'est renvoyé : seuls des agrégats et des lignes « Joueur n°k ».
+ * `identity` donne le nom des joueurs (clé `uid/playerId`) et des équipes (clé uid) ; sans lui, un joueur
+ * s'affiche « Joueur supprimé ». Les moyennes par catégorie restent des agrégats sans identité.
  */
-export function computeBenchmarks(categories: Map<string, string>, matches: { uid: string; data: Row }[]): Benchmarks {
+export function computeBenchmarks(
+  categories: Map<string, string>,
+  matches: { uid: string; data: Row }[],
+  identity: { players: Map<string, string>; teams: Map<string, string> } = { players: new Map(), teams: new Map() },
+): Benchmarks {
   const perCategory = new Map<string, { teams: Set<string>; matches: number; gf: number; ga: number; wins: number; ok: number; miss: number; yellow: number }>();
-  const players = new Map<string, { category: string; matches: number; goals: number; assists: number }>();
+  const players = new Map<string, { uid: string; pid: string; category: string; matches: number; goals: number; assists: number }>();
 
   for (const { uid, data } of matches) {
     if (data.status !== "finished") continue;
@@ -65,7 +74,7 @@ export function computeBenchmarks(categories: Map<string, string>, matches: { ui
       c.miss += num(s.passesManquees);
       c.yellow += num(s.cartonsJaunes);
       const key = `${uid}/${pid}`;
-      const p = players.get(key) ?? { category, matches: 0, goals: 0, assists: 0 };
+      const p = players.get(key) ?? { uid, pid, category, matches: 0, goals: 0, assists: 0 };
       players.set(key, p);
       p.matches++;
       p.goals += num(s.butsMarques);
@@ -87,12 +96,23 @@ export function computeBenchmarks(categories: Map<string, string>, matches: { ui
     .sort((a, b) => b.matches - a.matches);
 
   const eligible = [...players.values()].filter((p) => p.matches >= MIN_MATCHES);
-  const ranked = (key: "goals" | "assists"): AnonymousPlayer[] =>
+  const ranked = (key: "goals" | "assists"): RankedPlayer[] =>
     [...eligible]
       .sort((a, b) => b[key] - a[key] || b.matches - a.matches)
       .filter((p) => p[key] > 0)
       .slice(0, TOP)
-      .map((p, i) => ({ rank: i + 1, category: p.category, matches: p.matches, goals: p.goals, assists: p.assists, goalsPerMatch: round1(p.goals / p.matches) }));
+      .map((p, i) => ({
+        rank: i + 1,
+        name: identity.players.get(`${p.uid}/${p.pid}`) || "Joueur supprimé",
+        teamName: identity.teams.get(p.uid) || "—",
+        teamUid: p.uid,
+        playerId: p.pid,
+        category: p.category,
+        matches: p.matches,
+        goals: p.goals,
+        assists: p.assists,
+        goalsPerMatch: round1(p.goals / p.matches),
+      }));
 
   return { categories: rows, topScorers: ranked("goals"), topAssisters: ranked("assists") };
 }

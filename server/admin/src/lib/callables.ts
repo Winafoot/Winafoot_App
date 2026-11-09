@@ -191,7 +191,7 @@ export interface AppleOffer {
 }
 export const listAppleOffers = call<Record<string, never>, { offers: AppleOffer[] }>("listAppleOffers");
 
-/** Niveau des clients par catégorie et classement anonyme des joueurs (aucun nom, aucune équipe). */
+/** Niveau des clients par catégorie et classement des meilleurs joueurs, avec leur nom et leur équipe. */
 export interface CategoryBenchmark {
   category: string;
   teams: number;
@@ -202,8 +202,12 @@ export interface CategoryBenchmark {
   passAccuracy: number | null;
   yellowCardsPerMatch: number;
 }
-export interface AnonymousPlayer {
+export interface RankedPlayer {
   rank: number;
+  name: string;
+  teamName: string;
+  teamUid: string;
+  playerId: string;
   category: string;
   matches: number;
   goals: number;
@@ -212,7 +216,7 @@ export interface AnonymousPlayer {
 }
 export const getPlayerBenchmarks = call<
   Record<string, never>,
-  { categories: CategoryBenchmark[]; topScorers: AnonymousPlayer[]; topAssisters: AnonymousPlayer[]; generatedAt: string; matchesUsed: number; truncated: boolean; limit: number }
+  { categories: CategoryBenchmark[]; topScorers: RankedPlayer[]; topAssisters: RankedPlayer[]; generatedAt: string; matchesUsed: number; truncated: boolean; limit: number }
 >("getPlayerBenchmarks");
 
 /** Un joueur de l'app avec son équipe et ses totaux ; `teamUid` ouvre la fiche équipe. */
@@ -230,3 +234,6 @@ export interface PlayerRow {
   redCards: number;
 }
 export const getAllPlayers = call<Record<string, never>, { players: PlayerRow[]; truncated: boolean }>("getAllPlayers");
+
+/** Modifie des champs de la configuration de l'app (`mail.*` en clé pointée). Une valeur vide supprime un champ facultatif. */
+export const updateAppConfig = call<{ changes: Record<string, string> }, { changed: string[] }>("updateAppConfig");
