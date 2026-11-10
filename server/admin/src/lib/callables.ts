@@ -191,6 +191,31 @@ export interface AppleOffer {
 }
 export const listAppleOffers = call<Record<string, never>, { offers: AppleOffer[] }>("listAppleOffers");
 
+/** Code promo Google Play (collection promo_codes) : `uses` est compté par le serveur quand l'achat à prix réduit est confirmé. */
+export interface PromoCodeRow {
+  code: string;
+  label: string;
+  offerTag: string;
+  active: boolean;
+  expiresAt: string | null;
+  maxUses: number;
+  uses: number;
+  createdAt: string | null;
+}
+export const listPromoCodes = call<Record<string, never>, { codes: PromoCodeRow[] }>("listPromoCodes");
+/** Tag d'offre lu dans la Play Console ; `ambiguous` : posé sur plusieurs offres d'un même abonnement (à corriger). */
+export interface GoogleOfferTag {
+  tag: string;
+  offers: { productId: string; basePlanId: string; offerId: string; state: string }[];
+  ambiguous: boolean;
+}
+export const listGoogleOfferTags = call<Record<string, never>, { tags: GoogleOfferTag[] }>("listGoogleOfferTags");
+/** `create` : crée (refuse un code existant) ; sinon modifie le texte, le plafond, la date limite ou l'état d'un code existant. */
+export const savePromoCode = call<
+  { code: string; create: boolean; label: string; offerTag?: string; maxUses: number; expiresAt: string | null; active: boolean },
+  { code: string }
+>("savePromoCode");
+
 /** Niveau des clients par catégorie et classement des meilleurs joueurs, avec leur nom et leur équipe. */
 export interface CategoryBenchmark {
   category: string;

@@ -25,6 +25,11 @@ export interface SubscriptionData {
    * codes promo du back-office. Absent pour les abonnements achetés avant son ajout.
    */
   introOffer?: { code: string | null; atMs: number };
+  /**
+   * Environnement du dernier événement RevenueCat : « sandbox » pour les achats de test (testeurs Google, sandbox
+   * Apple, TestFlight), « production » pour les vrais. Absent pour les abonnements reçus avant son ajout.
+   */
+  environment?: "sandbox" | "production";
 }
 
 /** Les champs de l'événement RevenueCat dont le serveur se sert (https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields). */
@@ -44,6 +49,8 @@ export interface RevenueCatEvent {
   /** Montant payé dans la devise d'achat (absent pour un essai ou une offre gratuite). */
   price_in_purchased_currency?: number;
   currency?: string;
+  /** « SANDBOX » ou « PRODUCTION ». */
+  environment?: string;
 }
 
 export interface Access {
@@ -121,6 +128,8 @@ export function applyEvent(prev: SubscriptionData | undefined, event: RevenueCat
       ? { code: offerCode, atMs: event.event_timestamp_ms }
       : undefined);
 
+  const environment = event.environment === "SANDBOX" ? "sandbox" : event.environment === "PRODUCTION" ? "production" : prev?.environment;
+
   return {
     productId: (event.type === "PRODUCT_CHANGE" ? event.new_product_id : event.product_id) as string,
     period: product.period,
@@ -132,6 +141,7 @@ export function applyEvent(prev: SubscriptionData | undefined, event: RevenueCat
     lastEventMs: event.event_timestamp_ms,
     autoRenew,
     ...(introOffer != null ? { introOffer } : {}),
+    ...(environment != null ? { environment } : {}),
   };
 }
 

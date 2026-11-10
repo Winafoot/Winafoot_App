@@ -21,6 +21,7 @@ class FakeBillingService implements BillingService {
   final List<String> purchased = <String>[];
   final List<String?> replacedProductIds = <String?>[];
   final List<bool> deferredPurchases = <bool>[];
+  final List<String?> promoTags = <String?>[];
   int restoreCalls = 0;
   int codeRedemptionCalls = 0;
 
@@ -38,11 +39,13 @@ class FakeBillingService implements BillingService {
     String productId, {
     String? replacingProductId,
     bool deferred = false,
+    String? promoTag,
   }) async {
     if (purchaseError != null) throw purchaseError!;
     purchased.add(productId);
     replacedProductIds.add(replacingProductId);
     deferredPurchases.add(deferred);
+    promoTags.add(promoTag);
     return purchaseResult;
   }
 

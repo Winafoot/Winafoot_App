@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { GooglePromoCodes } from "@/components/google-promo-codes";
 import { OffersTracking } from "@/components/offers-tracking";
 import { PageHeader } from "@/components/page-header";
 import { Alert } from "@/components/ui/alert";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   createAppleOfferCode,
@@ -135,12 +137,20 @@ export default function OffersPage() {
     <>
       <PageHeader
         title="Codes promo"
-        description="Crée une réduction dans App Store Connect (iPhone et iPad) et ses codes à remettre aux clients. Le client les saisit dans Paramètres > J'ai un code promo."
+        description="Réductions sur le premier mois : codes Apple créés dans App Store Connect (iPhone et iPad), codes Google Play (Android) gérés ici, et suivi des abonnements obtenus avec une offre."
       />
-      <Alert className="mb-4">
-        Apple n&apos;applique pas de pourcentage : le prix réduit est le palier de prix Apple le plus proche de la réduction demandée. Le prix réellement appliqué est affiché après la création. Pour Android, créez l&apos;offre dans la Play Console.
+      <Tabs defaultValue="apple" className="grid gap-4">
+        <TabsList className="w-fit">
+          <TabsTrigger value="apple">Apple (iPhone, iPad)</TabsTrigger>
+          <TabsTrigger value="google">Google Play (Android)</TabsTrigger>
+          <TabsTrigger value="suivi">Suivi</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="apple" className="grid gap-4">
+      <Alert>
+        Apple n&apos;applique pas de pourcentage : le prix réduit est le palier de prix Apple le plus proche de la réduction demandée. Le prix réellement appliqué est affiché après la création. Le client saisit son code dans Paramètres, J&apos;ai un code promo.
       </Alert>
-      <Card className="mb-4 max-w-2xl">
+      <Card className="max-w-2xl">
         <CardHeader>
           <CardTitle>Nouvelle offre</CardTitle>
           <CardDescription>Réservée aux nouveaux abonnés, dans le pays choisi.</CardDescription>
@@ -260,7 +270,16 @@ export default function OffersPage() {
         </Card>
       )}
 
-      <OffersTracking />
+        </TabsContent>
+
+        <TabsContent value="google">
+          <GooglePromoCodes />
+        </TabsContent>
+
+        <TabsContent value="suivi">
+          <OffersTracking />
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

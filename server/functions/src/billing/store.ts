@@ -16,6 +16,7 @@ export function subscriptionToDoc(sub: SubscriptionData): Record<string, unknown
     lastEventMs: sub.lastEventMs,
     autoRenew: sub.autoRenew ?? null,
     ...(sub.introOffer != null ? { introOffer: { code: sub.introOffer.code, atMs: sub.introOffer.atMs } } : {}),
+    ...(sub.environment != null ? { environment: sub.environment } : {}),
     updatedAt: Timestamp.now(),
   };
 }
@@ -35,6 +36,7 @@ export function subscriptionFromDoc(data: any): SubscriptionData | undefined {
     ...(typeof data.introOffer?.atMs === "number"
       ? { introOffer: { code: typeof data.introOffer.code === "string" ? data.introOffer.code : null, atMs: data.introOffer.atMs } }
       : {}),
+    ...(data.environment === "sandbox" || data.environment === "production" ? { environment: data.environment } : {}),
   };
 }
 

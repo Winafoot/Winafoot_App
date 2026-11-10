@@ -13,6 +13,16 @@ export const PLAN_PRICES: Record<Teams, { name: string; monthly: number; yearly:
   3: { name: "Club", monthly: 43.99, yearly: 444.99 },
 };
 
+/** Nature d'un abonnement : offert depuis le BO, acheté en environnement de test (sandbox), ou réel (y compris « inconnu », avant le suivi). */
+export type SubscriptionKind = "offered" | "sandbox" | "real";
+
+export const KIND_LABELS: Record<SubscriptionKind, string> = { offered: "Offert", sandbox: "Test", real: "Réel" };
+
+export function subscriptionKind(c: Coach): SubscriptionKind {
+  if (c.testGrant === true) return "offered";
+  return c.subscription?.environment === "sandbox" ? "sandbox" : "real";
+}
+
 export interface RevenueLine {
   teams: Teams;
   name: string;
@@ -30,6 +40,8 @@ export interface Revenue {
   monthly: number;
   /** Abonnements offerts depuis le back-office : sans revenu, donc exclus du calcul. */
   offered: number;
+  /** Abonnements achetés en environnement de test : sans revenu, donc exclus du calcul. */
+  sandbox: number;
   /** Abonnés dont le premier achat a utilisé une offre ou un code : leur premier mois est peut-être réduit. */
   withOffer: number;
 }
@@ -46,14 +58,20 @@ export function computeRevenue(coaches: Coach[]): Revenue {
     (["monthly", "yearly"] as const).map((period) => ({ teams, name: PLAN_PRICES[teams].name, period, subscribers: 0, monthlyRevenue: 0 })),
   );
   let offered = 0;
+  let sandbox = 0;
   let withOffer = 0;
 
   for (const c of coaches) {
     if (c.ownerUid != null) continue;
     const sub = c.subscription;
     if (sub == null || (sub.status !== "active" && sub.status !== "grace")) continue;
-    if (c.testGrant === true) {
+    const kind = subscriptionKind(c);
+    if (kind === "offered") {
       offered++;
+      continue;
+    }
+    if (kind === "sandbox") {
+      sandbox++;
       continue;
     }
     const line = lines.find((l) => l.teams === sub.teamsAllowed && l.period === sub.period);
@@ -71,6 +89,7 @@ export function computeRevenue(coaches: Coach[]): Revenue {
     subscribers: lines.reduce((n, l) => n + l.subscribers, 0),
     monthly: round2(lines.reduce((n, l) => n + l.monthlyRevenue, 0)),
     offered,
+    sandbox,
     withOffer,
   };
 }

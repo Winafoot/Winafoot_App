@@ -10,7 +10,7 @@ import { computeRevenue, formatEuro, PLAN_PRICES } from "@/lib/revenue";
 /** Abonnés par formule et revenu mensuel estimé, calculés avec la grille de prix publique (aucun appel aux stores). */
 export function RevenueSection({ coaches, loading }: { coaches: Coach[]; loading: boolean }) {
   const revenue = useMemo(() => computeRevenue(coaches), [coaches]);
-  const hints = [revenue.offered > 0 ? `${revenue.offered} offert(s) exclu(s)` : null, revenue.withOffer > 0 ? `${revenue.withOffer} avec une offre d'introduction` : null].filter(Boolean);
+  const hints = [revenue.offered > 0 ? `${revenue.offered} offert(s) exclu(s)` : null, revenue.sandbox > 0 ? `${revenue.sandbox} de test exclu(s)` : null, revenue.withOffer > 0 ? `${revenue.withOffer} avec une offre d'introduction` : null].filter(Boolean);
 
   return (
     <section className="mb-6 grid gap-4">

@@ -14,6 +14,7 @@ import 'package:wina/billing/billing_service.dart';
 import 'package:wina/billing/offers.dart';
 import 'package:wina/billing/plan.dart';
 import 'package:wina/config/orientation_controller.dart';
+import 'package:wina/data/promo_code_repository.dart';
 import 'package:wina/config/theme.dart';
 import 'package:wina/providers/billing_providers.dart';
 import 'package:wina/view/widget/app_background.dart';
@@ -50,6 +51,9 @@ class AbonnementScreen extends ConsumerStatefulWidget {
 class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
   int _teams = 1;
   bool _busy = false;
+
+  /// Code promo Google validé par le serveur : l'achat se fait alors sur l'offre portant son tag.
+  PromoOffer? _promo;
 
   @override
   void initState() {
@@ -119,6 +123,7 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
             productId,
             replacingProductId: current?.productId,
             deferred: downgrade,
+            promoTag: _promo?.tag,
           );
       if (!mounted) return;
       if (result == PurchaseResult.cancelled) {
@@ -182,18 +187,22 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
     }
   }
 
-  /// Code promo : feuille de saisie d'Apple sur iOS, écran « Utiliser un code » du Play Store sur Android. L'accès
-  /// arrive ensuite par le webhook RevenueCat ; l'écran se ferme alors tout seul (voir le `ref.listen` ci-dessous).
+  /// Code promo : feuille de saisie d'Apple sur iOS. Sur Android, saisie dans l'app (validée par le serveur : le code
+  /// débloque une offre Google Play à prix réduit pour l'achat qui suit), avec un lien vers l'écran « Utiliser un
+  /// code » du Play Store pour les codes d'essai gratuit. L'accès arrive ensuite par le webhook RevenueCat ; l'écran
+  /// se ferme alors tout seul (voir le `ref.listen` ci-dessous).
   Future<void> _redeemCode() async {
     if (_busy) return;
     try {
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await ref.read(billingServiceProvider).presentCodeRedemption();
       } else {
-        await launchUrl(
-          Uri.parse('https://play.google.com/redeem'),
-          mode: LaunchMode.externalApplication,
+        final PromoOffer? offer = await showDialog<PromoOffer>(
+          context: context,
+          barrierColor: AppColor.scrim,
+          builder: (BuildContext _) => const _PromoCodeDialog(),
         );
+        if (offer != null && mounted) setState(() => _promo = offer);
       }
     } on BillingException catch (e) {
       if (mounted) _notifyError(e.message);
@@ -286,6 +295,11 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                                 onSelect: (int n) => setState(() => _teams = n),
                               ),
                               _gap(40, 28),
+                              if (_promo != null)
+                                _PromoBanner(
+                                  label: _promo!.label,
+                                  onRemove: () => setState(() => _promo = null),
+                                ),
                               offers.when(
                                 data:
                                     (Map<int, TeamsOffer> byTeams) =>
@@ -1473,3 +1487,147 @@ class _PlanChoice extends StatelessWidget {
 /// Espace vertical : [phone] sur téléphone (plus aéré), [tablet] sur tablette (inchangé).
 Widget _gap(double phone, double tablet) =>
     OrientationController.isPhone ? SizedBox(height: phone) : sh(tablet);
+
+/// Boîte de saisie du code promo Google : appelle le serveur et renvoie l'offre débloquée.
+class _PromoCodeDialog extends StatefulWidget {
+  const _PromoCodeDialog();
+
+  @override
+  State<_PromoCodeDialog> createState() => _PromoCodeDialogState();
+}
+
+class _PromoCodeDialogState extends State<_PromoCodeDialog> {
+  final TextEditingController _controller = TextEditingController();
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final String code = _controller.text.trim();
+    if (code.isEmpty || _loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final PromoOffer offer = await PromoCodeRepository.redeem(code);
+      if (mounted) Navigator.of(context).pop(offer);
+    } on PromoCodeException catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = e.message;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColor.background,
+      title: Text(
+        'app.subscription.promo-title'.tr(),
+        style: AppThemeStyle.boldStyle(20, AppColor.primaryLabels),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            autocorrect: false,
+            enabled: !_loading,
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+              hintText: 'app.subscription.promo-hint'.tr(),
+              errorText: _error,
+              errorMaxLines: 3,
+            ),
+          ),
+          sh(12),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap:
+                _loading
+                    ? null
+                    : () => launchUrl(
+                      Uri.parse('https://play.google.com/redeem'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+            child: Text(
+              'app.subscription.promo-store'.tr(),
+              style: AppThemeStyle.regularStyle(
+                14,
+                AppColor.secondaryLabels,
+              ).copyWith(decoration: TextDecoration.underline),
+            ),
+          ),
+        ],
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.of(context).pop(),
+          child: Text('app.subscription.promo-cancel'.tr()),
+        ),
+        TextButton(
+          onPressed: _loading ? null : _submit,
+          child:
+              _loading
+                  ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : Text('app.subscription.promo-apply'.tr()),
+        ),
+      ],
+    );
+  }
+}
+
+/// Rappel du code appliqué, au-dessus des cartes de prix.
+class _PromoBanner extends StatelessWidget {
+  const _PromoBanner({required this.label, required this.onRemove});
+
+  final String label;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Flexible(
+            child: Text(
+              'app.subscription.promo-applied'.tr(args: <String>[label]),
+              textAlign: TextAlign.center,
+              style: AppThemeStyle.boldStyle(16, AppColor.primaryLabels),
+            ),
+          ),
+          sw(12),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onRemove,
+            child: Text(
+              'app.subscription.promo-remove'.tr(),
+              style: AppThemeStyle.regularStyle(
+                14,
+                AppColor.secondaryLabels,
+              ).copyWith(decoration: TextDecoration.underline),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

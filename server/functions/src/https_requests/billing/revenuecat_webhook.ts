@@ -3,6 +3,7 @@ import type { Response } from "express";
 import { firestore } from "firebase-admin";
 import type { Request } from "firebase-functions/v2/https";
 import { isFirstPayment } from "../../billing/billing_mail";
+import { consumePromo, consumesPromo, readPendingPromo } from "../../billing/promo_codes";
 import { notifyNewSubscription } from "../../billing/notify_new_subscription";
 import { sendSubscriptionMail } from "../../billing/send_subscription_mail";
 import { applyEvent, type RevenueCatEvent, type SubscriptionData } from "../../billing/subscription";
@@ -86,7 +87,10 @@ async function applyToOwner(event: RevenueCatEvent): Promise<PaidResult> {
     const next = applyEvent(prev, event);
     if (next == null) return;
 
+    // Lectures avant écritures : un code promo Google validé par ce compte est consommé par son achat à prix réduit.
+    const promo = consumesPromo(event) ? await readPendingPromo(tx, event.app_user_id, Date.now()) : null;
     writeSubscriptionAndAccess(tx, ownerRef, linked.docs, next, Date.now());
+    if (promo != null) consumePromo(tx, promo, Date.now());
 
     // Mail interne à chaque nouvel abonnement : le rejeu d'un même événement ne le renvoie pas.
     const lastNewMs: number = owner.get("billingMail.newSubscriptionEventMs") ?? 0;
