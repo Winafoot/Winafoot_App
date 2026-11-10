@@ -33,11 +33,13 @@ abstract class BillingService {
   Future<List<PlanOffer>> loadOffers();
 
   /// [replacingProductId] : abonnement en cours que le nouveau remplace (changement de formule) ;
-  /// [deferred] : le changement prend effet au prochain renouvellement (rétrogradation) au lieu d'être immédiat.
+  /// [deferred] : le changement prend effet au prochain renouvellement (rétrogradation) au lieu d'être immédiat ;
+  /// [promoTag] : Android, tag de l'offre Google Play débloquée par un code promo validé (voir [PromoCodeRepository]).
   Future<PurchaseResult> purchase(
     String productId, {
     String? replacingProductId,
     bool deferred = false,
+    String? promoTag,
   });
 
   /// `true` si un abonnement a été retrouvé.
@@ -116,6 +118,7 @@ class RevenueCatBillingService implements BillingService {
     String productId, {
     String? replacingProductId,
     bool deferred = false,
+    String? promoTag,
   }) async {
     await _ensureConfigured();
     final Package? package = _package(
@@ -126,23 +129,43 @@ class RevenueCatBillingService implements BillingService {
       throw const BillingException(
         'Cette formule n\'est pas disponible pour le moment.',
       );
+    final StoreProductChangeInfo? changeInfo =
+        replacingProductId == null
+            ? null
+            : StoreProductChangeInfo(
+              replacingProductId,
+              replacementMode:
+                  deferred
+                      ? StoreReplacementMode.deferred
+                      : StoreReplacementMode.chargeProratedPrice,
+            );
+    // Code promo Google : l'offre à acheter est celle qui porte le tag du code. Sans elle, on n'achète SURTOUT PAS
+    // au plein tarif en silence : le client croirait avoir sa remise.
+    SubscriptionOption? promoOption;
+    if (promoTag != null && defaultTargetPlatform == TargetPlatform.android) {
+      for (final SubscriptionOption o
+          in package.storeProduct.subscriptionOptions ??
+              const <SubscriptionOption>[]) {
+        if (o.tags.contains(promoTag)) {
+          promoOption = o;
+          break;
+        }
+      }
+      if (promoOption == null)
+        throw const BillingException(
+          "Cette offre n'est pas disponible pour cette formule.",
+        );
+    }
     try {
       // Changement de formule : sur Android, remplace l'abonnement en cours (immédiat avec prorata pour une
       // formule supérieure, au renouvellement pour une inférieure). iOS gère le changement dans le groupe.
       await Purchases.purchase(
-        PurchaseParams.package(
-          package,
-          productChangeInfo:
-              replacingProductId == null
-                  ? null
-                  : StoreProductChangeInfo(
-                    replacingProductId,
-                    replacementMode:
-                        deferred
-                            ? StoreReplacementMode.deferred
-                            : StoreReplacementMode.chargeProratedPrice,
-                  ),
-        ),
+        promoOption != null
+            ? PurchaseParams.subscriptionOption(
+              promoOption,
+              productChangeInfo: changeInfo,
+            )
+            : PurchaseParams.package(package, productChangeInfo: changeInfo),
       );
       return PurchaseResult.purchased;
     } on PlatformException catch (e) {

@@ -6,10 +6,12 @@ import { CalendarClock, CreditCard, Gift, Wallet } from "lucide-react";
 import { SubscriptionBadge } from "@/components/coach-badges";
 import { DataTable } from "@/components/data-table";
 import { PageHeader } from "@/components/page-header";
+import { RevenueSection } from "@/components/revenue-section";
 import { StatCard } from "@/components/stat-card";
 import { Alert } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SUBSCRIPTION_LABELS, useCoaches, type Coach, type SubscriptionStatus } from "@/lib/data";
+import { KIND_LABELS, subscriptionKind, type SubscriptionKind } from "@/lib/revenue";
 import { formatDate, toDate } from "@/lib/utils";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -18,16 +20,20 @@ export default function SubscriptionsPage() {
   const router = useRouter();
   const { data, linked, loading, error } = useCoaches();
   const [status, setStatus] = useState<"all" | SubscriptionStatus | "none">("all");
+  // Par défaut, les vrais abonnements : les achats de test et les abonnements offerts ne comptent ni dans les chiffres ni dans la liste.
+  const [kind, setKind] = useState<"all" | SubscriptionKind>("real");
 
   const counts = useMemo(() => {
     const now = Date.now();
+    const real = data.filter((c) => subscriptionKind(c) === "real");
     return {
-      active: data.filter((c) => c.subscription?.status === "active").length,
-      trial: data.filter((c) => c.subscription?.status === "trial").length,
-      grace: data.filter((c) => c.subscription?.status === "grace").length,
+      active: real.filter((c) => c.subscription?.status === "active").length,
+      trial: real.filter((c) => c.subscription?.status === "trial").length,
+      grace: real.filter((c) => c.subscription?.status === "grace").length,
       manual: data.filter((c) => c.testGrant === true || (c.manualGrant === true && c.subscription == null)).length,
+      sandbox: data.filter((c) => c.subscription != null && subscriptionKind(c) === "sandbox").length,
       // Abonnements (essai ou payant) qui prennent fin dans les 14 jours : à surveiller avant qu'ils ne tombent.
-      endingSoon: data.filter((c) => {
+      endingSoon: real.filter((c) => {
         const end = toDate(c.subscription?.expiresAt)?.getTime();
         const s = c.subscription?.status;
         return end != null && (s === "active" || s === "trial") && end > now && end - now < 14 * DAY;
@@ -38,11 +44,12 @@ export default function SubscriptionsPage() {
   const rows = useMemo(
     () =>
       data.filter((c) => {
+        if (kind !== "all" && c.subscription != null && subscriptionKind(c) !== kind) return false;
         if (status === "all") return true;
         if (status === "none") return c.subscription == null;
         return c.subscription?.status === status;
       }),
-    [data, status],
+    [data, status, kind],
   );
 
   const linkedCount = useMemo(() => {
@@ -92,6 +99,12 @@ export default function SubscriptionsPage() {
         cell: ({ row }) => (row.original.testGrant ? "Offert" : row.original.subscription?.store === "app_store" ? "App Store" : row.original.subscription?.store === "play_store" ? "Google Play" : "—"),
       },
       {
+        id: "kind",
+        header: "Type",
+        accessorFn: (c) => (c.subscription == null ? "" : subscriptionKind(c)),
+        cell: ({ row }) => (row.original.subscription == null ? "—" : KIND_LABELS[subscriptionKind(row.original)]),
+      },
+      {
         id: "expiresAt",
         header: "Échéance",
         accessorFn: (c) => toDate(c.subscription?.expiresAt)?.getTime() ?? 0,
@@ -103,15 +116,17 @@ export default function SubscriptionsPage() {
 
   return (
     <>
-      <PageHeader title="Abonnements" description="État des abonnements des coachs, tel que reçu de RevenueCat." />
+      <PageHeader title="Abonnements" description="État des abonnements des coachs, tel que reçu de RevenueCat. Les chiffres ne comptent que les vrais abonnements : les achats de test et les abonnements offerts sont à part." />
       {error && <Alert variant="destructive" className="mb-4">Lecture impossible : {error.message}</Alert>}
 
       <section className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Actifs" value={counts.active} icon={Wallet} loading={loading} />
         <StatCard label="En essai" value={counts.trial} icon={Gift} loading={loading} />
         <StatCard label="Paiement en attente" value={counts.grace} icon={CreditCard} loading={loading} tone={counts.grace > 0 ? "warning" : "default"} />
-        <StatCard label="Échéance sous 14 jours" value={counts.endingSoon} icon={CalendarClock} loading={loading} tone={counts.endingSoon > 0 ? "warning" : "default"} hint={counts.manual > 0 ? `${counts.manual} abonnement(s) offert(s)` : undefined} />
+        <StatCard label="Échéance sous 14 jours" value={counts.endingSoon} icon={CalendarClock} loading={loading} tone={counts.endingSoon > 0 ? "warning" : "default"} hint={[counts.manual > 0 ? `${counts.manual} offert(s)` : null, counts.sandbox > 0 ? `${counts.sandbox} de test` : null].filter(Boolean).join(" · ") || undefined} />
       </section>
+
+      <RevenueSection coaches={data} loading={loading} />
 
       <DataTable
         columns={columns}
@@ -122,6 +137,18 @@ export default function SubscriptionsPage() {
         initialSorting={[{ id: "expiresAt", desc: false }]}
         onRowClick={(c) => router.push(`/coachs/detail/?uid=${encodeURIComponent(c.id)}`)}
         toolbar={
+          <div className="flex flex-wrap gap-2">
+            <Select value={kind} onValueChange={(v) => setKind(v as typeof kind)}>
+              <SelectTrigger className="w-44" aria-label="Filtrer par type d'abonnement">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="real">Vrais abonnements</SelectItem>
+                <SelectItem value="sandbox">Achats de test</SelectItem>
+                <SelectItem value="offered">Offerts (BO)</SelectItem>
+                <SelectItem value="all">Tous les types</SelectItem>
+              </SelectContent>
+            </Select>
           <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
             <SelectTrigger className="w-52" aria-label="Filtrer par statut d'abonnement">
               <SelectValue />
@@ -136,6 +163,7 @@ export default function SubscriptionsPage() {
               <SelectItem value="none">Sans abonnement</SelectItem>
             </SelectContent>
           </Select>
+          </div>
         }
       />
     </>

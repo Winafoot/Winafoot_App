@@ -14,8 +14,63 @@ import 'package:wina/models/stat_catalog.dart';
 /// Export PDF des bilans de match. Construit un document puis ouvre la feuille
 /// de partage / impression native du système (« Exporter en PDF »).
 
-/// Document A4 paysage : titre répété en en-tête et « Page X / Y » en pied de
-/// chaque page. [theme] fournit la police (Helvetica à défaut).
+// Palette des PDF : celle de l'app (AppColor), recopiée ici car le document ne
+// passe pas par Flutter (PdfColor, pas Color).
+const PdfColor _kGreen = PdfColor.fromInt(0xFF518948); // AppColor.primaryColor
+const PdfColor _kInk = PdfColor.fromInt(0xFF212121); // AppColor.primaryLabels
+const PdfColor _kMuted = PdfColor.fromInt(0xFF6E6E6E); // AppColor.secondaryLabels
+const PdfColor _kTint = PdfColor.fromInt(0xFFEFF4EF); // AppColor.background
+const PdfColor _kRule = PdfColor.fromInt(0xFFD3DDD1); // filet vert très clair
+
+/// Bandeau vert Wina de tête de document : le titre en blanc, et en dessous
+/// (facultatif) une ligne de contexte.
+pw.Widget _banner(String title, {pw.TextAlign align = pw.TextAlign.left}) =>
+    pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: const pw.BoxDecoration(
+        color: _kGreen,
+        borderRadius: pw.BorderRadius.all(pw.Radius.circular(6)),
+      ),
+      child: pw.Text(
+        title,
+        textAlign: align,
+        style: pw.TextStyle(
+          fontSize: 15,
+          fontWeight: pw.FontWeight.bold,
+          color: PdfColors.white,
+        ),
+      ),
+    );
+
+/// Pied de page : marque à gauche, « Page X / Y » à droite, sous un filet.
+pw.Widget _footer(pw.Context context) => pw.Container(
+  margin: const pw.EdgeInsets.only(top: 4),
+  padding: const pw.EdgeInsets.only(top: 4),
+  decoration: const pw.BoxDecoration(
+    border: pw.Border(top: pw.BorderSide(color: _kRule, width: 0.8)),
+  ),
+  child: pw.Row(
+    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+    children: <pw.Widget>[
+      pw.Text(
+        'Wina',
+        style: pw.TextStyle(
+          fontSize: 9,
+          fontWeight: pw.FontWeight.bold,
+          color: _kGreen,
+        ),
+      ),
+      pw.Text(
+        'Page ${context.pageNumber} / ${context.pagesCount}',
+        style: const pw.TextStyle(fontSize: 9, color: _kMuted),
+      ),
+    ],
+  ),
+);
+
+/// Document A4 paysage : bandeau de titre répété en en-tête et « Page X / Y »
+/// en pied de chaque page. [theme] fournit la police (Helvetica à défaut).
 pw.Document _buildDocument(
   String title,
   List<pw.Widget> Function(pw.Context) content, {
@@ -27,23 +82,11 @@ pw.Document _buildDocument(
       pageFormat: PdfPageFormat.a4.landscape,
       margin: const pw.EdgeInsets.all(24),
       header:
-          (pw.Context context) => pw.Container(
-            alignment: pw.Alignment.centerLeft,
-            margin: const pw.EdgeInsets.only(bottom: 12),
-            child: pw.Text(
-              title,
-              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-            ),
+          (pw.Context context) => pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 12),
+            child: _banner(title),
           ),
-      footer:
-          (pw.Context context) => pw.Container(
-            alignment: pw.Alignment.centerRight,
-            margin: const pw.EdgeInsets.only(top: 8),
-            child: pw.Text(
-              'Page ${context.pageNumber} / ${context.pagesCount}',
-              style: const pw.TextStyle(fontSize: 9),
-            ),
-          ),
+      footer: _footer,
       build: content,
     ),
   );
@@ -83,24 +126,44 @@ const Map<MatchPeriod, String> _kPeriodLabels = <MatchPeriod, String>{
 pw.Widget _collectifBlock(CollectifBlock block) => pw.Column(
   crossAxisAlignment: pw.CrossAxisAlignment.stretch,
   children: <pw.Widget>[
-    pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 4),
+    pw.Container(
+      padding: const pw.EdgeInsets.symmetric(vertical: 3),
+      decoration: const pw.BoxDecoration(
+        color: _kGreen,
+        borderRadius: pw.BorderRadius.only(
+          topLeft: pw.Radius.circular(5),
+          topRight: pw.Radius.circular(5),
+        ),
+      ),
       child: pw.Text(
         block.category.label.toUpperCase(),
         textAlign: pw.TextAlign.center,
-        style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+        style: pw.TextStyle(
+          fontSize: 10,
+          fontWeight: pw.FontWeight.bold,
+          color: PdfColors.white,
+        ),
       ),
     ),
     pw.Table(
-      border: pw.TableBorder.all(),
+      border: const pw.TableBorder(
+        left: pw.BorderSide(color: _kRule, width: 0.8),
+        right: pw.BorderSide(color: _kRule, width: 0.8),
+        bottom: pw.BorderSide(color: _kRule, width: 0.8),
+        horizontalInside: pw.BorderSide(color: _kRule, width: 0.6),
+        verticalInside: pw.BorderSide(color: _kRule, width: 0.6),
+      ),
       columnWidths: <int, pw.TableColumnWidth>{
         0: const pw.FlexColumnWidth(3),
         1: const pw.FlexColumnWidth(1),
       },
       defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
       children: <pw.TableRow>[
-        for (final CollectifRow r in block.rows)
+        for (int i = 0; i < block.rows.length; i++)
           pw.TableRow(
+            decoration: pw.BoxDecoration(
+              color: i.isOdd ? _kTint : PdfColors.white,
+            ),
             children: <pw.Widget>[
               pw.Padding(
                 padding: const pw.EdgeInsets.symmetric(
@@ -108,19 +171,20 @@ pw.Widget _collectifBlock(CollectifBlock block) => pw.Column(
                   vertical: 2.5,
                 ),
                 child: pw.Text(
-                  r.label,
+                  block.rows[i].label,
                   textAlign: pw.TextAlign.center,
-                  style: const pw.TextStyle(fontSize: 10),
+                  style: const pw.TextStyle(fontSize: 10, color: _kInk),
                 ),
               ),
               pw.Padding(
                 padding: const pw.EdgeInsets.symmetric(vertical: 2.5),
                 child: pw.Text(
-                  r.value,
+                  block.rows[i].value,
                   textAlign: pw.TextAlign.center,
                   style: pw.TextStyle(
                     fontSize: 11,
                     fontWeight: pw.FontWeight.bold,
+                    color: _kGreen,
                   ),
                 ),
               ),
@@ -153,40 +217,49 @@ pw.Document buildBilanCollectifDocument({
           (pw.Context context) => pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.stretch,
             children: <pw.Widget>[
-              pw.Text(
-                'STATISTIQUES COLLECTIVES',
-                textAlign: pw.TextAlign.center,
-                style: pw.TextStyle(
-                  fontSize: 16,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 8),
+              _banner('STATISTIQUES COLLECTIVES', align: pw.TextAlign.center),
+              pw.SizedBox(height: 6),
               pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
                 children: <pw.Widget>[
                   pw.Expanded(
                     child: pw.Text(
                       '$ownTeam / $opponent',
                       style: pw.TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: pw.FontWeight.bold,
+                        color: _kInk,
                       ),
                     ),
                   ),
                   pw.SizedBox(width: 12),
-                  pw.Text(
-                    _kPeriodLabels[period]!,
-                    style: pw.TextStyle(
-                      fontSize: 12,
-                      fontWeight: pw.FontWeight.bold,
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: pw.BoxDecoration(
+                      color: _kTint,
+                      border: pw.Border.all(color: _kGreen, width: 0.8),
+                      borderRadius: const pw.BorderRadius.all(
+                        pw.Radius.circular(10),
+                      ),
+                    ),
+                    child: pw.Text(
+                      _kPeriodLabels[period]!,
+                      style: pw.TextStyle(
+                        fontSize: 11,
+                        fontWeight: pw.FontWeight.bold,
+                        color: _kGreen,
+                      ),
                     ),
                   ),
                 ],
               ),
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 8),
             ],
           ),
+      footer: _footer,
       build:
           (pw.Context context) => <pw.Widget>[
             // Une page sans contenu n'est pas écrite : sans ce texte la période
@@ -330,13 +403,21 @@ List<pw.Widget> bilanIndividuelContent(
     for (int i = 0; i < pages.length; i++) ...<pw.Widget>[
       if (i > 0) pw.NewPage(),
       if (pages[i].isNotEmpty)
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 6),
+        pw.Container(
+          margin: const pw.EdgeInsets.only(bottom: 8),
+          padding: const pw.EdgeInsets.only(left: 8),
+          decoration: const pw.BoxDecoration(
+            border: pw.Border(left: pw.BorderSide(color: _kGreen, width: 3)),
+          ),
           child: pw.Text(
             <String>{
               for (final StatDef s in pages[i]) s.category.label,
             }.join(', '),
-            style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+            style: pw.TextStyle(
+              fontSize: 12,
+              fontWeight: pw.FontWeight.bold,
+              color: _kInk,
+            ),
           ),
         ),
       pw.TableHelper.fromTextArray(
@@ -359,9 +440,16 @@ List<pw.Widget> bilanIndividuelContent(
         headerStyle: pw.TextStyle(
           fontWeight: pw.FontWeight.bold,
           fontSize: kStatHeaderFontSize,
+          color: PdfColors.white,
         ),
-        cellStyle: const pw.TextStyle(fontSize: 9),
-        headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+        cellStyle: const pw.TextStyle(fontSize: 9, color: _kInk),
+        headerDecoration: const pw.BoxDecoration(color: _kGreen),
+        rowDecoration: const pw.BoxDecoration(color: PdfColors.white),
+        oddRowDecoration: const pw.BoxDecoration(color: _kTint),
+        border: const pw.TableBorder(
+          bottom: pw.BorderSide(color: _kRule, width: 0.8),
+          horizontalInside: pw.BorderSide(color: _kRule, width: 0.5),
+        ),
         cellPadding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 3),
         cellAlignment: pw.Alignment.center,
         cellAlignments: <int, pw.Alignment>{0: pw.Alignment.centerLeft},

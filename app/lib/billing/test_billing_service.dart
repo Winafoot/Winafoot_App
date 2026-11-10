@@ -82,6 +82,7 @@ class TestBillingService implements BillingService {
     String productId, {
     String? replacingProductId,
     bool deferred = false,
+    String? promoTag,
   }) async {
     if (!_on) throw const BillingUnavailable();
     try {

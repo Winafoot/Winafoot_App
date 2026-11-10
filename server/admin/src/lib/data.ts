@@ -13,6 +13,10 @@ export interface Subscription {
   trialEnd?: Timestamp | null;
   expiresAt?: Timestamp | null;
   store?: "app_store" | "play_store";
+  /** Premier achat avec une offre d'introduction ou un code promo (posé par le webhook RevenueCat). */
+  introOffer?: { code: string | null; atMs: number };
+  /** « sandbox » : achat de test (testeur Google, sandbox Apple, TestFlight) ; « production » : vrai achat. Absent : reçu avant l'ajout du suivi. */
+  environment?: "sandbox" | "production";
   updatedAt?: Timestamp | null;
 }
 
@@ -113,6 +117,8 @@ export const AUDIT_ACTIONS: Record<string, string> = {
   grant_subscription: "Abonnement offert",
   revoke_subscription: "Abonnement retiré",
   create_offer_code: "Code d'offre créé",
+  update_config: "Configuration modifiée",
+  save_promo_code: "Code promo Google enregistré",
   view_coach_data: "Consultation des données",
   send_notification: "Notification envoyée",
   linked_reset_password: "Mot de passe d'équipe liée",

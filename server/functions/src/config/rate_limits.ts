@@ -70,6 +70,8 @@ export const LIMITS = {
   // Adjoint : un seul par coach, quelques essais d'identifiant ou de mot de passe suffisent.
   assistantUid: { limit: 10, windowMs: HOUR },
   grantTestSubscriptionUid: { limit: 20, windowMs: HOUR },
+  // Code promo Google : quelques essais de saisie par heure, pas de quoi deviner un code par force brute.
+  redeemPromoCodeUid: { limit: 10, windowMs: HOUR },
 
   // Endpoints HTTP de la landing.
   deleteMailIp: { limit: 10, windowMs: 15 * MINUTE },

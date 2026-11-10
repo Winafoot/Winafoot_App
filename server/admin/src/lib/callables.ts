@@ -11,6 +11,8 @@ export const createCoach = call<
 export const resendInvite = call<{ uid: string }, { sent: true }>("resendInvite");
 export const setCoachDisabled = call<{ uid: string; disabled: boolean }, { disabled: boolean }>("setCoachDisabled");
 export const deleteCoach = call<{ uid: string }, { deleted: true }>("deleteCoach");
+/** Supprime une équipe liée dont le compte principal n'existe plus ; le serveur refuse toute autre équipe. */
+export const deleteOrphanTeam = call<{ uid: string }, { deleted: true }>("deleteOrphanTeam");
 
 /** Abonnement offert (comptes de test) : attribué ou retiré à la main, sans passer par les stores. `untilMs` : fin de l'accès, null après un retrait. */
 export const setCoachSubscription = call<
@@ -114,3 +116,149 @@ export const resetLinkedTeamPasswordByAdmin = call<{ uid: string; password: stri
 export function errorMessage(error: unknown, fallback = "L'opération a échoué."): string {
   return error instanceof Error && error.message ? error.message : fallback;
 }
+
+// Équipes et statistiques d'usage (lecture seule). Le bilan d'une équipe est journalisé côté serveur.
+export interface TeamActivity {
+  uid: string;
+  players: number;
+  matches: number;
+  finished: number;
+  lastFinishedAt: string | null;
+}
+export const getTeamActivity = call<Record<string, never>, { teams: TeamActivity[]; truncated: boolean; limit: number }>("getTeamActivity");
+
+export interface TeamPlayerLine {
+  id: string;
+  name: string;
+  position: string;
+  matches: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  /** Total de chaque statistique saisie (clés de `stat-catalog.ts`), valeurs non nulles seulement. */
+  stats: Record<string, number>;
+  history: { matchId: string; opponent: string; finishedAt: string | null; stats: Record<string, number> }[];
+}
+export interface TeamMatchLine {
+  id: string;
+  opponent: string;
+  scoreUs: number;
+  scoreThem: number;
+  result: "win" | "draw" | "loss";
+  finishedAt: string | null;
+  elapsedSeconds: number;
+  scorers: { name: string; goals: number }[];
+  yellowCards: number;
+  redCards: number;
+}
+export interface TeamStats {
+  record: { played: number; wins: number; draws: number; losses: number; goalsFor: number; goalsAgainst: number };
+  matches: TeamMatchLine[];
+  players: TeamPlayerLine[];
+  truncated: boolean;
+  limit: number;
+}
+export const getTeamStats = call<{ uid: string }, TeamStats>("getTeamStats");
+
+export interface UsageWeek {
+  weekStart: string;
+  matches: number;
+  activeTeams: number;
+}
+export const getUsageStats = call<Record<string, never>, { generatedAt: string; weeks: UsageWeek[]; truncated: boolean; limit: number }>("getUsageStats");
+
+/** Note interne d'un coach (visible des administrateurs seuls). Un texte vide efface la note. */
+export interface CoachNote {
+  text: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
+}
+export const getCoachNote = call<{ uid: string }, CoachNote>("getCoachNote");
+export const setCoachNote = call<{ uid: string; text: string }, CoachNote>("setCoachNote");
+
+/** Offres à code d'App Store Connect avec leurs lots de codes et codes personnalisés. */
+export interface AppleOffer {
+  id: string;
+  name: string;
+  subscription: string;
+  mode: string;
+  duration: string;
+  periods: number;
+  active: boolean;
+  batches: { id: string; codes: number; expirationDate: string | null; active: boolean }[];
+  customCodes: { id: string; code: string; uses: number; expirationDate: string | null; active: boolean }[];
+}
+export const listAppleOffers = call<Record<string, never>, { offers: AppleOffer[] }>("listAppleOffers");
+
+/** Code promo Google Play (collection promo_codes) : `uses` est compté par le serveur quand l'achat à prix réduit est confirmé. */
+export interface PromoCodeRow {
+  code: string;
+  label: string;
+  offerTag: string;
+  active: boolean;
+  expiresAt: string | null;
+  maxUses: number;
+  uses: number;
+  createdAt: string | null;
+}
+export const listPromoCodes = call<Record<string, never>, { codes: PromoCodeRow[] }>("listPromoCodes");
+/** Tag d'offre lu dans la Play Console ; `ambiguous` : posé sur plusieurs offres d'un même abonnement (à corriger). */
+export interface GoogleOfferTag {
+  tag: string;
+  offers: { productId: string; basePlanId: string; offerId: string; state: string }[];
+  ambiguous: boolean;
+}
+export const listGoogleOfferTags = call<Record<string, never>, { tags: GoogleOfferTag[] }>("listGoogleOfferTags");
+/** `create` : crée (refuse un code existant) ; sinon modifie le texte, le plafond, la date limite ou l'état d'un code existant. */
+export const savePromoCode = call<
+  { code: string; create: boolean; label: string; offerTag?: string; maxUses: number; expiresAt: string | null; active: boolean },
+  { code: string }
+>("savePromoCode");
+
+/** Niveau des clients par catégorie et classement des meilleurs joueurs, avec leur nom et leur équipe. */
+export interface CategoryBenchmark {
+  category: string;
+  teams: number;
+  matches: number;
+  goalsForPerMatch: number;
+  goalsAgainstPerMatch: number;
+  winRate: number;
+  passAccuracy: number | null;
+  yellowCardsPerMatch: number;
+}
+export interface RankedPlayer {
+  rank: number;
+  name: string;
+  teamName: string;
+  teamUid: string;
+  playerId: string;
+  category: string;
+  matches: number;
+  goals: number;
+  assists: number;
+  goalsPerMatch: number;
+}
+export const getPlayerBenchmarks = call<
+  Record<string, never>,
+  { categories: CategoryBenchmark[]; topScorers: RankedPlayer[]; topAssisters: RankedPlayer[]; generatedAt: string; matchesUsed: number; truncated: boolean; limit: number }
+>("getPlayerBenchmarks");
+
+/** Un joueur de l'app avec son équipe et ses totaux ; `teamUid` ouvre la fiche équipe. */
+export interface PlayerRow {
+  teamUid: string;
+  teamName: string;
+  category: string;
+  id: string;
+  name: string;
+  position: string;
+  matches: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+}
+export const getAllPlayers = call<Record<string, never>, { players: PlayerRow[]; truncated: boolean }>("getAllPlayers");
+
+/** Modifie des champs de la configuration de l'app (`mail.*` en clé pointée). Une valeur vide supprime un champ facultatif. */
+export const updateAppConfig = call<{ changes: Record<string, string> }, { changed: string[] }>("updateAppConfig");

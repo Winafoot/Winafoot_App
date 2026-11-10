@@ -35,3 +35,17 @@ export function formulaLabel(sub: Pick<SubscriptionData, "teamsAllowed" | "perio
 export function formatDateFr(ms: number): string {
   return new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" }).format(new Date(ms));
 }
+
+/** Nature d'un nouvel abonnement, pour le mail interne : paiement direct, essai ou offre gratuite, offre d'introduction. */
+export function newSubscriptionKind(event: Pick<RevenueCatEvent, "period_type" | "offer_code">): string {
+  if (event.period_type === "TRIAL") return "Essai ou offre gratuite";
+  if (event.period_type === "INTRO" || (typeof event.offer_code === "string" && event.offer_code !== "")) return "Offre d'introduction ou code promo";
+  return "Paiement au tarif normal";
+}
+
+/** « 17,00 EUR », ou « — » quand RevenueCat ne transmet pas de montant. */
+export function priceLabel(event: Pick<RevenueCatEvent, "price_in_purchased_currency" | "currency">): string {
+  const amount = event.price_in_purchased_currency;
+  if (typeof amount !== "number" || !Number.isFinite(amount)) return "—";
+  return `${amount.toFixed(2).replace(".", ",")} ${event.currency ?? ""}`.trim();
+}

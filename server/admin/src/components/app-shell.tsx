@@ -5,12 +5,16 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   FileText,
+  BarChart3,
+  Goal,
   LayoutDashboard,
   Loader2,
   LogOut,
   Menu,
   Moon,
+  Settings,
   ShieldCheck,
+  Shirt,
   Sun,
   Tag,
   UserPlus,
@@ -36,6 +40,9 @@ const NAV: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
       { href: "/coachs/", label: "Coachs", icon: Users },
+      { href: "/equipes/", label: "Équipes", icon: Shirt },
+      { href: "/joueurs/", label: "Joueurs", icon: Goal },
+      { href: "/statistiques/", label: "Statistiques", icon: BarChart3 },
       { href: "/abonnements/", label: "Abonnements", icon: Wallet },
       { href: "/offres/", label: "Codes promo", icon: Tag },
     ],
@@ -46,6 +53,7 @@ const NAV: { title: string; items: NavItem[] }[] = [
       { href: "/creer-coach/", label: "Créer un coach", icon: UserPlus },
       { href: "/administrateurs/", label: "Administrateurs", icon: ShieldCheck },
       { href: "/audit/", label: "Journal d'audit", icon: FileText },
+      { href: "/configuration/", label: "Configuration", icon: Settings },
     ],
   },
 ];

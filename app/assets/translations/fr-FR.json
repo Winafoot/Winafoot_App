@@ -335,7 +335,8 @@
         },
         "share": {
           "title": "Partager l'app",
-          "subtitle": "Soutenez-nous en partageant l'app"
+          "subtitle": "Soutenez-nous en partageant l'app",
+          "message": "Je gère mon équipe de foot avec Wina, l'app pour suivre ses matchs et ses stats en direct. Découvre-la ici : {}"
         },
         "link": {
           "privacy-policy": "Politique de confidentialité",
@@ -531,7 +532,7 @@
       "short-yearly": "Annuel",
       "short-monthly": "Mensuel",
       "see-offer": "Voir l'offre",
-      "per-year": "/ an",
+      "per-year": "/ an TTC",
       "per-month-equiv": "soit {} par mois",
       "yearly-1": "Un seul paiement, toute la saison couverte",
       "yearly-2": "Prix garanti pendant 12 mois",
@@ -540,7 +541,7 @@
       "subscribe-year": "S'abonner à l'année",
       "monthly-title": "Paiement mensuel",
       "no-commitment": "Sans engagement",
-      "per-month": "/ mois",
+      "per-month": "/ mois TTC",
       "for-one-team": "pour 1 équipe",
       "per-team": "soit {} par équipe",
       "monthly-1": "Petit montant chaque mois",
@@ -558,6 +559,13 @@
       "legal": "Abonnement à renouvellement automatique. Le montant de la formule choisie est prélevé sur votre compte App Store ou Google Play à chaque période, sauf résiliation au moins 24 h avant la fin de la période en cours. Gérez ou résiliez votre abonnement dans les réglages de votre compte.",
       "restore": "Restaurer mes achats",
       "redeem-code": "J'ai un code promo",
+      "promo-title": "Code promo",
+      "promo-hint": "Saisissez votre code",
+      "promo-apply": "Appliquer",
+      "promo-cancel": "Annuler",
+      "promo-store": "J'ai un code du Play Store",
+      "promo-applied": "Code appliqué : {}",
+      "promo-remove": "Retirer",
       "terms": "Conditions générales d'utilisation",
       "privacy": "Politique de confidentialité",
       "unavailable": "Achats indisponibles pour le moment.",

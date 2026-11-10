@@ -67,6 +67,7 @@ class FallbackBillingService implements BillingService {
     String productId, {
     String? replacingProductId,
     bool deferred = false,
+    String? promoTag,
   }) =>
       _usingFallback
           ? fallback.purchase(
@@ -78,6 +79,7 @@ class FallbackBillingService implements BillingService {
             productId,
             replacingProductId: replacingProductId,
             deferred: deferred,
+            promoTag: promoTag,
           );
 
   /// Rien à restaurer en mode simulé : l'abonnement de test vit déjà sur la fiche du compte.

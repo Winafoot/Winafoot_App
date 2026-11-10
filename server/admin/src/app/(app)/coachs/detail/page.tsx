@@ -7,6 +7,7 @@ import { ArrowLeft, Ban, CheckCircle2, Gift, Mail, Trash2, XCircle } from "lucid
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { CoachDataTabs } from "@/components/coach-data-tabs";
+import { CoachNoteCard } from "@/components/coach-note-card";
 import { GrantSubscriptionDialog } from "@/components/grant-subscription-dialog";
 import { LinkedTeamsCard } from "@/components/linked-teams-card";
 import { CoachStatusBadge, SubscriptionBadge } from "@/components/coach-badges";
@@ -166,6 +167,8 @@ function CoachDetail({ uid }: { uid: string }) {
       </div>
 
       <LinkedTeamsCard owner={coach} />
+
+      <CoachNoteCard uid={uid} />
 
       <CoachDataTabs uid={uid} />
 

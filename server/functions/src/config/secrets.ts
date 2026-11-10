@@ -11,6 +11,7 @@ import { defineSecret, SecretParam } from "firebase-functions/params";
  *   ALGOLIA_SEARCH_KEY   clé parente des clés de recherche temporaires (getSearchKey)
  *   REVENUECAT_WEBHOOK_SECRET  jeton d'autorisation du webhook RevenueCat (revenuecatWebhook)
  *   APPSTORE_KEY_ID, APPSTORE_ISSUER_ID, APPSTORE_PRIVATE_KEY  clé API App Store Connect (codes d'offre Apple du back-office)
+ *   GOOGLEPLAY_SERVICE_ACCOUNT  fichier JSON du compte de service Google Play (liste des tags d'offre du back-office)
  */
 export const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 export const ALGOLIA_WRITE_KEY = defineSecret("ALGOLIA_WRITE_KEY");
@@ -19,6 +20,7 @@ export const REVENUECAT_WEBHOOK_SECRET = defineSecret("REVENUECAT_WEBHOOK_SECRET
 export const APPSTORE_KEY_ID = defineSecret("APPSTORE_KEY_ID");
 export const APPSTORE_ISSUER_ID = defineSecret("APPSTORE_ISSUER_ID");
 export const APPSTORE_PRIVATE_KEY = defineSecret("APPSTORE_PRIVATE_KEY");
+export const GOOGLEPLAY_SERVICE_ACCOUNT = defineSecret("GOOGLEPLAY_SERVICE_ACCOUNT");
 
 export const MAILER_SECRET_PARAMS: SecretParam[] = [RESEND_API_KEY];
 
@@ -29,6 +31,8 @@ export const ALGOLIA_SEARCH_SECRET_PARAMS: SecretParam[] = [ALGOLIA_SEARCH_KEY];
 export const REVENUECAT_SECRET_PARAMS: SecretParam[] = [REVENUECAT_WEBHOOK_SECRET];
 
 export const APPSTORE_SECRET_PARAMS: SecretParam[] = [APPSTORE_KEY_ID, APPSTORE_ISSUER_ID, APPSTORE_PRIVATE_KEY];
+
+export const GOOGLEPLAY_SECRET_PARAMS: SecretParam[] = [GOOGLEPLAY_SERVICE_ACCOUNT];
 
 /** Valeur du secret sans espaces autour, ou `undefined` s'il est absent ou vide (secret non déclaré par la fonction). */
 export function readSecret(secret: SecretParam): string | undefined {

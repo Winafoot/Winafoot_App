@@ -102,6 +102,9 @@ export default async (data: DeleteCoachData, caller: AdminCaller): Promise<Delet
     );
   }
 
+  // Note interne : au mieux, son échec ne doit pas faire croire que les données du compte sont restées.
+  await firestore().collection("admin_notes").doc(data.uid).delete().catch(() => undefined);
+
   try {
     await firestore().recursiveDelete(ref);
   } catch (e: any) {

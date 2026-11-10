@@ -2,7 +2,7 @@ import { onCall } from "firebase-functions/v2/https";
 import { ALGOLIA_ENABLED } from "../config/algolia";
 import { APP_CHECK } from "../config/app_check";
 import { ADMIN_MAX_INSTANCES, LIMITS, PUBLIC_MAX_INSTANCES } from "../config/rate_limits";
-import { ALGOLIA_SEARCH_SECRET_PARAMS, APPSTORE_SECRET_PARAMS, MAILER_SECRET_PARAMS } from "../config/secrets";
+import { ALGOLIA_SEARCH_SECRET_PARAMS, APPSTORE_SECRET_PARAMS, GOOGLEPLAY_SECRET_PARAMS, MAILER_SECRET_PARAMS } from "../config/secrets";
 import { callableAdapter } from "../runtime/v2";
 import { limitedAuthedCallableAdapter, limitedPublicCallableAdapter } from "../runtime/v2_limited";
 import { adminCallableAdapter } from "../runtime/v2_admin";
@@ -114,6 +114,13 @@ export const grantTestSubscription = onCall(
   limitedAuthedCallableAdapter("callables/billing/grant_test_subscription", { scope: "grant-test-subscription", perUid: LIMITS.grantTestSubscriptionUid }),
 );
 
+// Authentifié : valide un code promo Google Play (collection promo_codes, fermée aux clients) et renvoie le tag de
+// l'offre à acheter. Réservé au compte principal sans abonnement ; l'usage est compté par le webhook RevenueCat.
+export const redeemPromoCode = onCall(
+  PUBLIC,
+  limitedAuthedCallableAdapter("callables/billing/redeem_promo_code", { scope: "redeem-promo-code", perUid: LIMITS.redeemPromoCodeUid }),
+);
+
 /// Recherche Algolia ///
 // Authentifié : la clé sécurisée est restreinte aux enregistrements de l'appelant (uid issu du jeton, payload ignoré).
 // Lie le SEUL secret de recherche (clé parente) ; la clé d'écriture n'est jamais liée ici.
@@ -127,6 +134,7 @@ export const getSearchKey = onCall(
 const ADMIN = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES };
 const ADMIN_MAILER = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: MAILER_SECRET_PARAMS };
 const ADMIN_APPSTORE = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: APPSTORE_SECRET_PARAMS };
+const ADMIN_GOOGLEPLAY = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: GOOGLEPLAY_SECRET_PARAMS };
 // Mot de passe choisi par l'administrateur : createCoach n'envoie aucun e-mail.
 export const createCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/create_coach"));
 export const resendInvite = onCall(ADMIN_MAILER, adminCallableAdapter("callables/admin/resend_invite"));
@@ -150,6 +158,27 @@ export const deleteAdmin = onCall(ADMIN, adminCallableAdapter("callables/admin/d
 export const getAdminStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_admin_stats"));
 export const getCoachData = onCall(ADMIN, adminCallableAdapter("callables/admin/get_coach_data"));
 export const listReports = onCall(ADMIN, adminCallableAdapter("callables/admin/list_reports"));
+// Vue « Équipes » et « Statistiques » : activité par compte (comptages), bilan d'une équipe (journalisé) et activité hebdomadaire.
+export const getTeamActivity = onCall(ADMIN, adminCallableAdapter("callables/admin/get_team_activity"));
+export const getTeamStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_team_stats"));
+export const getUsageStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_usage_stats"));
+// Équipe liée dont le compte principal a disparu : refusée si le propriétaire existe encore, sinon supprimée comme un coach.
+export const deleteOrphanTeam = onCall(ADMIN, adminCallableAdapter("callables/admin/delete_orphan_team"));
+// Notes internes sur un coach (collection admin_notes, fermée aux clients) et niveau des clients par catégorie (agrégats anonymes).
+export const getCoachNote = onCall(ADMIN, adminCallableAdapter("callables/admin/get_coach_note"));
+export const setCoachNote = onCall(ADMIN, adminCallableAdapter("callables/admin/set_coach_note"));
+export const getPlayerBenchmarks = onCall(ADMIN, adminCallableAdapter("callables/admin/get_player_benchmarks"));
+// Vue « Joueurs » : tous les joueurs avec leurs totaux (bornée et journalisée).
+export const getAllPlayers = onCall(ADMIN, adminCallableAdapter("callables/admin/get_all_players"));
+// Modification de la configuration de l'app (champs de la liste blanche de _app_config.ts), journalisée.
+export const updateAppConfig = onCall(ADMIN, adminCallableAdapter("callables/admin/update_app_config"));
+// Suivi des codes promo : offres, lots de codes et dates limites lus dans App Store Connect (mêmes secrets que la création).
+export const listAppleOffers = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/list_apple_offers"));
+// Codes promo Google Play : créés et suivis ici (l'API Google n'en propose pas), validés par redeemPromoCode.
+export const listPromoCodes = onCall(ADMIN, adminCallableAdapter("callables/admin/list_promo_codes"));
+export const savePromoCode = onCall(ADMIN, adminCallableAdapter("callables/admin/save_promo_code"));
+// Tags des offres d'abonnement lus dans la Play Console (API Google Play Developer, compte de service) : liste déroulante du formulaire.
+export const listGoogleOfferTags = onCall(ADMIN_GOOGLEPLAY, adminCallableAdapter("callables/admin/list_google_offer_tags"));
 
 // Messages aux coachs (notification interne et push) et mots de passe des comptes d'équipe liés, à la demande du propriétaire.
 export const sendAdminNotification = onCall(ADMIN, adminCallableAdapter("callables/admin/send_notification"));

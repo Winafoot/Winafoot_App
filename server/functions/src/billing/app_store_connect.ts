@@ -175,6 +175,47 @@ export async function subscriptionPrice(subscriptionId: string, territory: strin
   );
 }
 
+export interface AppleOffer {
+  id: string;
+  name: string;
+  /** App · groupe · abonnement, pour s'y retrouver. */
+  subscription: string;
+  /** « PAY_AS_YOU_GO », « FREE_TRIAL » ou « PAY_UP_FRONT ». */
+  mode: string;
+  duration: string;
+  periods: number;
+  active: boolean;
+  /** Lots de codes à usage unique. */
+  batches: { id: string; codes: number; expirationDate: string | null; active: boolean }[];
+  /** Codes personnalisés (ex. WINA10). */
+  customCodes: { id: string; code: string; uses: number; expirationDate: string | null; active: boolean }[];
+}
+
+/** Offres à code de tous les abonnements du compte, avec leurs lots de codes et codes personnalisés. */
+export async function listOffers(): Promise<AppleOffer[]> {
+  const out: AppleOffer[] = [];
+  for (const sub of await listSubscriptions()) {
+    for (const offer of (await listAll(`/v1/subscriptions/${sub.id}/offerCodes?limit=200`)).data) {
+      const [batches, customs] = await Promise.all([
+        listAll(`/v1/subscriptionOfferCodes/${offer.id}/oneTimeUseCodes?limit=200`),
+        listAll(`/v1/subscriptionOfferCodes/${offer.id}/customCodes?limit=200`),
+      ]);
+      out.push({
+        id: offer.id,
+        name: offer.attributes?.name ?? offer.id,
+        subscription: `${sub.appName} · ${sub.groupName} · ${sub.name}`,
+        mode: offer.attributes?.offerMode ?? "",
+        duration: offer.attributes?.duration ?? "",
+        periods: Number(offer.attributes?.numberOfPeriods ?? 0),
+        active: offer.attributes?.active === true,
+        batches: batches.data.map((b) => ({ id: b.id, codes: Number(b.attributes?.numberOfCodes ?? 0), expirationDate: b.attributes?.expirationDate ?? null, active: b.attributes?.active === true })),
+        customCodes: customs.data.map((c) => ({ id: c.id, code: c.attributes?.customCode ?? "", uses: Number(c.attributes?.numberOfCodes ?? 0), expirationDate: c.attributes?.expirationDate ?? null, active: c.attributes?.active === true })),
+      });
+    }
+  }
+  return out;
+}
+
 export interface CreateOfferInput {
   subscriptionId: string;
   name: string;
