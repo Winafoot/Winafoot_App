@@ -8,7 +8,9 @@ export const createCoach = call<
   { email: string; password: string; firstname?: string; teamFormat: number; teamName?: string; category?: string; division?: string; subscription?: { teams: number; days: number } },
   { uid: string }
 >("createCoach");
-export const resendInvite = call<{ uid: string }, { sent: true }>("resendInvite");
+/** uid → date ISO de la dernière connexion (Firebase Auth) ; null : jamais connecté. */
+export const listLastSignIns = call<Record<string, never>, { lastSignIns: Record<string, string | null> }>("listLastSignIns");
+export const resendInvite =call<{ uid: string }, { sent: true }>("resendInvite");
 export const setCoachDisabled = call<{ uid: string; disabled: boolean }, { disabled: boolean }>("setCoachDisabled");
 export const deleteCoach = call<{ uid: string }, { deleted: true }>("deleteCoach");
 /** Supprime une équipe liée dont le compte principal n'existe plus ; le serveur refuse toute autre équipe. */

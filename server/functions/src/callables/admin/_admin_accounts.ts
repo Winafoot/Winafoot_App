@@ -48,7 +48,7 @@ export function isAdminRecord(record: UserRecord): boolean {
   return record.customClaims?.admin === true;
 }
 
-function isoOrNull(value: string | undefined): string | null {
+export function isoOrNull(value: string | undefined): string | null {
   if (value == null) {
     return null;
   }

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trash2, UserPlus } from "lucide-react";
@@ -11,9 +11,10 @@ import { Alert } from "@/components/ui/alert";
 import { CoachStatusBadge, SubscriptionBadge } from "@/components/coach-badges";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { listLastSignIns } from "@/lib/callables";
 import { useCoaches, type Coach } from "@/lib/data";
 import { TEAM_CATEGORIES, TEAM_FORMATS } from "@/lib/team-options";
-import { formatDate, toDate } from "@/lib/utils";
+import { formatDate, formatDateTime, toDate } from "@/lib/utils";
 
 type StatusFilter = "all" | "active" | "disabled" | "incomplete";
 
@@ -21,6 +22,17 @@ export default function CoachesPage() {
   const router = useRouter();
   const { data, loading, error } = useCoaches();
   const [status, setStatus] = useState<StatusFilter>("all");
+  // Dernière connexion (Firebase Auth) : chargée à part ; la colonne reste vide tant qu'elle n'est pas arrivée ou en cas d'échec.
+  const [lastSignIns, setLastSignIns] = useState<Record<string, string | null> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    listLastSignIns({})
+      .then((r) => !cancelled && setLastSignIns(r.lastSignIns))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [selected, setSelected] = useState<Coach[]>([]);
   const [deleting, setDeleting] = useState(false);
   // Changer la clé remonte le tableau : la sélection repart de zéro (changement de filtre, fin d'une suppression).
@@ -80,8 +92,18 @@ export default function CoachesPage() {
         accessorFn: (c) => toDate(c.createdAt)?.getTime() ?? 0,
         cell: ({ row }) => formatDate(row.original.createdAt),
       },
+      {
+        id: "lastSignIn",
+        header: "Dernière connexion",
+        accessorFn: (c) => toDate(lastSignIns?.[c.id])?.getTime() ?? 0,
+        cell: ({ row }) => {
+          if (lastSignIns == null) return "…";
+          const at = lastSignIns[row.original.id];
+          return at ? formatDateTime(at) : "Jamais";
+        },
+      },
     ],
-    [],
+    [lastSignIns],
   );
 
   return (

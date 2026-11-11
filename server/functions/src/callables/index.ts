@@ -140,6 +140,8 @@ export const createCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/c
 export const resendInvite = onCall(ADMIN_MAILER, adminCallableAdapter("callables/admin/resend_invite"));
 export const setCoachDisabled = onCall(ADMIN, adminCallableAdapter("callables/admin/set_coach_disabled"));
 export const deleteCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/delete_coach"));
+// Colonne « Dernière connexion » de la vue « Coachs » : lue dans Firebase Auth, lecture seule.
+export const listLastSignIns = onCall(ADMIN, adminCallableAdapter("callables/admin/list_last_sign_ins"));
 // Abonnement offert (comptes de test) : attribué ou retiré à la main, sans passer par les stores.
 export const setCoachSubscription = onCall(ADMIN, adminCallableAdapter("callables/admin/set_coach_subscription"));
 // Codes d'offre Apple (réduction sur le premier mois) créés et relus via l'API App Store Connect.
