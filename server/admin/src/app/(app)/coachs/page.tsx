@@ -24,11 +24,15 @@ export default function CoachesPage() {
   const [status, setStatus] = useState<StatusFilter>("all");
   // Dernière connexion (Firebase Auth) : chargée à part ; la colonne reste vide tant qu'elle n'est pas arrivée ou en cas d'échec.
   const [lastSignIns, setLastSignIns] = useState<Record<string, string | null> | null>(null);
+  const [lastSignInsFailed, setLastSignInsFailed] = useState(false);
   useEffect(() => {
     let cancelled = false;
     listLastSignIns({})
       .then((r) => !cancelled && setLastSignIns(r.lastSignIns))
-      .catch(() => undefined);
+      .catch((e) => {
+        console.error("listLastSignIns", e);
+        if (!cancelled) setLastSignInsFailed(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -97,13 +101,13 @@ export default function CoachesPage() {
         header: "Dernière connexion",
         accessorFn: (c) => toDate(lastSignIns?.[c.id])?.getTime() ?? 0,
         cell: ({ row }) => {
-          if (lastSignIns == null) return "…";
+          if (lastSignIns == null) return lastSignInsFailed ? "—" : "…";
           const at = lastSignIns[row.original.id];
           return at ? formatDateTime(at) : "Jamais";
         },
       },
     ],
-    [lastSignIns],
+    [lastSignIns, lastSignInsFailed],
   );
 
   return (

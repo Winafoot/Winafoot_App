@@ -11,7 +11,7 @@ import { StatCard } from "@/components/stat-card";
 import { Alert } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SUBSCRIPTION_LABELS, useCoaches, type Coach, type SubscriptionStatus } from "@/lib/data";
-import { KIND_LABELS, subscriptionKind, type SubscriptionKind } from "@/lib/revenue";
+import { KIND_LABELS, PLAN_PRICES, subscriptionKind, type SubscriptionKind } from "@/lib/revenue";
 import { formatDate, toDate } from "@/lib/utils";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -79,7 +79,18 @@ export default function SubscriptionsPage() {
         cell: ({ row }) => {
           const s = row.original.subscription;
           if (!s?.teamsAllowed) return row.original.manualGrant ? "Accès manuel" : "—";
-          return `${s.teamsAllowed} équipe${s.teamsAllowed > 1 ? "s" : ""} · ${s.period === "monthly" ? "mensuel" : "annuel"}`;
+          const plan = PLAN_PRICES[s.teamsAllowed];
+          const monthly = s.period === "monthly";
+          const price = plan ? `${(monthly ? plan.monthly : plan.yearly).toFixed(2).replace(".", ",")} €/${monthly ? "mois" : "an"}` : null;
+          return (
+            <div className="min-w-0">
+              <p className="truncate">
+                {plan?.name ?? `${s.teamsAllowed} équipe${s.teamsAllowed > 1 ? "s" : ""}`} · {monthly ? "mensuel" : "annuel"}
+                {price && <span className="text-muted-foreground"> · {price}</span>}
+              </p>
+              {s.productId && <p className="truncate font-mono text-xs text-muted-foreground">{s.productId}</p>}
+            </div>
+          );
         },
       },
       {
