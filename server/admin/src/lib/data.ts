@@ -71,6 +71,27 @@ function useLiveCollection<T extends { id: string }>(path: string, constraints: 
   return state;
 }
 
+/**
+ * Statut d'abonnement tenant compte de l'échéance. Le statut stocké ne change qu'à la réception d'un événement
+ * RevenueCat : sans l'événement EXPIRATION (retard, perte), un essai ou un abonnement échu resterait « actif »
+ * à l'écran alors que les règles Firestore lui refusent déjà l'accès.
+ */
+export function effectiveSubscriptionStatus(coach: Coach, nowMs = Date.now()): SubscriptionStatus | undefined {
+  const sub = coach.subscription;
+  const status = sub?.status;
+  if (status === "trial" || status === "active" || status === "grace") {
+    const end = sub?.expiresAt?.toMillis?.();
+    if (end != null && end <= nowMs) return "expired";
+  }
+  return status;
+}
+
+/** Accès en cours : l'indicateur stocké ET une échéance non dépassée (même contrôle que les règles Firestore). */
+export function hasLiveAccess(coach: Coach, nowMs = Date.now()): boolean {
+  const until = coach.access?.until?.toMillis?.();
+  return coach.access?.active === true && until != null && until > nowMs;
+}
+
 /** Tous les comptes (coachs et comptes d'équipe liés). */
 export function useUsers(): AsyncState<Coach[]> {
   return useLiveCollection<Coach>("users", []);

@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { deleteCoach, errorMessage, resendInvite, setCoachDisabled, setCoachSubscription } from "@/lib/callables";
-import type { Coach } from "@/lib/data";
+import { hasLiveAccess, type Coach } from "@/lib/data";
 import { db } from "@/lib/firebase";
 import { TEAM_CATEGORIES, TEAM_DIVISIONS } from "@/lib/team-options";
 import { formatDate, formatDateTime } from "@/lib/utils";
@@ -64,7 +64,7 @@ function CoachDetail({ uid }: { uid: string }) {
   const label = coach.teamName ?? coach.email ?? coach.id;
   const sub = coach.subscription;
   // Un abonnement acheté sur un store ne se gère pas d'ici : le serveur refuse, on évite de proposer le bouton.
-  const storeSubscription = sub != null && coach.testGrant !== true && coach.access?.active === true;
+  const storeSubscription = sub != null && coach.testGrant !== true && hasLiveAccess(coach);
 
   const resend = async () => {
     setBusy(true);
@@ -141,7 +141,7 @@ function CoachDetail({ uid }: { uid: string }) {
                 </Field>
                 <Field label="Fin d'essai">{formatDate(sub.trialEnd)}</Field>
                 <Field label="Expire le">{formatDate(sub.expiresAt)}</Field>
-                <Field label="Accès">{coach.access ? (coach.access.active ? `Actif jusqu'au ${formatDate(coach.access.until)}` : "Inactif") : null}</Field>
+                <Field label="Accès">{coach.access ? (hasLiveAccess(coach) ? `Actif jusqu'au ${formatDate(coach.access.until)}` : "Inactif") : null}</Field>
                 <Field label="Produit">{sub.productId}</Field>
               </dl>
             ) : (

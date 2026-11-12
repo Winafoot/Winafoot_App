@@ -10,7 +10,7 @@ import { RevenueSection } from "@/components/revenue-section";
 import { StatCard } from "@/components/stat-card";
 import { Alert } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SUBSCRIPTION_LABELS, useCoaches, type Coach, type SubscriptionStatus } from "@/lib/data";
+import { effectiveSubscriptionStatus, SUBSCRIPTION_LABELS, useCoaches, type Coach, type SubscriptionStatus } from "@/lib/data";
 import { KIND_LABELS, PLAN_PRICES, subscriptionKind, type SubscriptionKind } from "@/lib/revenue";
 import { formatDate, toDate } from "@/lib/utils";
 
@@ -27,15 +27,15 @@ export default function SubscriptionsPage() {
     const now = Date.now();
     const real = data.filter((c) => subscriptionKind(c) === "real");
     return {
-      active: real.filter((c) => c.subscription?.status === "active").length,
-      trial: real.filter((c) => c.subscription?.status === "trial").length,
-      grace: real.filter((c) => c.subscription?.status === "grace").length,
+      active: real.filter((c) => effectiveSubscriptionStatus(c, now) === "active").length,
+      trial: real.filter((c) => effectiveSubscriptionStatus(c, now) === "trial").length,
+      grace: real.filter((c) => effectiveSubscriptionStatus(c, now) === "grace").length,
       manual: data.filter((c) => c.testGrant === true || (c.manualGrant === true && c.subscription == null)).length,
       sandbox: data.filter((c) => c.subscription != null && subscriptionKind(c) === "sandbox").length,
       // Abonnements (essai ou payant) qui prennent fin dans les 14 jours : à surveiller avant qu'ils ne tombent.
       endingSoon: real.filter((c) => {
         const end = toDate(c.subscription?.expiresAt)?.getTime();
-        const s = c.subscription?.status;
+        const s = effectiveSubscriptionStatus(c, now);
         return end != null && (s === "active" || s === "trial") && end > now && end - now < 14 * DAY;
       }).length,
     };
@@ -47,7 +47,7 @@ export default function SubscriptionsPage() {
         if (kind !== "all" && c.subscription != null && subscriptionKind(c) !== kind) return false;
         if (status === "all") return true;
         if (status === "none") return c.subscription == null;
-        return c.subscription?.status === status;
+        return effectiveSubscriptionStatus(c) === status;
       }),
     [data, status, kind],
   );
@@ -71,7 +71,7 @@ export default function SubscriptionsPage() {
           </div>
         ),
       },
-      { id: "status", header: "Statut", accessorFn: (c) => c.subscription?.status ?? "", cell: ({ row }) => <SubscriptionBadge coach={row.original} /> },
+      { id: "status", header: "Statut", accessorFn: (c) => effectiveSubscriptionStatus(c) ?? "", cell: ({ row }) => <SubscriptionBadge coach={row.original} /> },
       {
         id: "plan",
         header: "Formule",
