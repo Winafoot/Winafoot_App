@@ -13,6 +13,7 @@ import 'package:wina/config/legal_links.dart';
 import 'package:wina/billing/billing_service.dart';
 import 'package:wina/billing/offers.dart';
 import 'package:wina/billing/plan.dart';
+import 'package:wina/billing/store_links.dart';
 import 'package:wina/config/orientation_controller.dart';
 import 'package:wina/data/promo_code_repository.dart';
 import 'package:wina/config/theme.dart';
@@ -1267,7 +1268,12 @@ class _Footer extends StatelessWidget {
             alignment: WrapAlignment.center,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: <Widget>[
-              Text('app.subscription.payment-line'.tr(), style: line),
+              Text(
+                'app.subscription.payment-line'.tr(
+                  args: <String>[paymentStoreName()],
+                ),
+                style: line,
+              ),
               Text(' · ', style: line),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -1284,7 +1290,7 @@ class _Footer extends StatelessWidget {
           ),
           sh(6),
           Text(
-            'app.subscription.legal'.tr(),
+            'app.subscription.legal'.tr(args: <String>[billingAccountName()]),
             textAlign: TextAlign.center,
             style: AppThemeStyle.regularStyle(11, AppColor.secondaryLabels),
           ),
@@ -1559,7 +1565,7 @@ class _PromoCodeDialogState extends State<_PromoCodeDialog> {
                 _loading
                     ? null
                     : () => launchUrl(
-                      Uri.parse('https://play.google.com/redeem'),
+                      redeemCodeUri(),
                       mode: LaunchMode.externalApplication,
                     ),
             child: Text(

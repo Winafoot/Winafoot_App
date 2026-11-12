@@ -61,14 +61,13 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart' show MaterialPageRoute;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:skeleton/skeleton.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wina/billing/access_info.dart';
+import 'package:wina/billing/store_links.dart';
 import 'package:wina/config/legal_links.dart';
 import 'package:wina/providers/billing_providers.dart';
 import 'package:wina/view/page/abonnement_screen.dart';
@@ -430,11 +429,7 @@ KosmosSettingsConfig initKosmosSettingsConfig() {
                 CelluleModel(
                   tag: "manage-subscription",
                   onTap: (context, __) async {
-                    final String url =
-                        defaultTargetPlatform == TargetPlatform.iOS
-                            ? "https://apps.apple.com/account/subscriptions"
-                            : "https://play.google.com/store/account/subscriptions";
-                    await _launchOrNotify(context, Uri.parse(url));
+                    await _launchOrNotify(context, manageSubscriptionUri());
                     return null;
                   },
                   tileBuilder:

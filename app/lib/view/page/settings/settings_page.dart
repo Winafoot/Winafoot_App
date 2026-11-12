@@ -4,6 +4,7 @@ import 'package:kosmos_auth/kosmos_auth.dart' show KosmosAuth;
 import 'package:wina/billing/access_info.dart';
 import 'package:wina/billing/billing_service.dart'
     show BillingException, BillingUnavailable;
+import 'package:wina/billing/store_links.dart';
 import 'package:wina/config/legal_links.dart';
 import 'package:wina/config/skeleton_config.dart' show kCloudRegion;
 import 'package:wina/config/theme.dart';
@@ -275,12 +276,7 @@ class SettingsWebPage extends ConsumerWidget {
                                         .tr(),
                                 onTap:
                                     () => launchUrl(
-                                      Uri.parse(
-                                        defaultTargetPlatform ==
-                                                TargetPlatform.iOS
-                                            ? 'https://apps.apple.com/account/subscriptions'
-                                            : 'https://play.google.com/store/account/subscriptions',
-                                      ),
+                                      manageSubscriptionUri(),
                                       mode: LaunchMode.externalApplication,
                                     ),
                                 children: [],
@@ -924,7 +920,7 @@ Future<void> _redeemCode(BuildContext context, WidgetRef ref) async {
       await ref.read(billingServiceProvider).presentCodeRedemption();
     } else {
       await launchUrl(
-        Uri.parse('https://play.google.com/redeem'),
+        redeemCodeUri(),
         mode: LaunchMode.externalApplication,
       );
     }
