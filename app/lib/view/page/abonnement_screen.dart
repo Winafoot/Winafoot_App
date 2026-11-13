@@ -36,7 +36,12 @@ class AbonnementScreen extends ConsumerStatefulWidget {
     super.key,
     this.changePlan = false,
     this.asGate = false,
+    this.promoOnOpen = false,
   });
+
+  /// Ouvre tout de suite la saisie du code promo (Android : entrée « J'ai un code promo » des réglages, qui
+  /// ne doit pas envoyer chez le store : seul le code saisi ici est validé par le serveur et débloque l'offre).
+  final bool promoOnOpen;
 
   /// Changement de formule depuis les réglages (abonnement déjà actif) : l'écran est refermable.
   final bool changePlan;
@@ -61,6 +66,11 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
     super.initState();
     if (widget.changePlan) {
       _teams = ref.read(accessInfoProvider).valueOrNull?.teamsAllowed ?? 1;
+    }
+    if (widget.promoOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _redeemCode();
+      });
     }
   }
 

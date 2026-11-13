@@ -919,9 +919,12 @@ Future<void> _redeemCode(BuildContext context, WidgetRef ref) async {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       await ref.read(billingServiceProvider).presentCodeRedemption();
     } else {
-      await launchUrl(
-        redeemCodeUri(),
-        mode: LaunchMode.externalApplication,
+      // Android : la saisie du code se fait dans l'app (validé par le serveur). Envoyer chez le store
+      // n'accepterait que les codes générés par Google, pas ceux créés dans le back-office.
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const AbonnementScreen(promoOnOpen: true),
+        ),
       );
     }
   } on BillingException catch (e) {
