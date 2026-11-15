@@ -99,6 +99,16 @@ class RevenueCatBillingService implements BillingService {
       final StoreProduct product = p.storeProduct;
       final PlanProduct? plan = PlanProduct.parse(product.identifier);
       if (plan == null) continue;
+      // Android : prix de la phase d'introduction de chaque offre à tag (codes promo). Absent sur iOS.
+      final Map<String, String> promoPrices = <String, String>{};
+      for (final SubscriptionOption o
+          in product.subscriptionOptions ?? const <SubscriptionOption>[]) {
+        final PricingPhase? phase = o.introPhase;
+        if (phase == null) continue;
+        for (final String tag in o.tags) {
+          promoPrices[tag] = phase.price.formatted;
+        }
+      }
       out.add(
         PlanOffer(
           productId: product.identifier,
@@ -107,6 +117,7 @@ class RevenueCatBillingService implements BillingService {
           price: product.price,
           currencyCode: product.currencyCode,
           priceString: product.priceString,
+          promoPrices: promoPrices,
         ),
       );
     }

@@ -10,6 +10,8 @@ class PlanOffer {
     required this.price,
     required this.currencyCode,
     required this.priceString,
+    this.promoPrices = const <String, String>{},
+    this.regularPriceString,
   });
 
   final String productId;
@@ -20,6 +22,30 @@ class PlanOffer {
 
   /// Prix tel que le store l'affiche (devise et séparateurs de l'utilisateur).
   final String priceString;
+
+  /// Android : tag d'offre (posé dans la Play Console) -> prix de la phase d'introduction de cette offre,
+  /// tel que le store l'affiche. Sert à montrer le prix remisé une fois un code promo validé.
+  final Map<String, String> promoPrices;
+
+  /// Renseigné quand [priceString] est le prix remisé d'un code promo : le prix normal, affiché « au lieu de ».
+  final String? regularPriceString;
+
+  /// Cette offre avec, pour prix affiché, celui de l'offre portant [tag] ; inchangée si le tag n'a pas de prix.
+  /// Seul l'affichage change : l'achat reste fait sur l'offre du tag (voir `BillingService.purchase`).
+  PlanOffer withPromo(String? tag) {
+    final String? promo = tag == null ? null : promoPrices[tag];
+    if (promo == null) return this;
+    return PlanOffer(
+      productId: productId,
+      teams: teams,
+      period: period,
+      price: price,
+      currencyCode: currencyCode,
+      priceString: promo,
+      promoPrices: promoPrices,
+      regularPriceString: priceString,
+    );
+  }
 }
 
 /// Les deux périodes d'une formule à N équipes.

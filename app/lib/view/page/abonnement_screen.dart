@@ -309,12 +309,15 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
                               if (_promo != null)
                                 _PromoBanner(
                                   label: _promo!.label,
+                                  detail: _promoDetail(
+                                    _withPromo(offers.valueOrNull?[_teams]),
+                                  ),
                                   onRemove: () => setState(() => _promo = null),
                                 ),
                               offers.when(
                                 data:
                                     (Map<int, TeamsOffer> byTeams) =>
-                                        _buildCards(byTeams[_teams]),
+                                        _buildCards(_withPromo(byTeams[_teams])),
                                 loading:
                                     () => Padding(
                                       padding: EdgeInsets.symmetric(
@@ -411,6 +414,37 @@ class _AbonnementScreenState extends ConsumerState<AbonnementScreen> {
   void _buyFromSheet(String productId) {
     Navigator.of(context).pop();
     _buy(productId);
+  }
+
+  /// Avec un code promo validé, les cartes affichent le prix de l'offre remisée (quand le store en donne un).
+  TeamsOffer? _withPromo(TeamsOffer? offer) {
+    final String? tag = _promo?.tag;
+    if (offer == null || tag == null) return offer;
+    return TeamsOffer(
+      offer.teams,
+      monthly: offer.monthly?.withPromo(tag),
+      yearly: offer.yearly?.withPromo(tag),
+    );
+  }
+
+  /// « Mensuel : 9,99 € au lieu de 19,99 € · Annuel : … » ; `null` quand aucune carte n'a de prix remisé.
+  String? _promoDetail(TeamsOffer? offer) {
+    if (offer == null) return null;
+    final List<String> parts = <String>[
+      for (final MapEntry<String, PlanOffer?> e in <String, PlanOffer?>{
+        'app.subscription.short-monthly': offer.monthly,
+        'app.subscription.short-yearly': offer.yearly,
+      }.entries)
+        if (e.value?.regularPriceString != null)
+          'app.subscription.promo-instead'.tr(
+            args: <String>[
+              e.key.tr(),
+              e.value!.priceString,
+              e.value!.regularPriceString!,
+            ],
+          ),
+    ];
+    return parts.isEmpty ? null : parts.join(' · ');
   }
 
   Widget _buildCards(TeamsOffer? offer) {
@@ -1611,10 +1645,17 @@ class _PromoCodeDialogState extends State<_PromoCodeDialog> {
 
 /// Rappel du code appliqué, au-dessus des cartes de prix.
 class _PromoBanner extends StatelessWidget {
-  const _PromoBanner({required this.label, required this.onRemove});
+  const _PromoBanner({
+    required this.label,
+    required this.onRemove,
+    this.detail,
+  });
 
   final String label;
   final VoidCallback onRemove;
+
+  /// Prix remisé de la formule choisie, « au lieu de » son prix normal.
+  final String? detail;
 
   @override
   Widget build(BuildContext context) {
@@ -1624,10 +1665,26 @@ class _PromoBanner extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Flexible(
-            child: Text(
-              'app.subscription.promo-applied'.tr(args: <String>[label]),
-              textAlign: TextAlign.center,
-              style: AppThemeStyle.boldStyle(16, AppColor.primaryLabels),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'app.subscription.promo-applied'.tr(args: <String>[label]),
+                  textAlign: TextAlign.center,
+                  style: AppThemeStyle.boldStyle(16, AppColor.primaryLabels),
+                ),
+                if (detail != null) ...<Widget>[
+                  const SizedBox(height: 4),
+                  Text(
+                    detail!,
+                    textAlign: TextAlign.center,
+                    style: AppThemeStyle.regularStyle(
+                      14,
+                      AppColor.secondaryLabels,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           sw(12),

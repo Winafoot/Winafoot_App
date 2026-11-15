@@ -565,6 +565,7 @@
       "promo-cancel": "Annuler",
       "promo-store": "J'ai un code d'essai gratuit",
       "promo-applied": "Code appliqué : {}",
+      "promo-instead": "{} : {} au lieu de {}",
       "promo-remove": "Retirer",
       "terms": "Conditions générales d'utilisation",
       "privacy": "Politique de confidentialité",
