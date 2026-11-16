@@ -167,13 +167,28 @@ class RevenueCatBillingService implements BillingService {
           "Cette offre n'est pas disponible pour cette formule.",
         );
     }
+    // Android sans code promo : on achète EXPLICITEMENT le plan de base. Avec `PurchaseParams.package`, RevenueCat
+    // choisit seul l'essai gratuit / l'offre d'introduction la moins chère, et applique alors à tout le monde
+    // une offre Play (ex. « 1er mois à prix réduit ») sans qu'aucun code n'ait été saisi.
+    SubscriptionOption? basePlanOption;
+    if (promoOption == null && defaultTargetPlatform == TargetPlatform.android) {
+      for (final SubscriptionOption o
+          in package.storeProduct.subscriptionOptions ??
+              const <SubscriptionOption>[]) {
+        if (o.isBasePlan) {
+          basePlanOption = o;
+          break;
+        }
+      }
+    }
+    final SubscriptionOption? chosenOption = promoOption ?? basePlanOption;
     try {
       // Changement de formule : sur Android, remplace l'abonnement en cours (immédiat avec prorata pour une
       // formule supérieure, au renouvellement pour une inférieure). iOS gère le changement dans le groupe.
       await Purchases.purchase(
-        promoOption != null
+        chosenOption != null
             ? PurchaseParams.subscriptionOption(
-              promoOption,
+              chosenOption,
               productChangeInfo: changeInfo,
             )
             : PurchaseParams.package(package, productChangeInfo: changeInfo),
