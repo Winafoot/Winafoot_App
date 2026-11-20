@@ -108,7 +108,7 @@ List<FormationSlot> _line(PlayerPosition role, double y, int n) {
 /// horizontale : le premier chiffre = défenseurs, le dernier = attaquants, et
 /// toutes les lignes intermédiaires = milieux. Les lignes sont réparties du bas
 /// (défense, y 0.72) vers le haut (attaque, y 0.20). Une ligne à 0 joueur (ex.
-/// « 3-4-0 », « 2-0-2 ») est ignorée mais conserve sa place dans l'étagement.
+/// « 3-4-0 ») est ignorée mais conserve sa place dans l'étagement.
 Formation _fromLabel(String label, int playerCount) {
   final List<int> bands = label
       .split('-')
@@ -129,52 +129,160 @@ Formation _fromLabel(String label, int playerCount) {
   return Formation(label: label, playerCount: playerCount, slots: slots);
 }
 
+/// Composition à emplacements explicites, d'après les planches de référence : [players] donne le rôle et la
+/// position en pourcentage du terrain, [x] de la gauche (0) à la droite (100) et [y] mesuré depuis son propre
+/// but (0) vers le but adverse (100). Convertis ici dans le repère de l'app (y 0 = but adverse, en haut).
+Formation _fromPercent(
+  String label,
+  int playerCount,
+  List<(PlayerPosition, double, double)> players,
+) => Formation(
+  label: label,
+  playerCount: playerCount,
+  slots: <FormationSlot>[
+    for (final (PlayerPosition role, double x, double y) in players)
+      FormationSlot(role: role, x: x / 100, y: 1 - y / 100),
+  ],
+);
+
 List<Formation> _build(List<String> labels, int playerCount) => <Formation>[
   for (final String label in labels) _fromLabel(label, playerCount),
 ];
 
-final List<Formation> _formations11 = _build(<String>[
-  '4-4-2',
-  '4-3-3',
-  '4-4-1-1',
-  '4-2-3-1',
-  '3-5-2',
-  '4-5-1',
-  '4-1-4-1',
-  '4-1-2-1-2',
-  '4-2-2-2',
-  '4-3-1-2',
-  '4-1-3-2',
-  '4-3-2-1',
-  '4-2-4',
-  '5-4-1',
-  '5-2-1-2',
-  '5-3-2',
-  '5-2-3',
-  '3-1-4-2',
-  '3-4-1-2',
-  '3-1-5-1',
-  '3-4-2-1',
-  '3-4-3',
-  '3-5-1-1',
-], 11);
+final List<Formation> _formations11 = <Formation>[
+  ..._build(<String>[
+    '4-4-2',
+    '4-3-3',
+    '4-4-1-1',
+    '4-2-3-1',
+    '3-5-2',
+    '4-5-1',
+    '4-1-4-1',
+    '4-1-2-1-2',
+    '4-2-2-2',
+    '4-3-1-2',
+    '4-1-3-2',
+    '4-3-2-1',
+    '4-2-4',
+    '5-4-1',
+    '5-2-1-2',
+    '5-3-2',
+    '5-2-3',
+    '3-1-4-2',
+    '3-4-1-2',
+    '3-1-5-1',
+    '3-4-2-1',
+    '3-4-3',
+    '3-5-1-1',
+  ], 11),
+  // Défense à 5.
+  _fromPercent('5-2-2-1', 11, <(PlayerPosition, double, double)>[
+    (_g, 50, 7), // GB
+    (_d, 9, 24), // DG
+    (_d, 30, 24), // DCG
+    (_d, 50, 24), // DC
+    (_d, 70, 24), // DCD
+    (_d, 91, 24), // DD
+    (_m, 36, 44), // MC
+    (_m, 64, 44), // MC
+    (_a, 13, 63), // AG
+    (_a, 87, 63), // AD
+    (_a, 50, 84), // BU
+  ]),
+  _fromPercent('5-3-1-1', 11, <(PlayerPosition, double, double)>[
+    (_g, 50, 7), // GB
+    (_d, 9, 24), // DG
+    (_d, 30, 24), // DCG
+    (_d, 50, 24), // DC
+    (_d, 70, 24), // DCD
+    (_d, 91, 24), // DD
+    (_m, 24, 46), // MC
+    (_m, 50, 46), // MC
+    (_m, 76, 46), // MC
+    (_m, 50, 64), // MOC
+    (_a, 50, 83), // BU
+  ]),
+  // Défense à 3.
+  _fromPercent('3-2-4-1', 11, <(PlayerPosition, double, double)>[
+    (_g, 50, 7), // GB
+    (_d, 24, 22), // DCG
+    (_d, 50, 22), // DC
+    (_d, 76, 22), // DCD
+    (_m, 36, 42), // MDC
+    (_m, 64, 42), // MDC
+    (_a, 11, 64), // AG
+    (_m, 36, 64), // MOC
+    (_m, 64, 64), // MOC
+    (_a, 89, 64), // AD
+    (_a, 50, 85), // BU
+  ]),
+  _fromPercent('3-1-2-1-3', 11, <(PlayerPosition, double, double)>[
+    (_g, 50, 7), // GB
+    (_d, 24, 22), // DCG
+    (_d, 50, 22), // DC
+    (_d, 76, 22), // DCD
+    (_m, 50, 38), // MDC
+    (_m, 20, 52), // MG
+    (_m, 80, 52), // MD
+    (_m, 50, 65), // MOC
+    (_a, 16, 82), // AG
+    (_a, 50, 82), // BU
+    (_a, 84, 82), // AD
+  ]),
+  _fromPercent('3-3-1-3', 11, <(PlayerPosition, double, double)>[
+    (_g, 50, 7), // GB
+    (_d, 24, 22), // DCG
+    (_d, 50, 22), // DC
+    (_d, 76, 22), // DCD
+    (_m, 13, 44), // MG
+    (_m, 50, 44), // MDC
+    (_m, 87, 44), // MD
+    (_m, 50, 62), // MOC
+    (_a, 16, 82), // AG
+    (_a, 50, 82), // BU
+    (_a, 84, 82), // AD
+  ]),
+  _fromPercent('3-2-2-3', 11, <(PlayerPosition, double, double)>[
+    (_g, 50, 7), // GB
+    (_d, 24, 22), // DCG
+    (_d, 50, 22), // DC
+    (_d, 76, 22), // DCD
+    (_m, 36, 40), // MDC
+    (_m, 64, 40), // MDC
+    (_m, 13, 58), // MG
+    (_m, 87, 58), // MD
+    (_a, 16, 82), // AG
+    (_a, 50, 82), // BU
+    (_a, 84, 82), // AD
+  ]),
+];
 
-final List<Formation> _formations8 = _build(<String>[
-  '3-3-1',
-  '3-2-2',
-  '2-3-2',
-  '2-4-1',
-  '3-1-3',
-  '2-2-3',
-  '3-4-0',
-  '4-2-1',
-  '1-4-2',
-  '2-1-4',
-  '3-2-1-1',
-  '2-3-1-1',
-  '2-2-2-2',
-  '2-2-1-2',
-], 8);
+final List<Formation> _formations8 = <Formation>[
+  ..._build(<String>[
+    '3-3-1',
+    '3-2-2',
+    '2-3-2',
+    '2-4-1',
+    '3-1-3',
+    '2-2-3',
+    '3-4-0',
+    '4-2-1',
+    '1-4-2',
+    '3-2-1-1',
+    '2-3-1-1',
+    '2-2-1-2',
+  ], 8),
+  _fromPercent('3-1-2-1', 8, <(PlayerPosition, double, double)>[
+    (_g, 50, 7), // GB
+    (_d, 18, 23), // DG
+    (_d, 50, 23), // DC
+    (_d, 82, 23), // DD
+    (_m, 50, 40), // MDC
+    (_m, 18, 57), // MG
+    (_m, 82, 57), // MD
+    (_a, 50, 78), // BU
+  ]),
+];
 
 final List<Formation> _formations5 = _build(<String>[
   '2-2',
@@ -182,8 +290,6 @@ final List<Formation> _formations5 = _build(<String>[
   '2-1-1',
   '1-3',
   '3-1',
-  '2-0-2',
-  '2-2-0',
   '1-1-2',
 ], 5);
 
