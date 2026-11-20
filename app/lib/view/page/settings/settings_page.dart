@@ -252,21 +252,7 @@ class SettingsWebPage extends ConsumerWidget {
                           SettingsItem(
                             title: 'app.subscription.title'.tr(),
                             children: [
-                              SettingsNode(
-                                title: 'app.settings-extra.change-plan'.tr(),
-                                subtitle:
-                                    'app.settings-extra.change-plan-sub'.tr(),
-                                onTap:
-                                    () => Navigator.of(context).push(
-                                      MaterialPageRoute<void>(
-                                        builder:
-                                            (_) => const AbonnementScreen(
-                                              changePlan: true,
-                                            ),
-                                      ),
-                                    ),
-                                children: [],
-                              ),
+                              // « Changer de formule » est dans le menu « ⋯ » de la carte de profil.
                               SettingsNode(
                                 title:
                                     'app.settings-extra.manage-subscription'
@@ -456,8 +442,8 @@ class SettingsWebPage extends ConsumerWidget {
               ),
             ),
             sh(14),
-            // Déconnexion et suppression du compte visibles d'emblée, en petits
-            // boutons discrets (le menu « ⋯ » reste disponible).
+            // Déconnexion visible d'emblée, en petit bouton discret. La suppression du
+            // compte et le changement de formule sont dans le menu « ⋯ ».
             Wrap(
               alignment: WrapAlignment.center,
               spacing: 10,
@@ -468,12 +454,6 @@ class SettingsWebPage extends ConsumerWidget {
                   label: 'package.skeleton.profile.logout'.tr(),
                   color: AppColor.primaryColor,
                   onTap: () => UserController.logoutUser(context, ref),
-                ),
-                _AccountActionButton(
-                  icon: Iconsax.trash,
-                  label: 'account.delete.action'.tr(),
-                  color: AppColor.destructive,
-                  onTap: () => _confirmAndDeleteAccount(context, ref),
                 ),
               ],
             ),
@@ -486,12 +466,22 @@ class SettingsWebPage extends ConsumerWidget {
             padding: EdgeInsets.zero,
             child: const Icon(Iconsax.more, color: AppColor.primaryColor),
             onPressed: () async {
+              // Changer de formule : seulement pour un compte propriétaire (un compte d'équipe
+              // liée n'a ni abonnement ni équipes à gérer).
+              final AccessInfo? access = ref.read(accessInfoProvider).valueOrNull;
+              final bool canChangePlan = access != null && !access.isLinked;
               final action = await showCupertinoModalPopup<String>(
                 context: context,
                 builder:
                     (context) => CupertinoActionSheet(
                       message: Text('utils.what-do-you-want-to-do'.tr()),
                       actions: [
+                        if (canChangePlan)
+                          CupertinoActionSheetAction(
+                            child: Text('app.settings-extra.change-plan'.tr()),
+                            onPressed:
+                                () => Navigator.of(context).pop('change-plan'),
+                          ),
                         CupertinoActionSheetAction(
                           isDestructiveAction: true,
                           child: Text('package.skeleton.profile.logout'.tr()),
@@ -509,6 +499,13 @@ class SettingsWebPage extends ConsumerWidget {
                       ),
                     ),
               );
+              if (action == 'change-plan' && context.mounted) {
+                await Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AbonnementScreen(changePlan: true),
+                  ),
+                );
+              }
               if (action == 'logout' && context.mounted) {
                 // Logout unifié : passe par le skeleton (nettoie fcmToken +
                 // config locale, invalide userProvider, redirige vers login),
