@@ -176,9 +176,12 @@ export const getAllPlayers = onCall(ADMIN, adminCallableAdapter("callables/admin
 export const updateAppConfig = onCall(ADMIN, adminCallableAdapter("callables/admin/update_app_config"));
 // Suivi des codes promo : offres, lots de codes et dates limites lus dans App Store Connect (mêmes secrets que la création).
 export const listAppleOffers = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/list_apple_offers"));
+// Apple ne supprime pas une offre : elle est désactivée (définitif).
+export const deactivateAppleOffer = onCall(ADMIN_APPSTORE, adminCallableAdapter("callables/admin/deactivate_apple_offer"));
 // Codes promo Google Play : créés et suivis ici (l'API Google n'en propose pas), validés par redeemPromoCode.
 export const listPromoCodes = onCall(ADMIN, adminCallableAdapter("callables/admin/list_promo_codes"));
 export const savePromoCode = onCall(ADMIN, adminCallableAdapter("callables/admin/save_promo_code"));
+export const deletePromoCode = onCall(ADMIN, adminCallableAdapter("callables/admin/delete_promo_code"));
 // Tags des offres d'abonnement lus dans la Play Console (API Google Play Developer, compte de service) : liste déroulante du formulaire.
 export const listGoogleOfferTags = onCall(ADMIN_GOOGLEPLAY, adminCallableAdapter("callables/admin/list_google_offer_tags"));
 

@@ -37,7 +37,8 @@ export default function OffersPage() {
   const [months, setMonths] = useState("1");
   const [expirationDate, setExpirationDate] = useState(nextYear());
   const [customCode, setCustomCode] = useState("");
-  const [numberOfCodes, setNumberOfCodes] = useState("10");
+  // Apple impose 500 à 25 000 codes par lot à usage unique ; pour moins (un seul code, par exemple), saisir un code personnalisé.
+  const [numberOfCodes, setNumberOfCodes] = useState("500");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<AppleOfferResult | null>(null);
   const [codes, setCodes] = useState<string[]>([]);
@@ -221,7 +222,7 @@ export default function OffersPage() {
                 <Input id="offer-custom" value={customCode} onChange={(e) => setCustomCode(e.target.value.toUpperCase())} placeholder="WINA10" disabled={busy} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="offer-count">{customCode ? "Utilisations" : "Nombre de codes"}</Label>
+                <Label htmlFor="offer-count">{customCode ? "Utilisations" : "Nombre de codes (500 à 25 000)"}</Label>
                 <Input id="offer-count" required inputMode="numeric" value={numberOfCodes} onChange={(e) => setNumberOfCodes(e.target.value)} disabled={busy} />
               </div>
             </div>

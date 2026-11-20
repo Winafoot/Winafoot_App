@@ -1,5 +1,5 @@
 import { AdminAuditRepository } from "../../database/admin_audit/admin_audit_repository";
-import { createCustomCode, createOffer, createOneTimeCodes, discountedPrice, listPricePoints, pickPricePoint } from "../../billing/app_store_connect";
+import { createCustomCode, createOffer, createOneTimeCodes, deactivateOffer, discountedPrice, listPricePoints, pickPricePoint } from "../../billing/app_store_connect";
 import { HttpsError, logger } from "../../runtime/firebase";
 import { AdminCaller } from "../../runtime/v2_admin";
 import { describeError } from "../../utils/describe_error";
@@ -21,7 +21,7 @@ export interface CreateAppleOfferCodeData {
   expirationDate: string;
   /** Code personnalisé (ex. WINA10) ; sinon un lot de codes à usage unique. */
   customCode?: string;
-  /** Codes à usage unique à générer (ou utilisations du code personnalisé). 10 par défaut. */
+  /** Codes à usage unique à générer (500 à 25 000, 500 par défaut) ou utilisations du code personnalisé (10 par défaut). */
   numberOfCodes?: number;
 }
 
@@ -34,6 +34,10 @@ export interface CreateAppleOfferCodeResult {
   batchId?: string;
   customCode?: string;
 }
+
+/** Taille d'un lot de codes à usage unique imposée par Apple (aide App Store Connect : 500 à 25 000 ; les essais à 1 et 10 ont été refusés). */
+const ONE_TIME_MIN = 500;
+const ONE_TIME_MAX = 25000;
 
 function required(value: unknown, message: string): string {
   if (typeof value !== "string" || value.trim() === "") throw new HttpsError("invalid-argument", message);
@@ -54,14 +58,19 @@ export default async (data: CreateAppleOfferCodeData, caller: AdminCaller): Prom
   const basePrice = Number(data.basePrice);
   const percentOff = Number(data.percentOff ?? 10);
   const months = Number(data.months ?? 1);
-  const numberOfCodes = Number(data.numberOfCodes ?? 10);
+  const numberOfCodes = Number(data.numberOfCodes ?? (data.customCode?.trim() ? 10 : ONE_TIME_MIN));
   const territory = (data.territory ?? "FRA").trim().toUpperCase();
   const customCode = data.customCode == null || data.customCode.trim() === "" ? undefined : data.customCode.trim().toUpperCase();
   if (!(basePrice > 0)) throw new HttpsError("invalid-argument", "Prix de l'abonnement invalide.");
   if (!(percentOff > 0 && percentOff < 100)) throw new HttpsError("invalid-argument", "La réduction doit être comprise entre 0 et 100 %.");
   if (!Number.isInteger(months)) throw new HttpsError("invalid-argument", "Durée invalide.");
-  if (!Number.isInteger(numberOfCodes) || numberOfCodes < 1 || numberOfCodes > 500) throw new HttpsError("invalid-argument", "Entre 1 et 500 codes.");
   if (customCode != null && !/^[A-Z0-9]{4,20}$/.test(customCode)) throw new HttpsError("invalid-argument", "Code personnalisé : 4 à 20 lettres ou chiffres.");
+  // Vérifié AVANT de créer l'offre : un refus d'Apple sur les codes laisserait une offre vide qui garde son nom.
+  if (customCode != null) {
+    if (!Number.isInteger(numberOfCodes) || numberOfCodes < 1 || numberOfCodes > ONE_TIME_MAX) throw new HttpsError("invalid-argument", `Utilisations du code : entre 1 et ${ONE_TIME_MAX}.`);
+  } else if (!Number.isInteger(numberOfCodes) || numberOfCodes < ONE_TIME_MIN || numberOfCodes > ONE_TIME_MAX) {
+    throw new HttpsError("invalid-argument", `Apple impose entre ${ONE_TIME_MIN} et ${ONE_TIME_MAX} codes par lot à usage unique. Pour un seul code, utilisez un code personnalisé.`);
+  }
 
   const details = `offer=${name}, -${percentOff}% x${months} mois, ${customCode != null ? "code personnalisé" : `${numberOfCodes} codes`}`;
   const record = (outcome: "success" | "failure", error?: string) =>
@@ -72,17 +81,31 @@ export default async (data: CreateAppleOfferCodeData, caller: AdminCaller): Prom
     if (point == null) throw new HttpsError("failed-precondition", "Aucun palier de prix trouvé pour cet abonnement et ce territoire.");
     if (point.price >= basePrice) throw new HttpsError("failed-precondition", "Aucun palier Apple inférieur au prix actuel : vérifiez le prix saisi.");
 
-    const offerId = await createOffer({ subscriptionId, name, territory, pricePointId: point.id, months });
+    let offerId: string;
+    try {
+      offerId = await createOffer({ subscriptionId, name, territory, pricePointId: point.id, months });
+    } catch (e: any) {
+      if (String(e?.message ?? e).includes("Name is not unique")) {
+        throw new HttpsError("already-exists", `Une offre nommée « ${name} » existe déjà chez Apple (même désactivée) : choisissez un autre nom.`);
+      }
+      throw e;
+    }
     const result: CreateAppleOfferCodeResult = {
       offerId,
       appliedPrice: point.price,
       appliedPercentOff: Math.round((1 - point.price / basePrice) * 1000) / 10,
     };
-    if (customCode != null) {
-      await createCustomCode(offerId, customCode, numberOfCodes, expirationDate);
-      result.customCode = customCode;
-    } else {
-      result.batchId = await createOneTimeCodes(offerId, numberOfCodes, expirationDate);
+    try {
+      if (customCode != null) {
+        await createCustomCode(offerId, customCode, numberOfCodes, expirationDate);
+        result.customCode = customCode;
+      } else {
+        result.batchId = await createOneTimeCodes(offerId, numberOfCodes, expirationDate);
+      }
+    } catch (e: any) {
+      // Les codes ont été refusés : l'offre créée juste avant resterait vide et utilisable, on la désactive.
+      await deactivateOffer(offerId).catch((err) => logger.error(`[Error] createAppleOfferCode cleanup: ${describeError(err)}`));
+      throw new HttpsError("failed-precondition", `${e?.message ?? e} L'offre « ${name} » a été désactivée : réessayez avec un autre nom.`);
     }
     await record("success");
     return result;

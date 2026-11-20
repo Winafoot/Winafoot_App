@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { errorMessage, listGoogleOfferTags, listPromoCodes, savePromoCode, type GoogleOfferTag, type PromoCodeRow } from "@/lib/callables";
+import { deletePromoCode, errorMessage, listGoogleOfferTags, listPromoCodes, savePromoCode, type GoogleOfferTag, type PromoCodeRow } from "@/lib/callables";
 import { formatDate } from "@/lib/utils";
 
 const inThreeMonths = () => new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -73,6 +73,18 @@ export function GooglePromoCodes() {
       load();
     } catch (err) {
       toast.error(errorMessage(err, "Modification impossible."));
+    }
+  }
+
+  async function remove(c: PromoCodeRow) {
+    const ok = window.confirm(`Supprimer définitivement le code ${c.code} (${c.uses} utilisation${c.uses > 1 ? "s" : ""}) ? Cette action est irréversible. L'offre de la Play Console n'est pas touchée.`);
+    if (!ok) return;
+    try {
+      await deletePromoCode({ code: c.code });
+      toast.success(`Code ${c.code} supprimé.`);
+      load();
+    } catch (err) {
+      toast.error(errorMessage(err, "Suppression impossible."));
     }
   }
 
@@ -163,9 +175,12 @@ export function GooglePromoCodes() {
                   </TableCell>
                   <TableCell>{c.expiresAt != null ? formatDate(c.expiresAt) : "—"}</TableCell>
                   <TableCell>{status(c)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="space-x-2 text-right">
                     <Button type="button" variant="outline" size="sm" onClick={() => toggle(c)}>
                       {c.active ? "Désactiver" : "Réactiver"}
+                    </Button>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => remove(c)}>
+                      Supprimer
                     </Button>
                   </TableCell>
                 </TableRow>

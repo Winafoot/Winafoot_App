@@ -1,12 +1,14 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { errorMessage, listAppleOffers, listPromoCodes, type AppleOffer, type PromoCodeRow } from "@/lib/callables";
+import { deactivateAppleOffer, errorMessage, listAppleOffers, listPromoCodes, type AppleOffer, type PromoCodeRow } from "@/lib/callables";
 import { SUBSCRIPTION_LABELS, useUsers } from "@/lib/data";
 import { formatDate } from "@/lib/utils";
 
@@ -35,14 +37,41 @@ export function OffersTracking() {
   const [google, setGoogle] = useState<PromoCodeRow[] | null>(null);
   const [googleError, setGoogleError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const [removing, setRemoving] = useState<string | null>(null);
+
+  const loadOffers = useCallback(() => {
     listAppleOffers({})
-      .then(({ offers: list }) => setOffers(list))
+      .then(({ offers: list }) => {
+        setOffers(list);
+        setError(null);
+      })
       .catch((e) => setError(errorMessage(e, "Lecture des offres impossible.")));
+  }, []);
+
+  // Apple ne supprime pas une offre : on la désactive (définitif), après confirmation.
+  async function remove(offer: AppleOffer) {
+    const ok = window.confirm(
+      `Supprimer l'offre « ${offer.name} » ?\n\nApple ne permet pas de supprimer une offre : elle sera désactivée, définitivement (elle ne peut plus être réactivée). Ses codes cesseront de fonctionner ; les abonnés qui les ont déjà utilisés gardent leur remise. Le nom de l'offre ne pourra pas être réutilisé.`,
+    );
+    if (!ok) return;
+    setRemoving(offer.id);
+    try {
+      await deactivateAppleOffer({ offerId: offer.id, name: offer.name });
+      toast.success(`Offre « ${offer.name} » désactivée.`);
+      loadOffers();
+    } catch (err) {
+      toast.error(errorMessage(err, "Suppression impossible."));
+    } finally {
+      setRemoving(null);
+    }
+  }
+
+  useEffect(() => {
+    loadOffers();
     listPromoCodes({})
       .then(({ codes }) => setGoogle(codes))
       .catch((e) => setGoogleError(errorMessage(e, "Lecture des codes Google impossible.")));
-  }, []);
+  }, [loadOffers]);
 
   // Comptes dont le premier achat s'est fait avec une offre d'introduction ou un code (enregistré par le webhook).
   const subscribers = useMemo(
@@ -55,20 +84,24 @@ export function OffersTracking() {
 
   // Une ligne par code : d'abord Apple (offre, puis ses codes), ensuite Google. Le nom de l'offre n'apparaît qu'à sa première ligne.
   const rows = useMemo(() => {
-    type Row = { key: string; platform: string; name: string; subtitle: string; kind: string; codes: React.ReactNode; extra: string; date: string | null; active: boolean };
+    type Row = { key: string; platform: string; name: string; subtitle: string; kind: string; codes: React.ReactNode; extra: string; date: string | null; active: boolean; offer?: AppleOffer };
     const out: Row[] = [];
-    for (const offer of offers ?? []) {
-      const kind = `${MODES[offer.mode] ?? offer.mode} · ${offer.periods > 1 ? `${offer.periods} périodes de ` : ""}${DURATIONS[offer.duration] ?? offer.duration}`;
+    // Les offres et codes désactivés ne sont plus affichés ici (Apple ne les supprime pas : ils restent dans App Store Connect).
+    for (const offer of (offers ?? []).filter((o) => o.active)) {
+      const kind =`${MODES[offer.mode] ?? offer.mode} · ${offer.periods > 1 ? `${offer.periods} périodes de ` : ""}${DURATIONS[offer.duration] ?? offer.duration}`;
       const lines = [
-        ...offer.customCodes.map((c) => ({ key: c.id, codes: <code className="rounded bg-muted px-1.5 py-0.5">{c.code}</code>, extra: `${c.uses} utilisations`, date: c.expirationDate, active: c.active })),
-        ...offer.batches.map((b) => ({ key: b.id, codes: `${b.codes} codes à usage unique`, extra: "", date: b.expirationDate, active: b.active })),
+        ...offer.customCodes.filter((c) => c.active).map((c) => ({ key: c.id, codes: <code className="rounded bg-muted px-1.5 py-0.5">{c.code}</code>, extra: `${c.uses} utilisations`, date: c.expirationDate, active: c.active })),
+        ...offer.batches.filter((b) => b.active).map((b) => ({ key: b.id, codes: `${b.codes} codes à usage unique`, extra: "", date: b.expirationDate, active: b.active })),
       ];
-      if (lines.length === 0) lines.push({ key: offer.id, codes: <span className="text-muted-foreground">Aucun code créé</span>, extra: "", date: null, active: offer.active });
+      if (lines.length === 0) {
+        const hadCodes = offer.customCodes.length + offer.batches.length > 0;
+        lines.push({ key: offer.id, codes: <span className="text-muted-foreground">{hadCodes ? "Aucun code actif" : "Aucun code créé"}</span>, extra: "", date: null, active: offer.active });
+      }
       lines.forEach((l, i) =>
-        out.push({ ...l, key: `apple-${offer.id}-${l.key}`, platform: "Apple", name: i === 0 ? offer.name : "", subtitle: i === 0 ? offer.subscription : "", kind: i === 0 ? kind : "" }),
+        out.push({ ...l, key: `apple-${offer.id}-${l.key}`, platform: "Apple", name: i === 0 ? offer.name : "", subtitle: i === 0 ? offer.subscription : "", kind: i === 0 ? kind : "", offer: i === 0 ? offer : undefined }),
       );
     }
-    for (const c of google ?? []) {
+    for (const c of (google ?? []).filter((g) => g.active)) {
       out.push({
         key: `google-${c.code}`,
         platform: "Google",
@@ -107,6 +140,7 @@ export function OffersTracking() {
                   <TableHead>Type</TableHead>
                   <TableHead>Codes</TableHead>
                   <TableHead>Date limite</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,6 +163,13 @@ export function OffersTracking() {
                       {row.extra && <span className="ml-2 text-xs text-muted-foreground">{row.extra}</span>}
                     </TableCell>
                     <TableCell>{expiry(row.date, row.active)}</TableCell>
+                    <TableCell className="text-right">
+                      {row.offer && (
+                        <Button type="button" variant="destructive" size="sm" loading={removing === row.offer.id} disabled={removing != null} onClick={() => remove(row.offer!)}>
+                          Supprimer
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

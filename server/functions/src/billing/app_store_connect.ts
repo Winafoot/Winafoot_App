@@ -66,7 +66,7 @@ function credentials(): string {
   }
 }
 
-async function request(method: "GET" | "POST", path: string, body?: unknown): Promise<string> {
+async function request(method: "GET" | "POST" | "PATCH", path: string, body?: unknown): Promise<string> {
   const response = await fetch(`${BASE}${path}`, {
     method,
     headers: { Authorization: `Bearer ${credentials()}`, ...(body == null ? {} : { "Content-Type": "application/json" }) },
@@ -86,8 +86,9 @@ async function request(method: "GET" | "POST", path: string, body?: unknown): Pr
   return text;
 }
 
-async function json(method: "GET" | "POST", path: string, body?: unknown): Promise<any> {
-  return JSON.parse(await request(method, path, body));
+async function json(method: "GET" | "POST" | "PATCH", path: string, body?: unknown): Promise<any> {
+  const text = await request(method, path, body);
+  return text === "" ? {} : JSON.parse(text);
 }
 
 /** Paliers de prix d'un abonnement pour un territoire (« FRA » pour la France). */
@@ -294,4 +295,14 @@ export async function oneTimeCodeValues(batchId: string): Promise<string[]> {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line !== "" && line.toLowerCase() !== "code");
+}
+
+/**
+ * Désactive une offre : Apple ne permet pas de la supprimer. Définitif (l'offre ne se réactive pas), ses codes cessent
+ * de fonctionner ; les abonnés qui les ont déjà utilisés ne sont pas touchés. Le nom de l'offre reste pris.
+ */
+export async function deactivateOffer(offerId: string): Promise<void> {
+  await json("PATCH", `/v1/subscriptionOfferCodes/${encodeURIComponent(offerId)}`, {
+    data: { type: "subscriptionOfferCodes", id: offerId, attributes: { active: false } },
+  });
 }

@@ -192,6 +192,8 @@ export interface AppleOffer {
   customCodes: { id: string; code: string; uses: number; expirationDate: string | null; active: boolean }[];
 }
 export const listAppleOffers = call<Record<string, never>, { offers: AppleOffer[] }>("listAppleOffers");
+/** « Supprime » une offre Apple en la désactivant (Apple n'en propose pas d'autre) : définitif, ses codes cessent de fonctionner. */
+export const deactivateAppleOffer = call<{ offerId: string; name?: string }, { offerId: string }>("deactivateAppleOffer");
 
 /** Code promo Google Play (collection promo_codes) : `uses` est compté par le serveur quand l'achat à prix réduit est confirmé. */
 export interface PromoCodeRow {
@@ -217,6 +219,8 @@ export const savePromoCode = call<
   { code: string; create: boolean; label: string; offerTag?: string; maxUses: number; expiresAt: string | null; active: boolean },
   { code: string }
 >("savePromoCode");
+/** Supprime définitivement un code (irréversible) ; l'offre de la Play Console n'est pas touchée. */
+export const deletePromoCode = call<{ code: string }, { code: string }>("deletePromoCode");
 
 /** Niveau des clients par catégorie et classement des meilleurs joueurs, avec leur nom et leur équipe. */
 export interface CategoryBenchmark {

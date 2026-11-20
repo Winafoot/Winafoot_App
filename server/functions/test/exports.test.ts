@@ -80,6 +80,7 @@ describe("exposed surface", () => {
     "getAllPlayers",
     "updateAppConfig",
     "listAppleOffers",
+    "deactivateAppleOffer",
     "listAdmins",
     "createAdmin",
     "updateAdmin",
@@ -95,6 +96,7 @@ describe("exposed surface", () => {
     "redeemPromoCode",
     "listPromoCodes",
     "savePromoCode",
+    "deletePromoCode",
     "listGoogleOfferTags",
   ])("keeps the %s callable", (name) => {
     expect(callables).toHaveProperty(name);
@@ -156,8 +158,10 @@ describe("wiring of the hardened callables", () => {
     ["getAllPlayers", "get_all_players"],
     ["updateAppConfig", "update_app_config"],
     ["listAppleOffers", "list_apple_offers"],
+    ["deactivateAppleOffer", "deactivate_apple_offer"],
     ["listPromoCodes", "list_promo_codes"],
     ["savePromoCode", "save_promo_code"],
+    ["deletePromoCode", "delete_promo_code"],
     ["listGoogleOfferTags", "list_google_offer_tags"],
   ])("%s points at its admin handler through the admin adapter", (name, module) => {
     const adminSource = readFileSync(join(__dirname, "../src/callables/index.ts"), "utf8");
@@ -211,7 +215,7 @@ describe("instance cap of the public functions", () => {
   );
 
   // Un appel anonyme sur un callable admin est refusé DANS le code, donc après le démarrage de l'instance.
-  it.each(["createCoach", "resendInvite", "setCoachDisabled", "deleteCoach", "listLastSignIns", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions", "getTeamActivity", "getTeamStats", "getUsageStats", "deleteOrphanTeam", "getCoachNote", "setCoachNote", "getPlayerBenchmarks", "getAllPlayers", "updateAppConfig", "listAppleOffers", "listPromoCodes", "savePromoCode", "listGoogleOfferTags", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin"])("admin callable %s is capped", (name) => {
+  it.each(["createCoach", "resendInvite", "setCoachDisabled", "deleteCoach", "listLastSignIns", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions", "getTeamActivity", "getTeamStats", "getUsageStats", "deleteOrphanTeam", "getCoachNote", "setCoachNote", "getPlayerBenchmarks", "getAllPlayers", "updateAppConfig", "listAppleOffers", "deactivateAppleOffer", "listPromoCodes", "savePromoCode", "deletePromoCode", "listGoogleOfferTags", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin"])("admin callable %s is capped", (name) => {
     expect((callables as Record<string, any>)[name].__endpoint.maxInstances).toBe(ADMIN_MAX_INSTANCES);
   });
 

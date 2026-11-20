@@ -11,9 +11,12 @@ export type AdminAuditAction =
   | "revoke_subscription"
   // Code d'offre Apple généré depuis le back-office : `details` porte l'offre, jamais les codes.
   | "create_offer_code"
+  // Offre Apple désactivée depuis le back-office (Apple ne permet pas de la supprimer).
+  | "deactivate_offer_code"
   // Configuration de l'app (app_config/metadata) modifiée depuis le back-office : `details` liste les champs, jamais les valeurs.
   | "update_config"
   | "save_promo_code"
+  | "delete_promo_code"
   // Consultation des données d'un coach (effectif, matchs, compositions) : tracée, elles concernent des joueurs.
   | "view_coach_data"
   // Message envoyé à un groupe de comptes (jamais le texte, seulement l'audience) et mot de passe d'une équipe liée redéfini.
