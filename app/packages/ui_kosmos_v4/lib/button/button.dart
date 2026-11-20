@@ -217,18 +217,20 @@ class _ButtonState extends ConsumerState<Button> {
                     isLoading = true;
                   });
                 }
-                if (widget.onTap != null) await widget.onTap!();
-
-                if (!mounted) {
-                  mutex = true;
-                  return;
+                try {
+                  if (widget.onTap != null) await widget.onTap!();
+                } finally {
+                  // Une exception dans onTap ne doit jamais laisser le loader
+                  // affiché ni le bouton verrouillé.
+                  if (!mounted) {
+                    mutex = true;
+                  } else {
+                    setState(() {
+                      if (widget.showLoader) isLoading = false;
+                      mutex = true;
+                    });
+                  }
                 }
-
-                // ignore: curly_braces_in_flow_control_structures
-                setState(() {
-                  if (widget.showLoader) isLoading = false;
-                  mutex = true;
-                });
               },
               onLongPress: widget.onLongPress != null
                   ? () async {

@@ -734,9 +734,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   /// Back-End ///
+  /// Filet de sécurité : une lecture Firestore qui échoue ou ne répond pas
+  /// (App Check, réseau, document manquant) doit afficher une erreur, pas un
+  /// chargement sans fin.
   Future<void> _login(BuildContext context, AuthTemplateThemeData themeData,
       KosmosButtonThemeData buttonThemeData,
       [String? savedEmail, String? savedPass]) async {
+    try {
+      await _performLogin(context, themeData, buttonThemeData, savedEmail,
+              savedPass)
+          .timeout(const Duration(seconds: 45));
+    } catch (e, st) {
+      printExcept("[Login] $e\n$st");
+      if (FirebaseAuth.instance.currentUser != null) {
+        try {
+          await FirebaseAuth.instance.signOut();
+        } catch (_) {}
+      }
+      if (mounted) {
+        _showLoginErrorDialog(
+            context, "package.kosmos-auth.error-default".tr());
+      }
+    }
+  }
+
+  Future<void> _performLogin(
+      BuildContext context,
+      AuthTemplateThemeData themeData,
+      KosmosButtonThemeData buttonThemeData,
+      [String? savedEmail,
+      String? savedPass]) async {
     FocusManager.instance.primaryFocus?.unfocus();
 
     if (savedEmail == null || savedPass == null) {
