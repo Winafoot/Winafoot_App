@@ -1,3 +1,4 @@
+import { gunzipSync } from "node:zlib";
 import { createPrivateKey, sign } from "node:crypto";
 import { APPSTORE_ISSUER_ID, APPSTORE_KEY_ID, APPSTORE_PRIVATE_KEY, readSecret } from "../config/secrets";
 import { HttpsError } from "../runtime/firebase";
@@ -305,4 +306,70 @@ export async function deactivateOffer(offerId: string): Promise<void> {
   await json("PATCH", `/v1/subscriptionOfferCodes/${encodeURIComponent(offerId)}`, {
     data: { type: "subscriptionOfferCodes", id: offerId, attributes: { active: false } },
   });
+}
+
+/** Types de produit d'un premier téléchargement : iPhone (1), universelle (1F), iPad (1T), Mac (F1). Hors mises à jour (7) et re-téléchargements (3F), dont les chiffres de l'API divergent de l'interface web. */
+export const FIRST_DOWNLOAD_TYPES = new Set(["1", "1F", "1T", "F1"]);
+
+/**
+ * Premiers téléchargements d'un rapport de ventes Apple (TSV) : somme de « Units » sur les lignes d'un type de
+ * premier téléchargement. Les colonnes sont repérées par leur nom, l'ordre n'est pas supposé.
+ */
+export function parseFirstDownloads(tsv: string): number {
+  const lines = tsv.split(/\r?\n/).filter((l) => l.trim() !== "");
+  if (lines.length < 2) return 0;
+  const header = lines[0].split("\t").map((h) => h.trim());
+  const type = header.indexOf("Product Type Identifier");
+  const units = header.indexOf("Units");
+  if (type < 0 || units < 0) return 0;
+  let total = 0;
+  for (const line of lines.slice(1)) {
+    const cells = line.split("\t");
+    if (FIRST_DOWNLOAD_TYPES.has((cells[type] ?? "").trim())) total += Number(cells[units]) || 0;
+  }
+  return total;
+}
+
+/** Rapport de ventes quotidien (gzip + TSV). `null` : aucun rapport pour ce jour (pas encore publié, ou aucune vente). */
+async function salesReport(vendorNumber: string, date: string): Promise<string | null> {
+  const query = new URLSearchParams({
+    "filter[frequency]": "DAILY",
+    "filter[reportSubType]": "SUMMARY",
+    "filter[reportType]": "SALES",
+    "filter[vendorNumber]": vendorNumber,
+    "filter[reportDate]": date,
+    "filter[version]": "1_1",
+  });
+  const response = await fetch(`${BASE}/v1/salesReports?${query}`, {
+    headers: { Authorization: `Bearer ${credentials()}`, Accept: "application/a-gzip" },
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const text = (await response.text()).slice(0, 300);
+    let detail = text;
+    try {
+      const error = JSON.parse(text)?.errors?.[0];
+      if (error != null) detail = `${error.title ?? ""} ${error.detail ?? ""}`.trim();
+    } catch {
+      // Réponse non JSON : on garde le début du texte.
+    }
+    throw new HttpsError("failed-precondition", `Apple a refusé la demande (${response.status}) : ${detail}`);
+  }
+  const body = Buffer.from(await response.arrayBuffer());
+  return (body[0] === 0x1f && body[1] === 0x8b ? gunzipSync(body) : body).toString("utf8");
+}
+
+/** Premiers téléchargements par jour (une requête par date, 6 en parallèle). Un jour sans rapport compte 0. */
+export async function appleDailyDownloads(vendorNumber: string, dates: string[]): Promise<{ date: string; count: number }[]> {
+  const out: { date: string; count: number }[] = new Array(dates.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < dates.length) {
+      const i = next++;
+      const report = await salesReport(vendorNumber, dates[i]);
+      out[i] = { date: dates[i], count: report == null ? 0 : parseFirstDownloads(report) };
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(6, dates.length) }, worker));
+  return out;
 }

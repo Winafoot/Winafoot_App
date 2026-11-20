@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Flag, RefreshCw, Shield, Swords, UserCheck, Users, UsersRound, Wallet } from "lucide-react";
 import { toast } from "sonner";
+import { DownloadsCard } from "@/components/downloads-card";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Alert } from "@/components/ui/alert";
@@ -161,6 +162,10 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </section>
+
+      <section className="mt-6">
+        <DownloadsCard />
       </section>
 
       {stats && <p className="mt-4 text-xs text-muted-foreground">Calculé le {formatDateTime(stats.generatedAt)}.</p>}

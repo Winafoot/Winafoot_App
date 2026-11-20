@@ -135,6 +135,7 @@ const ADMIN = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES };
 const ADMIN_MAILER = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: MAILER_SECRET_PARAMS };
 const ADMIN_APPSTORE = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: APPSTORE_SECRET_PARAMS };
 const ADMIN_GOOGLEPLAY = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: GOOGLEPLAY_SECRET_PARAMS };
+const ADMIN_STORES = { ...APP_CHECK, maxInstances: ADMIN_MAX_INSTANCES, secrets: [...APPSTORE_SECRET_PARAMS, ...GOOGLEPLAY_SECRET_PARAMS] };
 // Mot de passe choisi par l'administrateur : createCoach n'envoie aucun e-mail.
 export const createCoach = onCall(ADMIN, adminCallableAdapter("callables/admin/create_coach"));
 export const resendInvite = onCall(ADMIN_MAILER, adminCallableAdapter("callables/admin/resend_invite"));
@@ -158,6 +159,8 @@ export const deleteAdmin = onCall(ADMIN, adminCallableAdapter("callables/admin/d
 // Tableau de bord et consultation des données de l'app : lecture seule, Admin SDK (les règles Firestore ferment
 // ces collections aux administrateurs côté client).
 export const getAdminStats = onCall(ADMIN, adminCallableAdapter("callables/admin/get_admin_stats"));
+// Téléchargements Apple (App Store Connect) et Google Play (rapports de la Play Console) : les deux jeux de secrets.
+export const getDownloadStats = onCall(ADMIN_STORES, adminCallableAdapter("callables/admin/get_download_stats"));
 export const getCoachData = onCall(ADMIN, adminCallableAdapter("callables/admin/get_coach_data"));
 export const listReports = onCall(ADMIN, adminCallableAdapter("callables/admin/list_reports"));
 // Vue « Équipes » et « Statistiques » : activité par compte (comptages), bilan d'une équipe (journalisé) et activité hebdomadaire.

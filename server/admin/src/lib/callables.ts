@@ -93,6 +93,23 @@ export interface AdminStats {
 }
 export const getAdminStats = call<Record<string, never>, AdminStats>("getAdminStats");
 
+/** Téléchargements d'une boutique sur la période : `configured` faux tant que ses réglages serveur sont vides, `error` dit alors ce qui manque. */
+export interface StoreDownloads {
+  configured: boolean;
+  total: number;
+  daily: { date: string; count: number }[];
+  error?: string;
+}
+/** Premiers téléchargements Apple et installations Google Play des derniers jours complets (jusqu'à hier). */
+export interface DownloadStats {
+  days: number;
+  from: string;
+  to: string;
+  apple: StoreDownloads;
+  google: StoreDownloads;
+}
+export const getDownloadStats = call<{ days?: number }, DownloadStats>("getDownloadStats");
+
 export interface CoachData {
   players: Record<string, unknown>[];
   matches: Record<string, unknown>[];

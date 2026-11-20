@@ -20,9 +20,9 @@ export interface ServiceAccount {
 const base64url = (input: Buffer | string) => Buffer.from(input).toString("base64url");
 
 /** JWT d'échange du compte de service (1 h au plus côté Google). */
-export function serviceAccountJwt(account: ServiceAccount, nowS = Math.floor(Date.now() / 1000)): string {
+export function serviceAccountJwt(account: ServiceAccount, nowS = Math.floor(Date.now() / 1000), scope = SCOPE): string {
   const header = base64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const payload = base64url(JSON.stringify({ iss: account.client_email, scope: SCOPE, aud: TOKEN_URL, iat: nowS, exp: nowS + 3000 }));
+  const payload = base64url(JSON.stringify({ iss: account.client_email, scope, aud: TOKEN_URL, iat: nowS, exp: nowS + 3000 }));
   const signature = sign("RSA-SHA256", Buffer.from(`${header}.${payload}`), createPrivateKey(account.private_key.replace(/\\n/g, "\n")));
   return `${header}.${payload}.${base64url(signature)}`;
 }
@@ -39,13 +39,15 @@ function account(): ServiceAccount {
   }
 }
 
-let cached: { token: string; untilMs: number } | undefined;
+const cached = new Map<string, { token: string; untilMs: number }>();
 
-async function accessToken(): Promise<string> {
-  if (cached != null && cached.untilMs > Date.now() + 60_000) return cached.token;
+/** Jeton OAuth du compte de service pour un périmètre (API Play Developer par défaut). */
+export async function accessToken(scope = SCOPE): Promise<string> {
+  const hit = cached.get(scope);
+  if (hit != null && hit.untilMs > Date.now() + 60_000) return hit.token;
   let assertion: string;
   try {
-    assertion = serviceAccountJwt(account());
+    assertion = serviceAccountJwt(account(), undefined, scope);
   } catch (e) {
     if (e instanceof HttpsError) throw e;
     throw new HttpsError("failed-precondition", "La clé privée du compte de service Google est illisible.");
@@ -59,8 +61,8 @@ async function accessToken(): Promise<string> {
   if (!response.ok || typeof json.access_token !== "string") {
     throw new HttpsError("failed-precondition", `Google a refusé le compte de service : ${String(json.error_description ?? json.error ?? response.status).slice(0, 200)}`);
   }
-  cached = { token: json.access_token, untilMs: Date.now() + (Number(json.expires_in) || 3600) * 1000 };
-  return cached.token;
+  cached.set(scope, { token: json.access_token, untilMs: Date.now() + (Number(json.expires_in) || 3600) * 1000 });
+  return json.access_token;
 }
 
 async function get(path: string): Promise<any> {

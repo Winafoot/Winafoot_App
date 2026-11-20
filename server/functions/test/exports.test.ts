@@ -86,6 +86,7 @@ describe("exposed surface", () => {
     "updateAdmin",
     "deleteAdmin",
     "getAdminStats",
+    "getDownloadStats",
     "getCoachData",
     "listReports",
     "sendAdminNotification",
@@ -127,7 +128,7 @@ describe("wiring of the hardened callables", () => {
 
   // L'adaptateur admin refuse l'appel AVANT de charger le module du handler : un export recâblé sur
   // l'adaptateur authentifié ou public ouvrirait la gestion des comptes administrateurs à n'importe qui.
-  it.each(["listLastSignIns", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin", "getAdminStats", "getCoachData", "listReports", "sendAdminNotification", "resetLinkedTeamPasswordByAdmin", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions", "getTeamActivity", "getTeamStats", "getUsageStats", "deleteOrphanTeam", "getCoachNote", "setCoachNote", "getPlayerBenchmarks", "getAllPlayers", "updateAppConfig", "listAppleOffers", "listPromoCodes", "savePromoCode", "listGoogleOfferTags"])("%s rejects an anonymous caller", async (name) => {
+  it.each(["listLastSignIns", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin", "getAdminStats", "getDownloadStats", "getCoachData", "listReports", "sendAdminNotification", "resetLinkedTeamPasswordByAdmin", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions", "getTeamActivity", "getTeamStats", "getUsageStats", "deleteOrphanTeam", "getCoachNote", "setCoachNote", "getPlayerBenchmarks", "getAllPlayers", "updateAppConfig", "listAppleOffers", "listPromoCodes", "savePromoCode", "listGoogleOfferTags"])("%s rejects an anonymous caller", async (name) => {
     const callable = (callables as Record<string, any>)[name];
 
     await expect(callable.run({ data: {}, rawRequest: {} })).rejects.toMatchObject({ code: "permission-denied" });
@@ -163,6 +164,7 @@ describe("wiring of the hardened callables", () => {
     ["savePromoCode", "save_promo_code"],
     ["deletePromoCode", "delete_promo_code"],
     ["listGoogleOfferTags", "list_google_offer_tags"],
+    ["getDownloadStats", "get_download_stats"],
   ])("%s points at its admin handler through the admin adapter", (name, module) => {
     const adminSource = readFileSync(join(__dirname, "../src/callables/index.ts"), "utf8");
     expect(adminSource).toMatch(new RegExp(`export const ${name} = onCall\\([^;]*adminCallableAdapter\\("callables/admin/${module}"\\)`));
@@ -215,7 +217,7 @@ describe("instance cap of the public functions", () => {
   );
 
   // Un appel anonyme sur un callable admin est refusé DANS le code, donc après le démarrage de l'instance.
-  it.each(["createCoach", "resendInvite", "setCoachDisabled", "deleteCoach", "listLastSignIns", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions", "getTeamActivity", "getTeamStats", "getUsageStats", "deleteOrphanTeam", "getCoachNote", "setCoachNote", "getPlayerBenchmarks", "getAllPlayers", "updateAppConfig", "listAppleOffers", "deactivateAppleOffer", "listPromoCodes", "savePromoCode", "deletePromoCode", "listGoogleOfferTags", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin"])("admin callable %s is capped", (name) => {
+  it.each(["createCoach", "resendInvite", "setCoachDisabled", "deleteCoach", "listLastSignIns", "setCoachSubscription", "createAppleOfferCode", "getAppleOfferCodeValues", "listAppleSubscriptions", "getTeamActivity", "getTeamStats", "getUsageStats", "deleteOrphanTeam", "getCoachNote", "setCoachNote", "getPlayerBenchmarks", "getAllPlayers", "updateAppConfig", "listAppleOffers", "deactivateAppleOffer", "listPromoCodes", "savePromoCode", "deletePromoCode", "listGoogleOfferTags", "getDownloadStats", "listAdmins", "createAdmin", "updateAdmin", "deleteAdmin"])("admin callable %s is capped", (name) => {
     expect((callables as Record<string, any>)[name].__endpoint.maxInstances).toBe(ADMIN_MAX_INSTANCES);
   });
 
