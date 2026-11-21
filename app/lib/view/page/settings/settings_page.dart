@@ -252,21 +252,8 @@ class SettingsWebPage extends ConsumerWidget {
                           SettingsItem(
                             title: 'app.subscription.title'.tr(),
                             children: [
-                              // « Changer de formule » est dans le menu « ⋯ » de la carte de profil.
-                              SettingsNode(
-                                title:
-                                    'app.settings-extra.manage-subscription'
-                                        .tr(),
-                                subtitle:
-                                    'app.settings-extra.manage-subscription-sub'
-                                        .tr(),
-                                onTap:
-                                    () => launchUrl(
-                                      manageSubscriptionUri(),
-                                      mode: LaunchMode.externalApplication,
-                                    ),
-                                children: [],
-                              ),
+                              // « Gérer mon abonnement » et « Changer de formule » sont dans le
+                              // menu « ⋯ » de la carte de profil.
                               SettingsNode(
                                 title: 'app.settings-extra.redeem-code'.tr(),
                                 subtitle:
@@ -482,6 +469,16 @@ class SettingsWebPage extends ConsumerWidget {
                             onPressed:
                                 () => Navigator.of(context).pop('change-plan'),
                           ),
+                        if (canChangePlan)
+                          CupertinoActionSheetAction(
+                            child: Text(
+                              'app.settings-extra.manage-subscription'.tr(),
+                            ),
+                            onPressed:
+                                () => Navigator.of(
+                                  context,
+                                ).pop('manage-subscription'),
+                          ),
                         CupertinoActionSheetAction(
                           isDestructiveAction: true,
                           child: Text('package.skeleton.profile.logout'.tr()),
@@ -504,6 +501,12 @@ class SettingsWebPage extends ConsumerWidget {
                   MaterialPageRoute<void>(
                     builder: (_) => const AbonnementScreen(changePlan: true),
                   ),
+                );
+              }
+              if (action == 'manage-subscription') {
+                await launchUrl(
+                  manageSubscriptionUri(),
+                  mode: LaunchMode.externalApplication,
                 );
               }
               if (action == 'logout' && context.mounted) {
